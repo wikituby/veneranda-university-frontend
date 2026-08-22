@@ -1,0 +1,169 @@
+<div class="container-fluid py-4">
+  @if (showToast()) {
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index:9999">
+      <div class="toast show align-items-center text-bg-{{ toastType() }} border-0">
+        <div class="d-flex">
+          <div class="toast-body">{{ toastMessage() }}</div>
+          <button class="btn-close btn-close-white me-2 m-auto" (click)="showToast.set(false)"></button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="fw-bold mb-1">Users</h4>
+      <p class="text-muted small mb-0">Manage system users</p>
+    </div>
+    <button class="btn btn-primary" (click)="openCreate()"><i class="bi bi-person-plus me-1"></i> Add User</button>
+  </div>
+
+  <div class="row g-2 mb-4">
+    <div class="col-md-6 col-lg-4">
+      <div class="input-group">
+        <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <input class="form-control" [(ngModel)]="searchText" placeholder="Search users..." (keyup.enter)="onSearch()">
+      </div>
+    </div>
+    <div class="col-auto"><button class="btn btn-primary" (click)="onSearch()">Search</button></div>
+  </div>
+
+  @if (loading()) {
+    <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+  } @else {
+    <div class="card border-0 shadow-sm">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="fw-semibold sortable" (click)="sort('fullName')">Name <i class="bi {{ sortIcon('fullName') }} small"></i></th>
+              <th class="fw-semibold sortable" (click)="sort('username')">Username <i class="bi {{ sortIcon('username') }} small"></i></th>
+              <th class="fw-semibold sortable" (click)="sort('email')">Email <i class="bi {{ sortIcon('email') }} small"></i></th>
+              <th class="fw-semibold">Role</th>
+              <th class="fw-semibold">Active</th>
+              <th class="fw-semibold text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (u of users(); track u.id) {
+              <tr>
+                <td>
+                  <div class="fw-medium">{{ u.fullName }}</div>
+                  <small class="text-muted">{{ u.jobTitle || '' }}</small>
+                </td>
+                <td>{{ u.username }}</td>
+                <td>{{ u.email }}</td>
+                <td>
+                  @if (roleLabels(u).length) {
+                    <div class="d-flex flex-wrap gap-1">
+                      @for (role of roleLabels(u); track role) {
+                        <span class="badge bg-primary bg-opacity-10 text-primary">{{ role }}</span>
+                      }
+                    </div>
+                  } @else {
+                    <span class="text-muted small">—</span>
+                  }
+                </td>
+                <td>
+                  @if (u.isActive) {
+                    <span class="badge bg-success bg-opacity-10 text-success">Active</span>
+                  } @else {
+                    <span class="badge bg-secondary bg-opacity-10 text-secondary">Inactive</span>
+                  }
+                </td>
+                <td class="text-end">
+                  <button class="btn btn-sm btn-outline-secondary me-1" (click)="openEdit(u)"><i class="bi bi-pencil"></i></button>
+                  <button class="btn btn-sm btn-outline-danger" (click)="deleteUser(u.id, u.fullName)"><i class="bi bi-trash"></i></button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="6" class="text-center py-4 text-muted">No users found</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (totalPages > 1) {
+        <div class="d-flex justify-content-between p-3 border-top">
+          <small class="text-muted">{{ totalElements() }} total</small>
+          <nav>
+            <ul class="pagination pagination-sm mb-0">
+              <li class="page-item" [class.disabled]="page()===0"><a class="page-link" (click)="goToPage(0)"><i class="bi bi-chevron-double-left"></i></a></li>
+              <li class="page-item" [class.disabled]="page()===0"><a class="page-link" (click)="goToPage(page()-1)"><i class="bi bi-chevron-left"></i></a></li>
+              @for (p of pagesArray; track p) {
+                <li class="page-item" [class.active]="p===page()"><a class="page-link" (click)="goToPage(p)">{{ p+1 }}</a></li>
+              }
+              <li class="page-item" [class.disabled]="page()>=totalPages-1"><a class="page-link" (click)="goToPage(page()+1)"><i class="bi bi-chevron-right"></i></a></li>
+              <li class="page-item" [class.disabled]="page()>=totalPages-1"><a class="page-link" (click)="goToPage(totalPages-1)"><i class="bi bi-chevron-double-right"></i></a></li>
+            </ul>
+          </nav>
+        </div>
+      }
+    </div>
+  }
+
+  @if (showForm()) {
+    <div class="modal-backdrop fade show" style="z-index:1050" (click)="cancelForm()"></div>
+    <div class="modal fade show d-block" tabindex="-1" style="z-index:1055" role="dialog" aria-modal="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg" style="border-radius:16px">
+          <div class="modal-header border-0 px-4 pt-4">
+            <h5 class="modal-title fw-bold">{{ editMode() ? 'Edit User' : 'New User' }}</h5>
+            <button type="button" class="btn-close" (click)="cancelForm()" aria-label="Close"></button>
+          </div>
+          <div class="modal-body px-4">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
+                <input class="form-control" [(ngModel)]="formName" placeholder="John Doe">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Username <span class="text-danger">*</span></label>
+                <input class="form-control" [(ngModel)]="formUsername" [disabled]="editMode()">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Email <span class="text-danger">*</span></label>
+                <input type="email" class="form-control" [(ngModel)]="formEmail">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">
+                  {{ editMode() ? 'Password (blank to keep)' : 'Password' }}
+                  @if (!editMode()) { <span class="text-danger">*</span> }
+                </label>
+                <input type="password" class="form-control" [(ngModel)]="formPassword">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Phone</label>
+                <input class="form-control" [(ngModel)]="formPhone">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Job Title</label>
+                <input class="form-control" [(ngModel)]="formJobTitle">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Role</label>
+                <select class="form-select" [(ngModel)]="formRoleId">
+                  <option [ngValue]="null">Select role…</option>
+                  @for (role of allRoles(); track role.id) {
+                    <option [ngValue]="role.id">{{ role.name }}</option>
+                  }
+                </select>
+              </div>
+              <div class="col-md-6 d-flex align-items-end">
+                <div class="form-check form-switch mb-2">
+                  <input class="form-check-input" type="checkbox" [(ngModel)]="formIsActive" id="userActive">
+                  <label class="form-check-label" for="userActive">Active</label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer border-0 px-4 pb-4">
+            <button type="button" class="btn btn-outline-secondary" (click)="cancelForm()">Cancel</button>
+            <button type="button" class="btn btn-primary" (click)="submitForm()">
+              <i class="bi bi-check-circle me-1"></i>{{ editMode() ? 'Update' : 'Create' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

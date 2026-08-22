@@ -1,0 +1,37 @@
+<div class="landing">
+  <div class="slides" aria-hidden="true">
+    @for (slide of slides; track slide.url; let i = $index) {
+      <div class="slide" [style.animation-delay]="i * 7 + 's'" [style.background-image]="'url(' + slide.url + ')'"></div>
+    }
+    <div class="veil"></div>
+  </div>
+
+  <header class="landing-nav">
+    <a class="brand" routerLink="/welcome">
+      <i class="bi bi-mortarboard-fill"></i>
+      <span>Veneranda<span class="brand-rest"> University</span></span>
+    </a>
+    @if (isLoggedIn) {
+      <a routerLink="/home" class="nav-login">Open programmes</a>
+    } @else {
+      <a routerLink="/login" class="nav-login">Log in</a>
+    }
+  </header>
+
+  <main class="hero">
+    <p class="kicker">Online programmes</p>
+    <h1>Start learning on your schedule.</h1>
+    <p class="lede">
+      Join a programme, pick a semester or a single course unit, then pay to unlock the outline
+      prepared by your course coordinator.
+    </p>
+    <a
+      [routerLink]="isLoggedIn ? '/home' : '/login'"
+      [queryParams]="isLoggedIn ? null : { tab: 'signup' }"
+      class="get-started"
+    >Get Started</a>
+    @if (!isLoggedIn) {
+      <p class="fine">Already enrolled? <a routerLink="/login">Sign in</a></p>
+    }
+  </main>
+</div>

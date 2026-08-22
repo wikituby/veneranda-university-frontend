@@ -1,0 +1,147 @@
+<div class="prog-shell">
+  <app-catalogue-topbar />
+
+  <div class="page">
+    @if (loading()) {
+      <div class="state"><div class="spinner-border text-primary"></div><span>Preparing checkout…</span></div>
+    } @else if (!item()) {
+      <p class="empty">Item not found.</p>
+    } @else {
+      <a [routerLink]="programmeHref()" class="back">Back to programme</a>
+      <h1>Subscribe and pay</h1>
+      <p class="lede">
+        You opened checkout for <strong>{{ item()!.title }}</strong>.
+        Coverage only goes downward: a course unit unlocks that unit only; a semester unlocks its units; a year unlocks its semesters and units; the programme unlocks everything.
+      </p>
+      @if (!enrolled()) {
+        <div class="inline-alert">Join this programme from Home before you pay.</div>
+        <a [routerLink]="programmeHref()" class="btn btn-outline-primary join-link">Open programme to join</a>
+      }
+
+      <h2 class="section-title">What to unlock</h2>
+      <div class="option-list">
+        @for (option of options(); track option.id) {
+          <button
+            type="button"
+            class="option-card"
+            [class.selected]="selectedId() === option.id"
+            [class.paid]="option.paid"
+            [class.trial]="option.trial"
+            [disabled]="option.paid"
+            (click)="choose(option)"
+          >
+            <div class="option-copy">
+              <span class="label">{{ kindLabel(option.kind) }}</span>
+              <h3>{{ option.title }}</h3>
+              <p>{{ option.blurb }}</p>
+            </div>
+            <div class="option-meta">
+              @if (option.paid) {
+                <span class="paid">Unlocked</span>
+              } @else {
+                <span class="amount">{{ formatKes(option.amount, option.currency) }}</span>
+              }
+            </div>
+          </button>
+        }
+      </div>
+
+      @if (!isTrial()) {
+        <h2 class="section-title">Payment method</h2>
+        <div class="method-list">
+          @for (pay of methods; track pay.id) {
+            <button
+              type="button"
+              class="method-card"
+              [class.selected]="method() === pay.id"
+              [class.mtn]="pay.id === 'mtn'"
+              [class.airtel]="pay.id === 'airtel'"
+              [class.visa]="pay.id === 'visa'"
+              (click)="chooseMethod(pay.id)"
+            >
+              <span class="method-mark" [attr.data-brand]="pay.id" aria-hidden="true">
+                @if (pay.id === 'visa') {
+                  <svg viewBox="0 0 72 24" class="brand-logo"><rect width="72" height="24" rx="4" fill="#1A1F71"/><text x="36" y="17" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">VISA</text></svg>
+                } @else if (pay.id === 'mtn') {
+                  <svg viewBox="0 0 72 24" class="brand-logo"><rect width="72" height="24" rx="4" fill="#FFCC00"/><text x="36" y="17" text-anchor="middle" font-size="13" font-weight="800" fill="#111">MTN</text></svg>
+                } @else {
+                  <svg viewBox="0 0 88 24" class="brand-logo"><rect width="88" height="24" rx="4" fill="#E4002B"/><text x="44" y="16.5" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">airtel</text></svg>
+                }
+              </span>
+              <span class="method-copy">
+                <strong>{{ pay.label }}</strong>
+                <small>{{ pay.hint }}</small>
+              </span>
+            </button>
+          }
+        </div>
+
+        @if (method() === 'visa') {
+          <div class="pay-fields visa-fields">
+            <label class="visa-name">
+              <span>Name on card</span>
+              <input class="form-control" [value]="cardName()" (input)="onCardName($event)" autocomplete="cc-name" placeholder="Name on the Visa card" />
+            </label>
+            <label class="visa-number">
+              <span>Card number</span>
+              <input class="form-control" [value]="cardNumber()" (input)="onCardNumber($event)" inputmode="numeric" autocomplete="cc-number" placeholder="ACCT-000003" />
+            </label>
+            <label class="visa-expiry">
+              <span>Expiry</span>
+              <input class="form-control" [value]="expiry()" (input)="onExpiry($event)" inputmode="numeric" autocomplete="cc-exp" placeholder="MM/YY" />
+            </label>
+            <label class="visa-cvc">
+              <span>CVC</span>
+              <input class="form-control" [value]="cvc()" (input)="onCvc($event)" inputmode="numeric" autocomplete="cc-csc" placeholder="123" />
+            </label>
+          </div>
+        } @else {
+          <div class="pay-fields money-fields">
+            <label class="money-phone">
+              <span class="money-label-row">
+                <span>{{ method() === 'mtn' ? 'MTN Mobile Money number' : 'Airtel Money number' }}</span>
+                <span class="hint">You will receive a prompt on this number to approve the payment.</span>
+              </span>
+              <div class="money-row">
+                <input class="form-control" [value]="phone()" (input)="onPhone($event)" inputmode="tel" autocomplete="tel" placeholder="07XX XXX XXX" />
+                <button type="button" class="btn btn-primary pay-btn" [disabled]="paying() || !enrolled() || !selected() || selected()!.paid" (click)="pay()">
+                  @if (paying()) {
+                    Processing…
+                  } @else if (selected()) {
+                    Pay {{ formatKes(selected()!.amount, selected()!.currency) }}
+                  } @else {
+                    Pay
+                  }
+                </button>
+              </div>
+            </label>
+          </div>
+        }
+      }
+
+      @if (error()) {
+        <div class="inline-alert">{{ error() }}</div>
+      }
+
+      @if (isTrial()) {
+        <button type="button" class="btn btn-primary pay-btn" [disabled]="paying() || !enrolled() || !selected() || selected()!.paid" (click)="pay()">
+          @if (paying()) {
+            Starting trial…
+          } @else {
+            Start 48-hour free trial
+          }
+        </button>
+      } @else if (method() === 'visa') {
+        <button type="button" class="btn btn-primary pay-btn" [disabled]="paying() || !enrolled() || !selected() || selected()!.paid" (click)="pay()">
+          @if (paying()) {
+            Processing…
+          } @else if (selected()) {
+            Pay {{ formatKes(selected()!.amount, selected()!.currency) }} with Visa
+          } @else {
+            Choose a plan
+          }
+        </button>
+      }
+    }
+  </div>
+</div>

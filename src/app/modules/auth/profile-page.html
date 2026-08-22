@@ -1,0 +1,119 @@
+<div class="profile-shell">
+  <app-catalogue-topbar />
+
+  <div class="page">
+    <a routerLink="/home" class="back">Home</a>
+    <header class="head">
+      <div class="head-avatar">{{ initials }}</div>
+      <div>
+        <p class="eyebrow">Account</p>
+        <h1>Your profile</h1>
+        <p class="lede">Update the name and email on this account, or change your password.</p>
+      </div>
+    </header>
+
+    <section class="card">
+      <h2>Personal details</h2>
+      <form (ngSubmit)="saveProfile()">
+        <label class="field">
+          <span>Username</span>
+          <input class="form-control" [value]="username" disabled />
+        </label>
+        <label class="field">
+          <span>Full name</span>
+          <input class="form-control" name="fullName" [(ngModel)]="fullName" autocomplete="name" required />
+        </label>
+        <label class="field">
+          <span>Email</span>
+          <input class="form-control" type="email" name="email" [(ngModel)]="email" autocomplete="email" required />
+        </label>
+        <label class="field">
+          <span>Phone</span>
+          <input class="form-control" type="tel" name="phone" [(ngModel)]="phone" autocomplete="tel" placeholder="Optional" />
+        </label>
+        @if (profileError()) {
+          <p class="alert error">{{ profileError() }}</p>
+        }
+        @if (profileOk()) {
+          <p class="alert ok">{{ profileOk() }}</p>
+        }
+        <button type="submit" class="btn btn-primary" [disabled]="savingProfile()">
+          {{ savingProfile() ? 'Saving…' : 'Save details' }}
+        </button>
+      </form>
+    </section>
+
+    <section class="card" id="password">
+      <h2>{{ hasPassword ? 'Change password' : 'Set a password' }}</h2>
+      <p class="hint">
+        @if (hasPassword) {
+          Enter your current password, then choose a new one of at least 8 characters.
+        } @else {
+          This account was created with Google. Set a password if you also want to sign in with email.
+        }
+      </p>
+      <form (ngSubmit)="savePassword()">
+        @if (hasPassword) {
+          <label class="field">
+            <span>Current password</span>
+            <div class="password-row">
+              <input
+                class="form-control"
+                [type]="hideCurrent() ? 'password' : 'text'"
+                name="currentPassword"
+                [(ngModel)]="currentPassword"
+                autocomplete="current-password"
+              />
+              <button type="button" class="btn btn-outline-secondary" (click)="hideCurrent.set(!hideCurrent())">
+                {{ hideCurrent() ? 'Show' : 'Hide' }}
+              </button>
+            </div>
+          </label>
+        }
+        <label class="field">
+          <span>New password</span>
+          <div class="password-row">
+            <input
+              class="form-control"
+              [type]="hideNew() ? 'password' : 'text'"
+              name="newPassword"
+              [(ngModel)]="newPassword"
+              autocomplete="new-password"
+              minlength="8"
+              required
+            />
+            <button type="button" class="btn btn-outline-secondary" (click)="hideNew.set(!hideNew())">
+              {{ hideNew() ? 'Show' : 'Hide' }}
+            </button>
+          </div>
+        </label>
+        <label class="field">
+          <span>Confirm new password</span>
+          <div class="password-row">
+            <input
+              class="form-control"
+              [type]="hideConfirm() ? 'password' : 'text'"
+              name="confirmPassword"
+              [(ngModel)]="confirmPassword"
+              autocomplete="new-password"
+              minlength="8"
+              required
+            />
+            <button type="button" class="btn btn-outline-secondary" (click)="hideConfirm.set(!hideConfirm())">
+              {{ hideConfirm() ? 'Show' : 'Hide' }}
+            </button>
+          </div>
+        </label>
+        @if (passwordError()) {
+          <p class="alert error">{{ passwordError() }}</p>
+        }
+        @if (passwordOk()) {
+          <p class="alert ok">{{ passwordOk() }}</p>
+        }
+        <button type="submit" class="btn btn-primary" [disabled]="savingPassword()">
+          {{ savingPassword() ? 'Saving…' : hasPassword ? 'Update password' : 'Set password' }}
+        </button>
+      </form>
+    </section>
+  </div>
+</div>

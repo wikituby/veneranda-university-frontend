@@ -1,0 +1,32 @@
+<div class="container-fluid py-4">
+  <h4 class="fw-bold mb-4">Audit Logs</h4>
+  <p class="text-muted mb-4">System-wide audit trail of all user actions</p>
+  <div class="row g-2 mb-4"><div class="col-md-6 col-lg-4"><div class="input-group"><span class="input-group-text"><i class="bi bi-search"></i></span><input class="form-control" [(ngModel)]="searchText" placeholder="Search module, action, user..." (keyup.enter)="load()"></div></div><div class="col-auto"><button class="btn btn-primary" (click)="load()">Search</button></div></div>
+  @if (loading()) { <div class="text-center py-5"><div class="spinner-border text-primary"></div></div> } @else {
+    <div class="card border-0 shadow-sm"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead class="table-light"><tr>
+      <th class="fw-semibold sortable" (click)="sort('createdAt')">Date/Time <i class="bi {{ sortIcon('createdAt') }} small"></i></th>
+      <th class="fw-semibold sortable" (click)="sort('username')">User <i class="bi {{ sortIcon('username') }} small"></i></th>
+      <th class="fw-semibold sortable" (click)="sort('module')">Module <i class="bi {{ sortIcon('module') }} small"></i></th>
+      <th class="fw-semibold sortable" (click)="sort('action')">Action <i class="bi {{ sortIcon('action') }} small"></i></th>
+      <th class="fw-semibold d-none d-lg-table-cell">Description</th>
+      <th class="fw-semibold d-none d-lg-table-cell">IP</th>
+    </tr></thead><tbody>
+      @for (log of logs(); track log.id) { <tr>
+        <td><small>{{ log.createdAt | date:'medium' }}</small></td>
+        <td><span class="fw-medium">{{ log.username || 'System' }}</span></td>
+        <td><span class="badge bg-light text-dark">{{ log.module }}</span></td>
+        <td><span class="badge bg-info bg-opacity-10 text-info">{{ log.action }}</span></td>
+        <td class="d-none d-lg-table-cell text-muted small">{{ log.description || '—' }}</td>
+        <td class="d-none d-lg-table-cell"><code class="small">{{ log.ipAddress || '—' }}</code></td>
+      </tr> } @empty { <tr><td colspan="6" class="text-center py-4 text-muted">No audit logs found</td></tr> }
+    </tbody></table></div>
+    @if (tp > 1) { <div class="d-flex justify-content-between p-3 border-top"><small class="text-muted">{{ totalElements() }} total</small><nav><ul class="pagination pagination-sm mb-0">
+      <li class="page-item" [class.disabled]="page()===0"><a class="page-link" (click)="gp(0)"><i class="bi bi-chevron-double-left"></i></a></li>
+      <li class="page-item" [class.disabled]="page()===0"><a class="page-link" (click)="gp(page()-1)"><i class="bi bi-chevron-left"></i></a></li>
+      @for (p of pa; track p) { <li class="page-item" [class.active]="p===page()"><a class="page-link" (click)="gp(p)">{{ p+1 }}</a></li> }
+      <li class="page-item" [class.disabled]="page()>=tp-1"><a class="page-link" (click)="gp(page()+1)"><i class="bi bi-chevron-right"></i></a></li>
+      <li class="page-item" [class.disabled]="page()>=tp-1"><a class="page-link" (click)="gp(tp-1)"><i class="bi bi-chevron-double-right"></i></a></li>
+    </ul></nav></div> }
+    </div>
+  }
+</div>

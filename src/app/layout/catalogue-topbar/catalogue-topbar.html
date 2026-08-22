@@ -1,0 +1,51 @@
+<header class="home-topbar">
+  <a class="brand" routerLink="/home">
+    <i class="bi bi-mortarboard-fill"></i>
+    <span>Veneranda<span class="brand-rest"> University</span></span>
+  </a>
+  <div class="topbar-right">
+    @if (showHome()) {
+      <a routerLink="/home" class="home-link">Home</a>
+    }
+    <div class="profile-wrap">
+      <button
+        type="button"
+        class="user-avatar-btn"
+        [class.open]="menuOpen()"
+        (click)="toggleMenu($event)"
+        [attr.aria-label]="displayName"
+        [attr.aria-expanded]="menuOpen()"
+      >
+        <span class="user-avatar">{{ initials }}</span>
+      </button>
+      @if (menuOpen()) {
+        <div class="profile-menu-backdrop" (click)="closeMenu()"></div>
+        <div class="profile-dropdown" role="menu">
+          @if (user; as u) {
+            <div class="profile-dropdown-head">
+              <div class="profile-dropdown-avatar">{{ initials }}</div>
+              <div class="profile-dropdown-meta">
+                <strong>{{ displayName }}</strong>
+                <span>{{ u.email }}</span>
+              </div>
+            </div>
+          }
+          <div class="profile-dropdown-divider"></div>
+          <a routerLink="/profile" class="profile-dropdown-item" (click)="closeMenu()">
+            <span class="item-icon"><i class="bi bi-person"></i></span>
+            <span>My Profile</span>
+          </a>
+          <a routerLink="/profile" fragment="password" class="profile-dropdown-item" (click)="closeMenu()">
+            <span class="item-icon"><i class="bi bi-shield-lock"></i></span>
+            <span>Change Password</span>
+          </a>
+          <div class="profile-dropdown-divider"></div>
+          <button type="button" class="profile-dropdown-item danger" (click)="logout()">
+            <span class="item-icon"><i class="bi bi-box-arrow-right"></i></span>
+            <span>Logout</span>
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+</header>

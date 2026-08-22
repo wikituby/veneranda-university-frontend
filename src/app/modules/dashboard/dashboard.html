@@ -1,0 +1,67 @@
+<div class="page-container">
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h3 class="fw-800 mb-1">Dashboard</h3>
+      <p class="text-muted mb-0 small">Welcome back! Here's your network overview.</p>
+    </div>
+    <span class="badge bg-light text-muted"><i class="bi bi-clock me-1"></i> {{ today | date:'mediumDate' }}</span>
+  </div>
+
+  @if (loading()) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary"></div>
+      <p class="text-muted mt-2">Loading dashboard...</p>
+    </div>
+  } @else {
+    <div class="row g-4">
+      @for (card of cards(); track card.l) {
+        <div class="col-12 col-sm-6 col-xl-3">
+          <div class="kpi-card card border-0 h-100">
+            <div class="card-body d-flex align-items-center gap-3 p-3">
+              <div class="kpi-icon-bg" [style.background]="card.g">
+                <i class="bi {{ card.i }} text-white"></i>
+              </div>
+              <div class="overflow-hidden">
+                <div class="kpi-value fw-700 fs-4 lh-1 mb-1">{{ card.v }}</div>
+                <small class="text-muted text-nowrap">{{ card.l }}</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4 mt-2">
+      <div class="col-12 col-lg-8">
+        <div class="card border-0 h-100">
+          <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="fw-600 mb-0"><i class="bi bi-graph-up text-primary me-2"></i>Revenue Overview</h6>
+            <span class="badge bg-light text-muted">This Year</span>
+          </div>
+          <div class="card-body d-flex align-items-center justify-content-center" style="min-height:260px">
+            <div class="text-center text-muted">
+              <i class="bi bi-bar-chart-line display-4 opacity-25"></i>
+              <p class="mt-2 mb-0">Chart.js integration ready</p>
+              <small>Connect to revenue API for real data</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-lg-4">
+        <div class="card border-0 h-100">
+          <div class="card-header py-3">
+            <h6 class="fw-600 mb-0"><i class="bi bi-people text-primary me-2"></i>Customer Growth</h6>
+          </div>
+          <div class="card-body d-flex align-items-center justify-content-center" style="min-height:260px">
+            <div class="text-center text-muted">
+              <i class="bi bi-graph-up-arrow display-4 opacity-25"></i>
+              <p class="mt-2 mb-0">Chart.js integration ready</p>
+              <small>Connect to customer API for real data</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

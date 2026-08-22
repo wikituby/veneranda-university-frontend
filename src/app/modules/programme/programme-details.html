@@ -1,0 +1,124 @@
+<div class="details-shell">
+  <app-catalogue-topbar />
+
+  <div class="page">
+    @if (loading()) {
+      <div class="state"><div class="spinner-border text-primary"></div><span>Loading programme…</span></div>
+    } @else if (!programme()) {
+      <p class="empty">Programme not found.</p>
+    } @else {
+      <a routerLink="/home" class="back">Home</a>
+
+      <div class="hero">
+        <div class="hero-cover" [style.background]="theme().gradient">
+          @if (!coverFailed()) {
+            <img [src]="theme().url" [alt]="programme()!.title" (error)="coverFailed.set(true)" />
+          }
+        </div>
+        <div class="hero-copy">
+          <p class="eyebrow">{{ story()?.category }} programme</p>
+          @if (programme()!.programmeCode) {
+            <p class="code-line">{{ programme()!.programmeCode }}</p>
+          }
+          <h1>{{ programmeHeading(programme()!) }}</h1>
+          <p class="affil">Affiliated to {{ programme()!.affiliatedInstitution || defaultInstitution }}</p>
+        </div>
+      </div>
+
+      @if (error()) {
+        <div class="inline-alert">{{ error() }}</div>
+      }
+
+      <div class="layout">
+        <div class="main">
+          <section>
+            <h2>About this programme</h2>
+            <p>{{ story()?.about }}</p>
+          </section>
+
+          <section>
+            <h2>How to enroll</h2>
+            <ol class="enroll-steps">
+              @for (step of story()?.howToEnroll || []; track step) {
+                <li>{{ step }}</li>
+              }
+            </ol>
+          </section>
+
+          <section>
+            <h2>Affiliated university</h2>
+            <p>{{ story()?.affiliatedNote }}</p>
+          </section>
+
+          <section>
+            <h2>Lecturers teaching this programme</h2>
+            <div class="faculty-grid">
+              @for (person of story()?.faculty || []; track person.name + person.role) {
+                <article class="faculty-card">
+                    <div class="faculty-avatar">{{ facultyInitials(person.name) }}</div>
+                  <div>
+                    <strong>{{ person.name }}</strong>
+                    <span>{{ person.role }}</span>
+                    <em>{{ person.focus }}</em>
+                  </div>
+                </article>
+              }
+            </div>
+          </section>
+
+          <section>
+            <h2>What you get</h2>
+            <ul class="ticks">
+              @for (item of story()?.youGet || []; track item) {
+                <li>{{ item }}</li>
+              }
+            </ul>
+          </section>
+
+          <section>
+            <h2>What you become</h2>
+            <ul class="ticks">
+              @for (item of story()?.youBecome || []; track item) {
+                <li>{{ item }}</li>
+              }
+            </ul>
+            <p class="career">{{ story()?.career }}</p>
+          </section>
+
+          <section>
+            <h2>Programme outline</h2>
+            @if (!years().length) {
+              <p>The outline is being prepared. Join to follow updates from the coordinator.</p>
+            } @else {
+              <p>{{ years().length }} year{{ years().length === 1 ? '' : 's' }}, {{ units().length }} course unit{{ units().length === 1 ? '' : 's' }} published so far.</p>
+              <ul class="outline">
+                @for (year of years(); track year.id) {
+                  <li>{{ year.title }}</li>
+                }
+              </ul>
+            }
+          </section>
+        </div>
+
+        <aside class="cta">
+          <p class="cta-kicker">{{ enrolled() ? 'Your programme' : 'Get started' }}</p>
+          <p class="cta-price">{{ priceLabel() }}</p>
+          <p class="cta-note">
+            {{ enrolled() ? 'You have joined this programme. Open it to subscribe and read units.' : 'Join for free, then subscribe to unlock content.' }}
+          </p>
+          @if (enrolled()) {
+            <button type="button" class="btn btn-outline-secondary" disabled>Joined</button>
+            <button type="button" class="btn btn-primary" (click)="openWorkspace()">Open</button>
+          } @else {
+            <button type="button" class="btn btn-primary" [disabled]="joining() || subscribing()" (click)="openWorkspace()">
+              {{ joining() ? 'Joining…' : 'Join' }}
+            </button>
+          }
+          <button type="button" class="btn btn-outline-primary" [disabled]="joining() || subscribing()" (click)="openSubscribe()">
+            {{ subscribing() ? 'Opening…' : 'Subscribe' }}
+          </button>
+        </aside>
+      </div>
+    }
+  </div>
+</div>

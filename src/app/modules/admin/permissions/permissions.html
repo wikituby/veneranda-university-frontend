@@ -1,0 +1,17 @@
+<div class="container-fluid py-4">
+  <h4 class="fw-bold mb-4">Permissions</h4>
+  <p class="text-muted">Online school permissions grouped by module. Managed via database migrations.</p>
+  @if (loading()) { <div class="text-center py-5"><div class="spinner-border text-primary"></div></div> } @else {
+    @for (entry of grouped(); track entry[0]) {
+      <div class="card border-0 shadow-sm mb-3"><div class="card-header bg-transparent py-3"><h6 class="fw-bold mb-0 text-capitalize"><i class="bi bi-folder me-2 text-primary"></i>{{ entry[0] }}</h6></div>
+      <div class="card-body"><div class="row g-3">
+        @for (p of entry[1]; track p.id) {
+          <div class="col-md-4 col-lg-3"><div class="d-flex align-items-center gap-2 p-2 bg-light rounded">
+            <i class="bi bi-check-circle text-success"></i>
+            <div><div class="small fw-medium">{{ p.name }}</div><code class="small text-muted">{{ p.code }}</code></div>
+          </div></div>
+        }
+      </div></div></div>
+    }
+  }
+</div>

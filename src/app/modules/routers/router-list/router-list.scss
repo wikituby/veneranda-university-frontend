@@ -1,0 +1,13 @@
+// Router List — minimal custom styles (Bootstrap handles layout)
+.table {
+  th { white-space: nowrap; }
+  td { vertical-align: middle; }
+}
+
+mat-row:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+::ng-deep .mat-mdc-paginator {
+  background: transparent !important;
+}

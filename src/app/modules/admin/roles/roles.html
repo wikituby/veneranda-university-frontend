@@ -1,0 +1,149 @@
+<div class="container-fluid py-4">
+  @if (showToast()) {
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index:9999">
+      <div class="toast show align-items-center text-bg-{{ toastType() }} border-0">
+        <div class="d-flex">
+          <div class="toast-body">{{ toastMessage() }}</div>
+          <button class="btn-close btn-close-white me-2 m-auto" (click)="showToast.set(false)"></button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="fw-bold mb-1">Roles</h4>
+      <p class="text-muted small mb-0">Online school roles — Super Admin, System Admin, School Admin, Instructor, Teacher, Coordinator, and Student</p>
+    </div>
+    <button class="btn btn-primary" (click)="openCreate()"><i class="bi bi-plus-circle me-1"></i> Add Role</button>
+  </div>
+
+  <div class="row g-2 mb-4">
+    <div class="col-md-6 col-lg-4">
+      <div class="input-group">
+        <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <input class="form-control" [(ngModel)]="searchText" placeholder="Search roles..." (keyup.enter)="loadRoles()">
+      </div>
+    </div>
+    <div class="col-auto"><button class="btn btn-primary" (click)="loadRoles()">Search</button></div>
+  </div>
+
+  @if (loading()) {
+    <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+  } @else {
+    <div class="card border-0 shadow-sm">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="fw-semibold sortable" (click)="sort('name')">Name <i class="bi {{ sortIcon('name') }} small"></i></th>
+              <th class="fw-semibold sortable" (click)="sort('code')">Code <i class="bi {{ sortIcon('code') }} small"></i></th>
+              <th class="fw-semibold">Permissions</th>
+              <th class="fw-semibold">Active</th>
+              <th class="fw-semibold text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of roles(); track r.id) {
+              <tr>
+                <td>
+                  <div class="fw-medium">{{ r.name }}</div>
+                  <small class="text-muted">{{ r.description || '' }}</small>
+                </td>
+                <td><code>{{ r.code }}</code></td>
+                <td><span class="badge bg-info bg-opacity-10 text-info">{{ r.permissions.length }} permissions</span></td>
+                <td>
+                  @if (r.isActive) {
+                    <span class="badge bg-success bg-opacity-10 text-success">Active</span>
+                  } @else {
+                    <span class="badge bg-secondary bg-opacity-10 text-secondary">Inactive</span>
+                  }
+                </td>
+                <td class="text-end">
+                  <button class="btn btn-sm btn-outline-secondary me-1" (click)="openEdit(r)"><i class="bi bi-pencil"></i></button>
+                  <button class="btn btn-sm btn-outline-danger" (click)="deleteRole(r.id, r.name)"><i class="bi bi-trash"></i></button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="5" class="text-center py-4 text-muted">No roles found</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (tp > 1) {
+        <div class="d-flex justify-content-between p-3 border-top">
+          <small class="text-muted">{{ totalElements() }} total</small>
+          <nav>
+            <ul class="pagination pagination-sm mb-0">
+              <li class="page-item" [class.disabled]="page()===0"><a class="page-link" (click)="gp(0)"><i class="bi bi-chevron-double-left"></i></a></li>
+              <li class="page-item" [class.disabled]="page()===0"><a class="page-link" (click)="gp(page()-1)"><i class="bi bi-chevron-left"></i></a></li>
+              @for (p of pa; track p) {
+                <li class="page-item" [class.active]="p===page()"><a class="page-link" (click)="gp(p)">{{ p+1 }}</a></li>
+              }
+              <li class="page-item" [class.disabled]="page()>=tp-1"><a class="page-link" (click)="gp(page()+1)"><i class="bi bi-chevron-right"></i></a></li>
+              <li class="page-item" [class.disabled]="page()>=tp-1"><a class="page-link" (click)="gp(tp-1)"><i class="bi bi-chevron-double-right"></i></a></li>
+            </ul>
+          </nav>
+        </div>
+      }
+    </div>
+  }
+
+  @if (showForm()) {
+    <div class="modal-backdrop fade show" style="z-index:1050" (click)="showForm.set(false)"></div>
+    <div class="modal fade show d-block" tabindex="-1" style="z-index:1055" role="dialog" aria-modal="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg" style="border-radius:16px">
+          <div class="modal-header border-0 px-4 pt-4">
+            <h5 class="modal-title fw-bold">{{ editMode() ? 'Edit Role' : 'New Role' }}</h5>
+            <button type="button" class="btn-close" (click)="showForm.set(false)" aria-label="Close"></button>
+          </div>
+          <div class="modal-body px-4">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Name <span class="text-danger">*</span></label>
+                <input class="form-control" [(ngModel)]="formName">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Code <span class="text-danger">*</span></label>
+                <input class="form-control" [(ngModel)]="formCode" [disabled]="editMode()">
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-semibold">Description</label>
+                <textarea class="form-control" [(ngModel)]="formDesc" rows="2"></textarea>
+              </div>
+              <div class="col-12">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" [(ngModel)]="formActive" id="roleActive">
+                  <label class="form-check-label" for="roleActive">Active</label>
+                </div>
+              </div>
+            </div>
+            <h6 class="fw-bold mt-4 mb-3">Permissions</h6>
+            @for (entry of groupedPerms(); track entry[0]) {
+              <div class="mb-3">
+                <div class="badge bg-light text-dark mb-2">{{ entry[0] }}</div>
+                <div class="row g-2">
+                  @for (perm of entry[1]; track perm.id) {
+                    <div class="col-md-4 col-lg-3">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" [checked]="formPerms.has(perm.id)" (change)="togglePerm(perm.id)" [id]="'perm' + perm.id">
+                        <label class="form-check-label small" [for]="'perm' + perm.id">{{ perm.name }}</label>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+          <div class="modal-footer border-0 px-4 pb-4">
+            <button type="button" class="btn btn-outline-secondary" (click)="showForm.set(false)">Cancel</button>
+            <button type="button" class="btn btn-primary" (click)="submit()">
+              <i class="bi bi-check-circle me-1"></i>{{ editMode() ? 'Update' : 'Create' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

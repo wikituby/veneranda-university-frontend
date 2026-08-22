@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Veneranda University</title>
+    <script>
+      // GitHub Pages SPA fallback: serve index.html for client routes.
+      (function () {
+        var path = window.location.pathname;
+        var base = path.replace(/\/[^/]*$/, '/');
+        if (base.endsWith('/')) {
+          sessionStorage.setItem('gh-pages-redirect', path + window.location.search + window.location.hash);
+          window.location.replace(base);
+        }
+      })();
+    </script>
+  </head>
+  <body></body>
+</html>

@@ -1,0 +1,261 @@
+<div class="home-shell">
+  <app-catalogue-topbar [showHome]="false" />
+
+  <div class="student-home">
+  <header class="student-home-hero">
+    <p class="eyebrow">Your catalogue</p>
+    <h1>Welcome, {{ userName }}</h1>
+    <p class="lede">Continue in programmes you have joined, or explore others below to join.</p>
+  </header>
+
+  @if (error()) {
+    <div class="state error">
+      <p>{{ error() }}</p>
+      <button type="button" class="btn btn-outline-secondary btn-sm" (click)="reload()">Retry</button>
+    </div>
+  }
+
+  @if (loading() && !programmes().length && !enrollments().length && !error()) {
+    <div class="state">
+      <div class="spinner-border text-primary" role="status"></div>
+      <span>Loading…</span>
+    </div>
+  }
+
+    <section class="vu-accordion">
+      <button type="button" class="acc-head" [attr.aria-expanded]="yoursOpen()" (click)="toggleYours()">
+        <span class="acc-label">
+          Your programmes
+          <span class="count">{{ enrollments().length }}</span>
+        </span>
+        <i class="bi" [class.bi-chevron-down]="yoursOpen()" [class.bi-chevron-right]="!yoursOpen()" aria-hidden="true"></i>
+      </button>
+      @if (yoursOpen()) {
+        <div class="acc-body">
+          @if (enrollments().length) {
+            <div class="continue-row">
+              @for (item of enrollments(); track item.categoryId) {
+                @let theme = coverTheme(item.categoryTitle || '', item.categoryId);
+                <article class="continue-card" (click)="openDetailsById(item.categoryId)">
+                  <div class="continue-cover" [style.background]="theme.gradient">
+                    @if (showCover(item.categoryId)) {
+                      <img [src]="theme.url" [alt]="item.categoryTitle" (error)="onCoverError(item.categoryId)" />
+                    }
+                    <div class="cover-actions">
+                      <button type="button" class="continue-open" (click)="openProgramme(item.categoryId, $event)">
+                        Open
+                      </button>
+                      <button type="button" class="continue-unjoin" (click)="startUnjoin(item, $event)">
+                        Unjoin
+                      </button>
+                    </div>
+                  </div>
+                  <div class="continue-copy">
+                      <p class="partner">{{ institutionOf(item.categoryId) }}</p>
+                    <h3>{{ programmeHeading(programmeById(item.categoryId), item.categoryTitle) }}</h3>
+                    @if (programmeById(item.categoryId); as owned) {
+                      @if (canManageProgramme(owned)) {
+                        <div class="tile-footer" (click)="$event.stopPropagation()">
+                          <button type="button" class="tile-admin" (click)="startEdit(owned, $event)">Edit</button>
+                          <button type="button" class="tile-admin danger" (click)="startDelete(owned, $event)">Delete</button>
+                        </div>
+                      }
+                    }
+                  </div>
+                </article>
+              }
+            </div>
+          } @else {
+            <p class="empty">You have not joined a programme yet. Explore the catalogue below.</p>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="vu-accordion">
+      <div class="acc-head-split">
+        <button type="button" class="acc-head" [attr.aria-expanded]="exploreOpen()" (click)="toggleExplore()">
+          <span class="acc-label">
+            Explore programmes
+            <span class="count">{{ availableProgrammes().length }}</span>
+          </span>
+          <i class="bi" [class.bi-chevron-down]="exploreOpen()" [class.bi-chevron-right]="!exploreOpen()" aria-hidden="true"></i>
+        </button>
+        <a routerLink="/programmes/new" class="create-link">Register a programme</a>
+      </div>
+      @if (exploreOpen()) {
+        <div class="acc-body">
+          @if (availableProgrammes().length) {
+            <div class="explore-toolbar">
+              <label class="search-field">
+                <i class="bi bi-search" aria-hidden="true"></i>
+                <input
+                  type="search"
+                  [value]="searchQuery()"
+                  (input)="onSearch($event)"
+                  placeholder="Search programmes"
+                  aria-label="Search programmes"
+                />
+              </label>
+            </div>
+            @if (programmeFilters().length > 1) {
+              <div class="filter-row" role="group" aria-label="Programme category">
+                @for (cat of programmeFilters(); track cat) {
+                  <button
+                    type="button"
+                    class="filter-chip"
+                    [class.active]="selectedCategory() === cat"
+                    (click)="setCategory(cat)"
+                  >
+                    {{ cat }}
+                  </button>
+                }
+              </div>
+            }
+            @if (exploreProgrammes().length) {
+              <div class="catalog-grid">
+                @for (p of exploreProgrammes(); track p.id) {
+                  @let theme = coverTheme(p.title, p.id);
+                  <article class="course-tile" (click)="openDetails(p)">
+                    <div class="tile-cover" [style.background]="theme.gradient">
+                      @if (showCover(p.id)) {
+                        <img [src]="theme.url" [alt]="p.title" (error)="onCoverError(p.id)" />
+                      }
+                      <button type="button" class="continue-open" [disabled]="joiningId() === p.id" (click)="joinProgramme(p, $event)">
+                        @if (joiningId() === p.id) {
+                          <span class="spinner-border spinner-border-sm"></span>
+                        } @else {
+                          Join
+                        }
+                      </button>
+                    </div>
+                    <div class="tile-body">
+                      <p class="partner">{{ p.affiliatedInstitution || defaultInstitution }}</p>
+                      <h3>{{ programmeHeading(p) }}</h3>
+                      <p class="desc">{{ p.description || 'Published programme' }}</p>
+                      @if (canManageProgramme(p)) {
+                        <div class="tile-footer" (click)="$event.stopPropagation()">
+                          <button type="button" class="tile-admin" (click)="startEdit(p, $event)">Edit</button>
+                          <button type="button" class="tile-admin danger" (click)="startDelete(p, $event)">Delete</button>
+                        </div>
+                      }
+                    </div>
+                  </article>
+                }
+              </div>
+            } @else {
+              <p class="empty">No programmes match that search or filter.</p>
+            }
+          } @else {
+            <p class="empty">No other programmes to explore right now.</p>
+          }
+        </div>
+      }
+    </section>
+  </div>
+</div>
+
+@if (unjoinStep(); as step) {
+  <div class="modal-backdrop" (click)="cancelUnjoin()">
+    <div class="modal-card confirm-card" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="unjoinTitle">
+      @if (step === 'warn') {
+        <h2 id="unjoinTitle">Unjoin this programme?</h2>
+        <p class="confirm-lead">
+          If you unjoin, every subscription in this programme will be terminated and no refunds will be issued.
+          You will lose access to all years, semesters, and course units you had subscribed to.
+          Proceed only if you are sure.
+        </p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline-secondary" (click)="cancelUnjoin()">Cancel</button>
+          <button type="button" class="btn btn-outline-danger" (click)="continueUnjoin()">I understand, continue</button>
+        </div>
+      } @else {
+        <h2 id="unjoinTitle">Confirm with your password</h2>
+        <p class="confirm-lead">Enter your account password to unjoin {{ unjoinTarget()?.title }}. This cannot be undone, and subscriptions will not be refunded.</p>
+        <label class="modal-field">
+          <span>Password</span>
+          <div class="password-row">
+            <input
+              class="form-control"
+              [type]="hideUnjoinPassword() ? 'password' : 'text'"
+              [value]="unjoinPassword()"
+              (input)="onUnjoinPassword($event)"
+              autocomplete="current-password"
+              placeholder="Your password"
+            />
+            <button type="button" class="btn btn-outline-secondary" (click)="hideUnjoinPassword.set(!hideUnjoinPassword())">
+              {{ hideUnjoinPassword() ? 'Show' : 'Hide' }}
+            </button>
+          </div>
+        </label>
+        @if (unjoinError()) {
+          <p class="confirm-note unjoin-error">{{ unjoinError() }}</p>
+        }
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline-secondary" [disabled]="unjoining()" (click)="cancelUnjoin()">Cancel</button>
+          <button type="button" class="btn btn-outline-danger" [disabled]="unjoining() || !unjoinPassword().trim()" (click)="confirmUnjoin()">
+            {{ unjoining() ? 'Unjoining…' : 'Unjoin programme' }}
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+@if (editing(); as draft) {
+  <div class="modal-backdrop" (click)="cancelEdit()">
+    <div class="modal-card" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <h2>Edit this programme</h2>
+      <label class="modal-field">
+        <span>Title</span>
+        <input class="form-control" [value]="formTitle()" (input)="onFormTitle($event)" placeholder="Programme title" />
+      </label>
+      <div class="form-pair">
+        <label class="modal-field">
+          <span>Programme code</span>
+          <input class="form-control" [value]="formProgrammeCode()" (input)="onFormProgrammeCode($event)" placeholder="e.g. DCMCH-001" maxlength="50" />
+        </label>
+        <label class="modal-field">
+          <span>Abbreviation</span>
+          <input class="form-control" [value]="formAbbreviation()" (input)="onFormAbbreviation($event)" placeholder="e.g. DCMCH" maxlength="50" />
+        </label>
+      </div>
+      <label class="modal-field">
+        <span>Description</span>
+        <textarea class="form-control" rows="4" [value]="formDescription()" (input)="onFormDescription($event)" placeholder="What this programme covers"></textarea>
+      </label>
+      <label class="modal-field">
+        <span>Institution affiliated to</span>
+        <select class="form-select" [value]="formInstitution()" (change)="onFormInstitution($event)">
+          @for (inst of institutionOptions(); track inst) {
+            <option [value]="inst">{{ inst }}</option>
+          }
+        </select>
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline-secondary" [disabled]="formBusy()" (click)="cancelEdit()">Cancel</button>
+        <button type="button" class="btn btn-primary" [disabled]="formBusy()" (click)="confirmEdit()">
+          {{ formBusy() ? 'Saving…' : 'Save' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (deleting(); as draft) {
+  <div class="modal-backdrop" (click)="cancelDelete()">
+    <div class="modal-card confirm-card" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <h2>Delete {{ draft.title }}?</h2>
+      <p class="confirm-lead">
+        This removes the programme and its years, semesters, and course units from the catalogue.
+        Students who had joined it will lose that listing. This cannot be undone.
+      </p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline-secondary" [disabled]="deleteBusy()" (click)="cancelDelete()">Cancel</button>
+        <button type="button" class="btn btn-outline-danger" [disabled]="deleteBusy()" (click)="confirmDelete()">
+          {{ deleteBusy() ? 'Deleting…' : 'Delete programme' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

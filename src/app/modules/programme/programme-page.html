@@ -1,0 +1,341 @@
+<div class="prog-shell">
+  <app-catalogue-topbar />
+
+  <div class="page">
+  @if (loading()) {
+    <div class="state"><div class="spinner-border text-primary"></div><span>Loading programme…</span></div>
+  } @else if (!programme()) {
+    <p class="empty">Programme not found.</p>
+  } @else {
+    <header class="head">
+      <a routerLink="/home" class="back">Home</a>
+      <div class="level-row">
+        <div class="title-line">
+          @if (isCovered(programme()!.id)) {
+            <span class="sub-badge">
+              Subscribed
+              <span class="sub-badge-amt">{{ paidLabel(programme()!.id, programme()!.priceAmount ?? defaultPrice('PROGRAMME'), programme()!.currency) }}</span>
+            </span>
+          }
+          <h1>{{ programmeHeading(programme()!) }}</h1>
+          @if (!isCovered(programme()!.id)) {
+            <span class="price">{{ paidLabel(programme()!.id, programme()!.priceAmount ?? defaultPrice('PROGRAMME'), programme()!.currency) }}</span>
+          }
+        </div>
+        <div class="row-actions head-actions">
+          @if (!isStaff()) {
+            @if (enrolled()) {
+              <button type="button" class="btn btn-sm btn-outline-secondary" disabled>Joined</button>
+              <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="unjoining()" (click)="unjoin()">
+                {{ unjoining() ? 'Unjoining…' : 'Unjoin' }}
+              </button>
+            } @else {
+              <button type="button" class="btn btn-sm btn-primary" [disabled]="joining()" (click)="join()">
+                {{ joining() ? 'Joining…' : 'Join this programme' }}
+              </button>
+            }
+          }
+          @if (ownsSubscription(programme()!.id)) {
+            <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="unsubscribingId() === programme()!.id" (click)="unsubscribe(programme()!.id)">
+              {{ unsubscribingId() === programme()!.id ? 'Unsubscribing…' : 'Unsubscribe' }}
+            </button>
+          } @else if (!isCovered(programme()!.id)) {
+            <button type="button" class="btn btn-sm btn-primary" (click)="subscribe(programme()!.id)">
+              Subscribe
+            </button>
+          }
+          @if (canManage()) {
+            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="startEdit(programme()!)">Edit</button>
+            <button type="button" class="btn btn-sm btn-outline-primary" (click)="startAddYear()">Add section</button>
+          }
+        </div>
+      </div>
+      @if (programme()!.programmeCode) {
+        <p class="code-line">{{ programme()!.programmeCode }}</p>
+      }
+      <p class="affil">Affiliated to {{ programme()!.affiliatedInstitution || defaultInstitution }}</p>
+      <p class="lede">{{ programme()!.description }}</p>
+    </header>
+
+    @if (error()) {
+      <div class="inline-alert">{{ error() }}</div>
+    }
+
+    @if (!years().length) {
+      <p class="empty">No years have been added yet. Coordinators add years, then semesters, then course units.</p>
+    }
+
+    @for (year of years(); track year.id) {
+      <section class="accordion">
+        <div class="level-row acc-head-row" (click)="toggleYear(year.id)">
+          <div class="acc-head">
+            <div class="section-label">
+              @if (isYearCovered(year.id)) {
+                <span class="sub-badge">
+                  Subscribed
+                  <span class="sub-badge-amt">{{ yearPaidLabel(year) }}</span>
+                </span>
+              }
+              <span class="section-title">{{ year.title }}</span>
+              @if (!isYearCovered(year.id)) {
+                <span class="price">{{ yearPaidLabel(year) }}</span>
+              }
+            </div>
+            <i class="bi" [class.bi-chevron-down]="isYearOpen(year.id)" [class.bi-chevron-right]="!isYearOpen(year.id)"></i>
+          </div>
+          <div class="row-actions" (click)="$event.stopPropagation()">
+            @if (ownsSubscription(year.id, [programme()!.id])) {
+              <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="unsubscribingId() === year.id" (click)="unsubscribe(year.id, $event)">
+                {{ unsubscribingId() === year.id ? 'Unsubscribing…' : 'Unsubscribe' }}
+              </button>
+            } @else if (!isYearCovered(year.id)) {
+              <button type="button" class="btn btn-sm btn-primary" (click)="subscribe(year.id, $event)">
+                Subscribe
+              </button>
+            }
+            @if (canManage()) {
+              <button type="button" class="btn btn-sm btn-outline-secondary" (click)="startEdit(year, $event, year.id)">Edit</button>
+              <button type="button" class="btn btn-sm btn-outline-primary add-btn" (click)="startAddSemester(year, $event)">
+                Add section
+              </button>
+            }
+          </div>
+        </div>
+        @if (isYearOpen(year.id)) {
+          <div class="acc-body">
+            @for (sem of year.children; track sem.id) {
+              <div class="semester" (click)="toggleSemester(sem.id)">
+                <div class="level-row sem-row">
+                  <div class="sem-toggle">
+                    <i class="bi" [class.bi-chevron-down]="isSemesterOpen(sem.id)" [class.bi-chevron-right]="!isSemesterOpen(sem.id)"></i>
+                    @if (isSemesterCovered(sem.id, year.id)) {
+                      <span class="sub-badge">
+                        Subscribed
+                        <span class="sub-badge-amt">{{ semesterPaidLabel(sem, year.id) }}</span>
+                      </span>
+                    }
+                    <span class="sem-title">{{ sem.title }}</span>
+                    @if (!isSemesterCovered(sem.id, year.id)) {
+                      <span class="price">{{ semesterPaidLabel(sem, year.id) }}</span>
+                    }
+                  </div>
+                  <div class="row-actions" (click)="$event.stopPropagation()">
+                    @if (ownsSubscription(sem.id, [year.id, programme()!.id])) {
+                      <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="unsubscribingId() === sem.id" (click)="unsubscribe(sem.id, $event)">
+                        {{ unsubscribingId() === sem.id ? 'Unsubscribing…' : 'Unsubscribe' }}
+                      </button>
+                    } @else if (!isSemesterCovered(sem.id, year.id)) {
+                      <button type="button" class="btn btn-sm btn-primary" (click)="subscribe(sem.id, $event)">
+                        Subscribe
+                      </button>
+                    }
+                    @if (canManage()) {
+                      <button type="button" class="btn btn-sm btn-outline-secondary" (click)="startEdit(sem, $event, year.id, sem.id)">Edit</button>
+                      <button type="button" class="btn btn-sm btn-outline-primary" (click)="startAddUnit(sem, year.id, $event)">
+                        Add section
+                      </button>
+                    }
+                  </div>
+                </div>
+                @if (isSemesterOpen(sem.id)) {
+                  <div class="unit-grid" (click)="$event.stopPropagation()">
+                    @for (unit of sem.children; track unit.id) {
+                      <article class="unit-card" [class.clickable]="unitAccessible(unit, sem.id)" (click)="onUnitCardClick(unit, sem.id)">
+                        <h3>{{ programmeHeading(unit) }}</h3>
+                        @if (unit.programmeCode) {
+                          <p class="unit-code">{{ unit.programmeCode }}</p>
+                        }
+                        <p class="unit-desc">{{ unit.description || 'Course unit' }}</p>
+                        <div class="unit-foot">
+                          @if (isCovered(unit.id, [sem.id, year.id])) {
+                            <span class="btn btn-sm unit-subscribed">{{ unitPaidLabel(unit, sem.id, year.id) }}</span>
+                          } @else {
+                            <span>{{ unitPaidLabel(unit, sem.id, year.id) }}</span>
+                          }
+                          <div class="unit-actions">
+                            @if (ownsSubscription(unit.id, [sem.id, year.id, programme()!.id])) {
+                              <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="unsubscribingId() === unit.id" (click)="unsubscribe(unit.id, $event)">
+                                {{ unsubscribingId() === unit.id ? 'Unsubscribing…' : 'Unsubscribe' }}
+                              </button>
+                            }
+                            @if (unitAccessible(unit, sem.id)) {
+                              <button type="button" class="btn btn-sm btn-outline-primary" (click)="openUnit(unit, sem.id); $event.stopPropagation()">
+                                Open
+                              </button>
+                            } @else if (!isCovered(unit.id, [sem.id, year.id])) {
+                              <button type="button" class="btn btn-sm btn-primary" (click)="subscribe(unit.id, $event)">
+                                Subscribe
+                              </button>
+                            }
+                            @if (canManage()) {
+                              <button type="button" class="btn btn-sm btn-outline-secondary" (click)="startEdit(unit, $event, year.id, sem.id)">
+                                Edit
+                              </button>
+                            }
+                          </div>
+                        </div>
+                      </article>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </section>
+    }
+  }
+  </div>
+</div>
+
+@if (formOpen()) {
+  <div class="modal-backdrop" (click)="closeForm()">
+    <div class="modal-card" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <h2>{{ adding() ? 'Add a' : 'Edit this' }} {{ formKindLabel() }}</h2>
+      @if (formCrumbs().length) {
+        <nav class="form-crumbs" aria-label="Section location">
+          @for (crumb of formCrumbs(); track $index; let last = $last) {
+            <span [class.current]="last">{{ crumb }}</span>
+            @if (!last) {
+              <i class="bi bi-chevron-right" aria-hidden="true"></i>
+            }
+          }
+        </nav>
+      }
+      <label class="modal-field">
+        <span>Title</span>
+        <input class="form-control" [value]="formTitle()" (input)="onFormTitle($event)" [placeholder]="'Enter the ' + formKindLabel() + ' title'" />
+      </label>
+      @if (showCodeFields()) {
+        <div class="form-pair">
+          <label class="modal-field">
+            <span>{{ codeFieldLabel() }}</span>
+            <input class="form-control" [value]="formProgrammeCode()" (input)="onFormProgrammeCode($event)" [placeholder]="codePlaceholder()" maxlength="50" />
+          </label>
+          <label class="modal-field">
+            <span>Abbreviation</span>
+            <input class="form-control" [value]="formAbbreviation()" (input)="onFormAbbreviation($event)" [placeholder]="abbreviationPlaceholder()" maxlength="50" />
+          </label>
+        </div>
+      }
+      <label class="modal-field">
+        <span>Description</span>
+        <textarea class="form-control" rows="4" [value]="formDescription()" (input)="onFormDescription($event)" placeholder="What this section covers"></textarea>
+      </label>
+      @if (editing()?.kind === 'PROGRAMME') {
+        <label class="modal-field">
+          <span>Institution affiliated to</span>
+          <select class="form-select" [value]="formInstitution()" (change)="onFormInstitution($event)">
+            @for (inst of institutionOptions(); track inst) {
+              <option [value]="inst">{{ inst }}</option>
+            }
+          </select>
+        </label>
+      }
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline-secondary" (click)="closeForm()">Cancel</button>
+        <button type="button" class="btn btn-primary" [disabled]="addingBusy()" (click)="confirmForm()">
+          {{ addingBusy() ? 'Saving…' : 'Save' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (pendingUnsubscribe(); as pending) {
+  <div class="modal-backdrop" (click)="cancelUnsubscribe()">
+    <div class="modal-card confirm-card" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="unsubTitle">
+      <h2 id="unsubTitle">Unsubscribe from {{ pending.title }}?</h2>
+      <p class="confirm-lead">
+        Are you sure you want to unsubscribe from this {{ unsubscribeKindLabel() }}?
+        Once you unsubscribe, the days already used will be charged against your subscription money and the remaining balance will be refunded to you.
+        Nested sections covered by this {{ unsubscribeKindLabel() }} will also lose subscribed access.
+      </p>
+      @if (unsubscribePreview(); as preview) {
+        @if (preview.trial) {
+          <p class="confirm-note">This is a free trial, so there is nothing to refund.</p>
+        } @else {
+          <ul class="confirm-facts">
+            <li><span>Amount paid</span><strong>{{ preview.paidLabel }}</strong></li>
+            <li><span>Days used</span><strong>{{ preview.usedDays }}</strong></li>
+            <li><span>Charged for used days</span><strong>{{ preview.chargedLabel }}</strong></li>
+            <li><span>Balance refunded</span><strong>{{ preview.refundLabel }}</strong></li>
+          </ul>
+        }
+      }
+      <p class="confirm-note">Enter your account password to confirm and unsubscribe.</p>
+      <label class="modal-field">
+        <span>Password</span>
+        <div class="password-row">
+          <input
+            class="form-control"
+            [type]="hideUnsubscribePassword() ? 'password' : 'text'"
+            [value]="unsubscribePassword()"
+            (input)="onUnsubscribePassword($event)"
+            autocomplete="current-password"
+            placeholder="Your password"
+          />
+          <button type="button" class="btn btn-outline-secondary" (click)="hideUnsubscribePassword.set(!hideUnsubscribePassword())">
+            {{ hideUnsubscribePassword() ? 'Show' : 'Hide' }}
+          </button>
+        </div>
+      </label>
+      @if (unsubscribeError()) {
+        <p class="confirm-note unjoin-error">{{ unsubscribeError() }}</p>
+      }
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline-secondary" [disabled]="!!unsubscribingId()" (click)="cancelUnsubscribe()">Cancel</button>
+        <button type="button" class="btn btn-outline-danger" [disabled]="!!unsubscribingId() || !unsubscribePassword().trim()" (click)="confirmUnsubscribe()">
+          {{ unsubscribingId() ? 'Unsubscribing…' : 'Yes, unsubscribe' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (unjoinStep()) {
+  <div class="modal-backdrop" (click)="cancelUnjoin()">
+    <div class="modal-card confirm-card" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="unjoinTitle">
+      @if (unjoinStep() === 'warn') {
+        <h2 id="unjoinTitle">Unjoin this programme?</h2>
+        <p class="confirm-lead">
+          If you unjoin, every subscription in this programme will be terminated and no refunds will be issued.
+          You will lose access to all years, semesters, and course units you had subscribed to.
+          Proceed only if you are sure.
+        </p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline-secondary" (click)="cancelUnjoin()">Cancel</button>
+          <button type="button" class="btn btn-outline-danger" (click)="continueUnjoin()">I understand, continue</button>
+        </div>
+      } @else {
+        <h2 id="unjoinTitle">Confirm with your password</h2>
+        <p class="confirm-lead">Enter your account password to unjoin {{ programme()?.title }}. This cannot be undone, and subscriptions will not be refunded.</p>
+        <label class="modal-field">
+          <span>Password</span>
+          <div class="password-row">
+            <input
+              class="form-control"
+              [type]="hideUnjoinPassword() ? 'password' : 'text'"
+              [value]="unjoinPassword()"
+              (input)="onUnjoinPassword($event)"
+              autocomplete="current-password"
+              placeholder="Your password"
+            />
+            <button type="button" class="btn btn-outline-secondary" (click)="hideUnjoinPassword.set(!hideUnjoinPassword())">
+              {{ hideUnjoinPassword() ? 'Show' : 'Hide' }}
+            </button>
+          </div>
+        </label>
+        @if (unjoinError()) {
+          <p class="confirm-note unjoin-error">{{ unjoinError() }}</p>
+        }
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline-secondary" [disabled]="unjoining()" (click)="cancelUnjoin()">Cancel</button>
+          <button type="button" class="btn btn-outline-danger" [disabled]="unjoining() || !unjoinPassword().trim()" (click)="confirmUnjoin()">
+            {{ unjoining() ? 'Unjoining…' : 'Unjoin programme' }}
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+}

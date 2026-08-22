@@ -1,0 +1,698 @@
+<mat-sidenav-container
+  class="app-sidenav-container"
+  [class.mobile-overlay]="isMobile()"
+  [style.--app-sidebar-width.px]="effectiveSidebarWidth()"
+>
+  <!-- ===== Sidebar ===== -->
+  <mat-sidenav
+    #drawer
+    class="app-sidenav"
+    [class.collapsed]="sidebarCollapsed() && !isMobile()"
+    [mode]="sidenavMode()"
+    [opened]="sidenavOpened()"
+    [disableClose]="!isMobile()"
+    (openedChange)="onSidenavOpenedChange($event)"
+    fixedInViewport
+  >
+    <div class="sidebar-header-row">
+      <a
+        class="sidebar-header"
+        routerLink="/home"
+        [matTooltip]="sidebarCollapsed() ? (programmeName() || 'Programme') : ''"
+        matTooltipPosition="right"
+        aria-label="Programme home"
+      >
+        <mat-icon class="logo-icon">school</mat-icon>
+        @if (!sidebarCollapsed() || isMobile()) {
+          <span class="logo-text">Veneranda University</span>
+        }
+      </a>
+      @if (isMobile()) {
+        <button
+          type="button"
+          class="sidebar-close-btn"
+          (click)="closeMobileDrawer()"
+          aria-label="Close course outline"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+    </div>
+
+    <div class="sidebar-top-fixed">
+      @if (!sidebarCollapsed()) {
+        <div class="sidebar-search">
+          <mat-icon class="sidebar-search-icon">search</mat-icon>
+          <input
+            type="search"
+            class="sidebar-search-input"
+            placeholder="Search outline & admin..."
+            [ngModel]="sidebarSearch()"
+            (ngModelChange)="sidebarSearch.set($event)"
+            aria-label="Search sidebar"
+          />
+          @if (sidebarSearch()) {
+            <button type="button" class="sidebar-search-clear" (click)="clearSidebarSearch()" aria-label="Clear search">
+              <mat-icon>close</mat-icon>
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Scrollable Nav Area -->
+    <div class="sidebar-nav-scroll">
+      @if (sidebarCollapsed()) {
+        <a
+          class="rail-icon-btn home-rail"
+          [routerLink]="programmeNode()?.id ? ['/programmes', programmeNode()!.id] : '/home'"
+          [matTooltip]="sidebarProgrammeTooltip()"
+          matTooltipPosition="right"
+        >
+          <mat-icon>menu_book</mat-icon>
+        </a>
+      } @else {
+        <a
+          class="sidebar-programme"
+          [routerLink]="programmeNode()?.id ? ['/programmes', programmeNode()!.id] : '/home'"
+          aria-label="Programme home"
+        >
+          <mat-icon class="sidebar-programme-icon">menu_book</mat-icon>
+          <div class="sidebar-programme-text">
+            <span class="sidebar-programme-kicker">Programme</span>
+            <span class="sidebar-programme-name">{{ programmeName() || 'Programme' }}</span>
+            @if (sidebarContextBreadcrumb()) {
+              <span class="sidebar-programme-context">{{ sidebarContextBreadcrumb() }}</span>
+            }
+          </div>
+        </a>
+      }
+      <!-- Course Outline -->
+      <div class="sidebar-section-header outline-header" [class.collapsed-section]="sidebarCollapsed()">
+        @if (!sidebarCollapsed()) {
+          <span class="sidebar-section-label">Course Outline</span>
+        }
+        @if (canEditOutline() && !sidebarCollapsed()) {
+          <button
+            type="button"
+            class="section-add-btn"
+            matTooltip="Add outline item"
+            (click)="addRootOutlineItem()"
+            aria-label="Add outline item"
+          >
+            <mat-icon>add</mat-icon>
+          </button>
+        }
+      </div>
+
+      @if (loadingCourseTree()) {
+        <div class="tree-loading">
+          <div class="spinner-border spinner-border-sm text-light" role="status"></div>
+          @if (!sidebarCollapsed()) {
+            <span class="text-light-50">Loading outline...</span>
+          }
+        </div>
+      } @else if (displayCourseTree().length === 0) {
+        @if (!sidebarCollapsed()) {
+          <div class="tree-empty">
+            @if (sidebarSearch()) {
+              <p>No outline matches “{{ sidebarSearch() }}”.</p>
+            } @else if (canEditOutline()) {
+              <p>No outline items yet.</p>
+              <button type="button" class="btn btn-sm btn-outline-light" (click)="addRootOutlineItem()">
+                <i class="bi bi-plus-lg me-1"></i> Add first item
+              </button>
+            } @else {
+              <p>No outline items yet.</p>
+            }
+          </div>
+        }
+      } @else if (sidebarCollapsed()) {
+        <nav class="course-tree course-tree-rail">
+          @for (node of displayCourseTree(); track node.id) {
+            <button
+              type="button"
+              class="rail-icon-btn"
+              [class.active]="isActive(node) || isDescendantActive(node)"
+              [matTooltip]="node.title"
+              matTooltipPosition="right"
+              (click)="onRailNodeClick(node)"
+            >
+              <mat-icon>{{ node.icon || (isLeaf(node) ? 'description' : 'folder') }}</mat-icon>
+            </button>
+          }
+        </nav>
+      } @else {
+        <nav class="course-tree">
+          <ng-container *ngTemplateOutlet="renderNodes; context: { $implicit: displayCourseTree(), level: 0 }"></ng-container>
+        </nav>
+      }
+
+      <!-- Administration -->
+      <div class="sidebar-section-header mt-3" [class.collapsed-section]="sidebarCollapsed()">
+        @if (!sidebarCollapsed()) {
+          <span class="sidebar-section-label">Administration</span>
+        }
+      </div>
+
+      @if (sidebarCollapsed()) {
+        <nav class="admin-rail">
+          @for (item of adminNavItems; track item.route) {
+            @if (hasPermission(item.permission)) {
+              <a
+                class="rail-icon-btn"
+                [routerLink]="item.route"
+                routerLinkActive="active"
+                [matTooltip]="item.label"
+                matTooltipPosition="right"
+              >
+                <mat-icon>{{ item.icon }}</mat-icon>
+              </a>
+            }
+          }
+        </nav>
+      } @else {
+        <mat-nav-list>
+          @for (item of filteredAdminNavItems(); track item.route) {
+            @if (hasPermission(item.permission)) {
+              <a mat-list-item [routerLink]="item.route" routerLinkActive="active-nav-item">
+                <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+                <span matListItemTitle>{{ item.label }}</span>
+              </a>
+            }
+          }
+        </mat-nav-list>
+        @if (sidebarSearch() && filteredAdminNavItems().length === 0) {
+          <div class="tree-empty admin-empty">
+            <p>No admin items match.</p>
+          </div>
+        }
+      }
+    </div>
+
+    <!-- Fixed Profile Section -->
+    <div class="sidebar-profile" [class.collapsed-profile]="sidebarCollapsed()">
+      @if (currentUser | async; as user) {
+        @if (sidebarCollapsed()) {
+          <div class="profile-avatar rail-avatar" [matTooltip]="user.fullName" matTooltipPosition="right">
+            {{ getInitials() }}
+          </div>
+        } @else {
+          <div class="profile-card">
+            <div class="profile-row">
+              <div class="profile-avatar">{{ getInitials() }}</div>
+              <div class="profile-meta">
+                <div class="profile-name">{{ user.fullName }}</div>
+                <small class="profile-email">{{ user.email }}</small>
+              </div>
+              <button
+                type="button"
+                class="profile-logout-btn"
+                (click)="logout()"
+                matTooltip="Logout"
+                aria-label="Logout"
+              >
+                <i class="bi bi-box-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+        }
+      }
+    </div>
+
+    @if (!sidebarCollapsed() && !isMobile()) {
+      <div class="sidebar-resizer" (mousedown)="startResize($event)" matTooltip="Drag to resize"></div>
+    }
+  </mat-sidenav>
+
+  <!-- ===== Main Content ===== -->
+  <mat-sidenav-content class="main-content">
+    <header class="app-toolbar">
+      <div class="toolbar-left">
+        <button
+          type="button"
+          class="toolbar-burger"
+          [class.open]="isMobile() && mobileDrawerOpen()"
+          (click)="toggleSidebar()"
+          [attr.aria-label]="burgerLabel()"
+          [matTooltip]="burgerLabel()"
+        >
+          <span class="burger-line"></span>
+          <span class="burger-line"></span>
+          <span class="burger-line"></span>
+        </button>
+
+        <div class="toolbar-brand">
+          <span class="toolbar-title">{{ selectedCourseTitle() }}</span>
+          <span class="toolbar-subtitle">{{ unitBreadcrumb() }}</span>
+        </div>
+      </div>
+
+      <div class="toolbar-right">
+        <button
+          type="button"
+          class="toolbar-icon-btn"
+          [class.open]="appearanceOpen()"
+          (click)="toggleAppearanceMenu($event)"
+          [attr.aria-expanded]="appearanceOpen()"
+          aria-label="Appearance settings"
+          matTooltip="Appearance"
+        >
+          <i class="bi bi-circle-half"></i>
+        </button>
+
+        <button
+          type="button"
+          class="toolbar-icon-btn toolbar-optional"
+          [class.open]="notificationsOpen()"
+          (click)="toggleNotifications($event)"
+          [attr.aria-expanded]="notificationsOpen()"
+          [attr.aria-label]="unreadNotifications() > 0 ? 'Notifications, ' + unreadNotifications() + ' unread' : 'Notifications'"
+        >
+          <i class="bi bi-bell"></i>
+          @if (unreadNotifications() > 0) {
+            <span class="toolbar-badge">{{ unreadNotifications() > 99 ? '99+' : unreadNotifications() }}</span>
+          }
+        </button>
+
+        <button
+          type="button"
+          class="toolbar-icon-btn toolbar-optional"
+          [class.open]="messagesOpen()"
+          (click)="toggleMessages($event)"
+          [attr.aria-expanded]="messagesOpen()"
+          [attr.aria-label]="unreadMessages() > 0 ? 'Messages, ' + unreadMessages() + ' unread' : 'Messages'"
+        >
+          <i class="bi bi-chat-dots"></i>
+          @if (unreadMessages() > 0) {
+            <span class="toolbar-badge">{{ unreadMessages() > 99 ? '99+' : unreadMessages() }}</span>
+          }
+        </button>
+
+        @if (currentUser | async; as user) {
+          <button
+            type="button"
+            class="user-avatar-btn"
+            [class.open]="profileMenuOpen()"
+            (click)="toggleProfileMenu($event)"
+            [attr.aria-label]="user.fullName"
+            [attr.aria-expanded]="profileMenuOpen()"
+          >
+            <span class="user-avatar">{{ getInitials() }}</span>
+          </button>
+        }
+      </div>
+    </header>
+
+    <div class="content-area">
+      <router-outlet />
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>
+
+<!-- Recursive course outline template -->
+<ng-template #renderNodes let-nodes let-level="level">
+  @for (node of nodes; track node.id) {
+    <div class="tree-node" [style.padding-left.px]="level * 14">
+      @if (isLeaf(node)) {
+        <div
+          class="tree-leaf-wrap"
+          [class.active]="isActive(node)"
+          [title]="node.description || node.title"
+        >
+          <button type="button" class="tree-leaf" (click)="selectLeaf(node)">
+            <mat-icon class="leaf-icon">description</mat-icon>
+            <span class="tree-label">{{ node.title }}</span>
+          </button>
+          @if (canEditOutline()) {
+            <button
+              type="button"
+              class="node-menu-btn"
+              (click)="openNodeMenu($event, node)"
+              [attr.aria-label]="'Options for ' + node.title"
+            >
+              <i class="bi bi-three-dots-vertical"></i>
+            </button>
+          }
+        </div>
+      } @else {
+        <div
+          class="tree-branch-wrap"
+          [class.expanded]="isNodeExpanded(node)"
+          [title]="node.description || node.title"
+        >
+          <button type="button" class="tree-branch" (click)="toggleNode(node)">
+            <mat-icon class="chevron">{{ isNodeExpanded(node) ? 'expand_more' : 'chevron_right' }}</mat-icon>
+            <mat-icon class="branch-icon">{{ node.icon || (level === 0 ? 'folder' : 'folder_open') }}</mat-icon>
+            <span class="tree-label">{{ node.title }}</span>
+          </button>
+          @if (canEditOutline()) {
+            <button
+              type="button"
+              class="node-menu-btn"
+              (click)="openNodeMenu($event, node)"
+              [attr.aria-label]="'Options for ' + node.title"
+            >
+              <i class="bi bi-three-dots-vertical"></i>
+            </button>
+          }
+        </div>
+
+        @if (isNodeExpanded(node)) {
+          <div class="tree-children">
+            <ng-container *ngTemplateOutlet="renderNodes; context: { $implicit: node.children, level: level + 1 }"></ng-container>
+          </div>
+        }
+      }
+    </div>
+  }
+</ng-template>
+
+<!-- Bootstrap-styled node actions menu -->
+@if (canEditOutline() && nodeMenuOpen() && contextMenuNode(); as ctxNode) {
+  <div class="node-menu-backdrop" (click)="closeNodeMenu()"></div>
+  <div
+    class="dropdown-menu show shadow node-bs-dropdown"
+    [style.top.px]="nodeMenuPos().top"
+    [style.left.px]="nodeMenuPos().left"
+    role="menu"
+  >
+    <h6 class="dropdown-header">{{ ctxNode.title }}</h6>
+    <button type="button" class="dropdown-item" (click)="editNode(ctxNode); closeNodeMenu()">
+      <i class="bi bi-pencil"></i>
+      <span>Edit</span>
+    </button>
+    <button type="button" class="dropdown-item" (click)="addChildNode(ctxNode); closeNodeMenu()">
+      <i class="bi bi-plus-lg"></i>
+      <span>Add child</span>
+    </button>
+    <div class="dropdown-divider"></div>
+    <button type="button" class="dropdown-item text-danger" (click)="deleteNode(ctxNode); closeNodeMenu()">
+      <i class="bi bi-trash"></i>
+      <span>Delete</span>
+    </button>
+  </div>
+}
+
+<!-- Modern profile dropdown -->
+@if (profileMenuOpen()) {
+  <div class="profile-menu-backdrop" (click)="closeToolbarPanels()"></div>
+  <div class="profile-dropdown" role="menu" [style.top.px]="profileMenuPos().top" [style.right.px]="profileMenuPos().right">
+    @if (currentUser | async; as user) {
+      <div class="profile-dropdown-head">
+        <div class="profile-dropdown-avatar">{{ getInitials() }}</div>
+        <div class="profile-dropdown-meta">
+          <strong>{{ user.fullName }}</strong>
+          <span>{{ user.email }}</span>
+        </div>
+      </div>
+      <div class="profile-dropdown-divider"></div>
+      <a routerLink="/profile" class="profile-dropdown-item" (click)="closeToolbarPanels()">
+        <span class="item-icon"><i class="bi bi-person"></i></span>
+        <span>My Profile</span>
+      </a>
+      <a routerLink="/profile" fragment="password" class="profile-dropdown-item" (click)="closeToolbarPanels()">
+        <span class="item-icon"><i class="bi bi-shield-lock"></i></span>
+        <span>Change Password</span>
+      </a>
+      <div class="profile-dropdown-divider"></div>
+      <div class="profile-appearance-block">
+        <div class="profile-appearance-label">Appearance</div>
+        <div class="appearance-swatches compact">
+          @for (opt of appearanceOptions; track opt.id) {
+            <button
+              type="button"
+              class="appearance-option"
+              [class.active]="appearance() === opt.id"
+              (click)="setAppearance(opt.id)"
+              [attr.aria-label]="opt.label"
+              [matTooltip]="opt.description"
+            >
+              <span class="appearance-preview" [attr.data-theme]="opt.id">
+                <span class="preview-sidebar"></span>
+                <span class="preview-main"></span>
+              </span>
+            </button>
+          }
+        </div>
+      </div>
+      <div class="profile-dropdown-divider"></div>
+      <button type="button" class="profile-dropdown-item danger" (click)="logout(); closeToolbarPanels()">
+        <span class="item-icon"><i class="bi bi-box-arrow-right"></i></span>
+        <span>Logout</span>
+      </button>
+    }
+  </div>
+}
+
+<!-- Appearance dropdown -->
+@if (appearanceOpen()) {
+  <div class="profile-menu-backdrop" (click)="closeToolbarPanels()"></div>
+  <div
+    class="panel-dropdown appearance-dropdown"
+    role="menu"
+    [style.top.px]="appearancePos().top"
+    [style.right.px]="appearancePos().right"
+  >
+    <div class="panel-dropdown-header">
+      <div>
+        <h6>Appearance</h6>
+        <span>Choose how the workspace looks</span>
+      </div>
+    </div>
+    <div class="appearance-options">
+      @for (opt of appearanceOptions; track opt.id) {
+        <button
+          type="button"
+          class="appearance-card"
+          [class.active]="appearance() === opt.id"
+          (click)="setAppearance(opt.id)"
+        >
+          <span class="appearance-preview large" [attr.data-theme]="opt.id">
+            <span class="preview-sidebar"></span>
+            <span class="preview-main">
+              <span class="preview-bar"></span>
+              <span class="preview-block"></span>
+              <span class="preview-block short"></span>
+            </span>
+          </span>
+          <span class="appearance-copy">
+            <strong>{{ opt.label }}</strong>
+            <span>{{ opt.description }}</span>
+          </span>
+          @if (appearance() === opt.id) {
+            <i class="bi bi-check-circle-fill appearance-check"></i>
+          }
+        </button>
+      }
+    </div>
+  </div>
+}
+
+<!-- Notifications dropdown -->
+@if (notificationsOpen()) {
+  <div class="profile-menu-backdrop" (click)="closeToolbarPanels()"></div>
+  <div
+    class="panel-dropdown notifications-dropdown"
+    role="menu"
+    [style.top.px]="notificationsPos().top"
+    [style.right.px]="notificationsPos().right"
+  >
+    <div class="panel-dropdown-header">
+      <div>
+        <h6>Notifications</h6>
+        <span>{{ unreadNotifications() }} unread</span>
+      </div>
+      <button type="button" class="panel-link-btn" (click)="markAllNotificationsRead()">Mark all read</button>
+    </div>
+    <div class="panel-dropdown-list">
+      @for (item of notifications(); track item.id) {
+        <button type="button" class="panel-feed-item" [class.unread]="!item.read" (click)="markNotificationRead(item.id)">
+          <span class="feed-icon" [class]="item.tone">
+            <i class="bi" [class]="item.icon"></i>
+          </span>
+          <span class="feed-body">
+            <strong>{{ item.title }}</strong>
+            <span class="feed-text">{{ item.body }}</span>
+            <span class="feed-time">{{ item.time }}</span>
+          </span>
+          @if (!item.read) {
+            <span class="feed-unread-dot"></span>
+          }
+        </button>
+      } @empty {
+        <div class="panel-empty">You're all caught up.</div>
+      }
+    </div>
+    <button type="button" class="panel-footer-btn" (click)="closeToolbarPanels()">View all notifications</button>
+  </div>
+}
+
+<!-- Messages dropdown -->
+@if (messagesOpen()) {
+  <div class="profile-menu-backdrop" (click)="closeToolbarPanels()"></div>
+  <div
+    class="panel-dropdown messages-dropdown"
+    role="menu"
+    [style.top.px]="messagesPos().top"
+    [style.right.px]="messagesPos().right"
+  >
+    <div class="panel-dropdown-header">
+      <div>
+        <h6>Messages</h6>
+        <span>{{ unreadMessages() }} unread</span>
+      </div>
+      <button type="button" class="panel-link-btn" (click)="closeToolbarPanels()">
+        <i class="bi bi-pencil-square"></i>
+      </button>
+    </div>
+    <div class="panel-dropdown-list">
+      @for (item of messages(); track item.id) {
+        <button type="button" class="panel-feed-item" [class.unread]="!item.read" (click)="markMessageRead(item.id)">
+          <span class="feed-avatar">{{ item.initials }}</span>
+          <span class="feed-body">
+            <strong>{{ item.from }}</strong>
+            <span class="feed-text">{{ item.preview }}</span>
+            <span class="feed-time">{{ item.time }}</span>
+          </span>
+          @if (!item.read) {
+            <span class="feed-unread-dot"></span>
+          }
+        </button>
+      } @empty {
+        <div class="panel-empty">No messages yet.</div>
+      }
+    </div>
+    <button type="button" class="panel-footer-btn" (click)="closeToolbarPanels()">Open inbox</button>
+  </div>
+}
+
+<!-- Modern course section modal -->
+@if (showCourseModal()) {
+  <div class="course-modal-backdrop" (click)="closeCourseModal()"></div>
+  <div class="course-modal" role="dialog" aria-modal="true" [attr.aria-labelledby]="'courseModalTitle'">
+    <div class="course-modal-card">
+      <div class="course-modal-accent"></div>
+      <div class="course-modal-header">
+        <div class="course-modal-icon">
+          <i class="bi" [ngClass]="courseModalIcon()"></i>
+        </div>
+        <div class="course-modal-heading">
+          <h5 id="courseModalTitle">{{ courseModalHeading() }}</h5>
+          <p>{{ courseModalSubtitle() }}</p>
+        </div>
+        <button type="button" class="course-modal-close" (click)="closeCourseModal()" aria-label="Close">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="course-modal-body">
+        <div class="mb-3">
+          <label class="form-label" for="courseSectionTitle">Section title</label>
+          <input
+            id="courseSectionTitle"
+            class="form-control course-modal-input"
+            type="text"
+            [(ngModel)]="courseFormTitle"
+            placeholder="e.g. Module 3: Practice"
+            maxlength="120"
+            autofocus
+            (keyup.enter)="submitCourseModal()"
+          />
+        </div>
+        @if (courseModalEditNode()) {
+          <div class="mb-3">
+            <label class="form-label" for="courseSectionParent">Parent item</label>
+            <div
+              class="parent-picker"
+              [class.open]="parentPickerOpen()"
+              [class.drop-up]="parentPickerDropUp()"
+              (click)="$event.stopPropagation()"
+            >
+              <button
+                type="button"
+                id="courseSectionParent"
+                class="parent-picker-trigger"
+                [attr.aria-expanded]="parentPickerOpen()"
+                aria-haspopup="listbox"
+                (click)="toggleParentPicker($event)"
+              >
+                <span class="parent-picker-value" [class.placeholder]="!courseFormParentId()">
+                  {{ selectedParentLabel() }}
+                </span>
+                <i class="bi" [ngClass]="parentPickerOpen() ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+              </button>
+              @if (parentPickerOpen()) {
+                <div id="courseParentPickerPanel" class="parent-picker-panel" role="listbox">
+                  <div class="parent-picker-search">
+                    <i class="bi bi-search"></i>
+                    <input
+                      id="courseParentSearch"
+                      type="text"
+                      name="parentPickerSearch"
+                      [ngModel]="parentPickerQuery()"
+                      (ngModelChange)="parentPickerQuery.set($event)"
+                      placeholder="Search parent item"
+                      autocomplete="off"
+                      (keydown.enter)="$event.preventDefault()"
+                    />
+                  </div>
+                  <div class="parent-picker-list">
+                    @for (option of filteredOutlineParentOptions(); track option.id) {
+                      <button
+                        type="button"
+                        class="parent-picker-option"
+                        role="option"
+                        [class.active]="option.id === courseFormParentId()"
+                        [attr.aria-selected]="option.id === courseFormParentId()"
+                        (click)="selectParentOption(option.id)"
+                      >
+                        {{ option.label }}
+                      </button>
+                    } @empty {
+                      <div class="parent-picker-empty">No matching items</div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+            <small class="text-muted d-block mt-1">
+              Move this item under another outline section, or back to the course unit.
+            </small>
+          </div>
+        }
+        <div class="mb-1">
+          <label class="form-label" for="courseSectionDesc">Description <span class="optional">(optional)</span></label>
+          <textarea
+            id="courseSectionDesc"
+            class="form-control course-modal-input"
+            rows="3"
+            [(ngModel)]="courseFormDescription"
+            placeholder="Short summary of what this section covers"
+            maxlength="280"
+          ></textarea>
+        </div>
+        @if (courseFormError()) {
+          <div class="course-modal-error mt-3">
+            <i class="bi bi-exclamation-circle me-1"></i>{{ courseFormError() }}
+          </div>
+        }
+      </div>
+
+      <div class="course-modal-footer">
+        <button type="button" class="btn btn-outline-secondary" (click)="closeCourseModal()" [disabled]="savingCourse()">
+          Cancel
+        </button>
+        <button type="button" class="btn btn-primary course-modal-save" (click)="submitCourseModal()" [disabled]="savingCourse()">
+          @if (savingCourse()) {
+            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+            Saving...
+          } @else {
+            <i class="bi bi-check-lg me-1"></i>
+            {{ courseModalSaveLabel() }}
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

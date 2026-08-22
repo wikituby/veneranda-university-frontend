@@ -1,0 +1,145 @@
+<div class="captive-bg">
+  <div class="captive-card card border-0 shadow-lg">
+    <div class="card-body p-4 p-md-5">
+
+      <!-- ===== STEP 1: Plan Selection ===== -->
+      @if (step() === 1) {
+        <div class="text-center mb-4">
+          <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary bg-opacity-10 mb-3" style="width:72px;height:72px">
+            <i class="bi bi-wifi text-primary fs-1"></i>
+          </div>
+          <h3 class="fw-bold mb-1">WiFi Access</h3>
+          <p class="text-muted">Select a plan to get started</p>
+        </div>
+
+        @if (loading()) {
+          <div class="text-center py-4"><div class="spinner-border text-primary"></div></div>
+        } @else {
+          <div class="row g-3">
+            @for (pkg of packages(); track pkg.id) {
+              <div class="col-6 col-md-4">
+                <div class="card border h-100 plan-card" (click)="selectPackage(pkg)" role="button">
+                  <div class="card-body text-center p-3">
+                    <i class="bi {{ pkg.icon }} text-primary fs-3 mb-2 d-block"></i>
+                    <h6 class="fw-bold mb-1">{{ pkg.name }}</h6>
+                    <div class="text-primary fw-bold mb-1">{{ formatPrice(pkg) }}</div>
+                    <small class="text-muted">{{ pkg.durationLabel }}</small>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      }
+
+      <!-- ===== STEP 2: Enter Phone Number ===== -->
+      @if (step() === 2) {
+        <button class="btn btn-outline-secondary btn-sm mb-3" (click)="back()"><i class="bi bi-arrow-left me-1"></i> Back</button>
+        <div class="text-center mb-4">
+          <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-10 mb-3" style="width:64px;height:64px">
+            <i class="bi bi-phone text-success fs-2"></i>
+          </div>
+          <h5 class="fw-bold">Mobile Money Payment</h5>
+          <p class="text-muted small">Selected: <strong>{{ selectedPackage()?.name }}</strong> — {{ formatPrice(selectedPackage()!) }}</p>
+        </div>
+
+        @if (errorMessage()) {
+          <div class="alert alert-danger d-flex align-items-center gap-2 py-2 small"><i class="bi bi-exclamation-triangle-fill"></i> {{ errorMessage() }}</div>
+        }
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Mobile Number</label>
+          <div class="input-group input-group-lg">
+            <span class="input-group-text"><i class="bi bi-phone"></i></span>
+            <input type="tel" class="form-control" [(ngModel)]="phoneNumber" placeholder="e.g. 0772123456" (keyup.enter)="initiatePayment()">
+          </div>
+          <small class="text-muted">A payment prompt will be sent to your phone</small>
+          <div class="alert alert-info d-flex align-items-center gap-2 mt-2 py-2 small mb-0">
+            <i class="bi bi-info-circle-fill"></i>
+            <span>You will enter your <strong>mobile money PIN on your phone</strong>, not here</span>
+          </div>
+        </div>
+
+        <button class="btn btn-primary w-100 py-2" (click)="initiatePayment()" [disabled]="loading()">
+          @if (loading()) { <span class="spinner-border spinner-border-sm me-2"></span> Sending... }
+          @else { <i class="bi bi-send me-1"></i> Send Payment Request }
+        </button>
+      }
+
+      <!-- ===== STEP 3: Awaiting Payment Confirmation on Phone ===== -->
+      @if (step() === 3) {
+        <button class="btn btn-outline-secondary btn-sm mb-3" (click)="back()"><i class="bi bi-arrow-left me-1"></i> Back</button>
+        <div class="text-center mb-4">
+          <div class="position-relative d-inline-block mb-3">
+            <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-warning bg-opacity-10" style="width:80px;height:80px">
+              <i class="bi bi-phone-flip text-warning fs-1"></i>
+            </div>
+            <div class="position-absolute top-50 start-50 translate-middle">
+              <div class="pulse-ring"></div>
+            </div>
+          </div>
+          <h5 class="fw-bold">Confirm on Your Phone</h5>
+          <p class="text-muted small mb-1">A payment request has been sent to</p>
+          <p class="fw-bold mb-2">{{ phoneNumber() }}</p>
+          <p class="text-muted small mb-0">Please check your phone and enter your</p>
+          <p class="fw-bold small">Mobile Money PIN to approve payment</p>
+        </div>
+
+        <div class="card bg-light border-0 mb-3">
+          <div class="card-body text-center p-4">
+            <div class="spinner-border text-primary mb-3" role="status"></div>
+            <p class="fw-medium mb-1">Awaiting payment confirmation...</p>
+            <p class="text-muted small mb-0">Do not close this page</p>
+            <p class="text-muted small mt-2">
+              Checking {{ pollAttempts() > 0 ? 'again' : 'now' }}... 
+              @if (pollAttempts() > 0) { (attempt {{ pollAttempts() }}) }
+            </p>
+          </div>
+        </div>
+
+        <button class="btn btn-outline-secondary w-100" (click)="back()">
+          <i class="bi bi-x-circle me-1"></i> Cancel & Try Again
+        </button>
+      }
+
+      <!-- ===== STEP 4: Connected! ===== -->
+      @if (step() === 4 && session()) {
+        <div class="text-center mb-4">
+          <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-10 mb-3" style="width:72px;height:72px">
+            <i class="bi bi-check-circle-fill text-success fs-1"></i>
+          </div>
+          <h3 class="fw-bold text-success mb-1">Connected!</h3>
+          <p class="text-muted">Payment confirmed — you are now online</p>
+        </div>
+
+        <div class="card bg-light border-0 mb-4">
+          <div class="card-body text-center p-4">
+            <div class="row g-3">
+              <div class="col-6">
+                <div class="text-muted small">Time Remaining</div>
+                <div class="fw-bold fs-4">{{ session()?.timeRemaining }}</div>
+              </div>
+              <div class="col-6">
+                <div class="text-muted small">Data Used</div>
+                <div class="fw-bold fs-4">{{ session()?.dataUsed }}</div>
+              </div>
+            </div>
+            <hr>
+            <div class="text-muted small">Session expires: {{ session()?.expiresAt | date:'medium' }}</div>
+          </div>
+        </div>
+
+        @if (session()?.status === 'EXPIRED') {
+          <div class="alert alert-warning text-center">
+            <i class="bi bi-clock-history me-1"></i> Your session has expired. Please purchase a new plan.
+          </div>
+          <button class="btn btn-primary w-100" (click)="goToPlans()"><i class="bi bi-arrow-repeat me-1"></i> Buy Another Plan</button>
+        } @else {
+          <button class="btn btn-outline-danger w-100" (click)="disconnect()">
+            <i class="bi bi-power me-1"></i> Disconnect
+          </button>
+        }
+      }
+    </div>
+  </div>
+</div>

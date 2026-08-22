@@ -1,0 +1,50 @@
+<div class="browse-shell">
+  <app-catalogue-topbar />
+
+  <div class="page">
+  <header class="head">
+    <p class="eyebrow">Join a programme</p>
+    <h1>Explore programmes</h1>
+    <p class="lede">Join first. Then subscribe to a semester or to a single course unit before you can read it.</p>
+  </header>
+
+  @if (loading()) {
+    <div class="state"><div class="spinner-border text-primary"></div><span>Loading programmes…</span></div>
+  } @else if (error() && !programmes().length) {
+    <p class="empty">{{ error() }}</p>
+  } @else {
+    @if (error()) {
+      <div class="inline-alert">{{ error() }}</div>
+    }
+    <div class="catalog-grid">
+      @for (p of programmes(); track p.id) {
+        @let theme = coverTheme(p.title, p.id);
+        <article class="course-tile" (click)="openOrJoin(p)">
+          <div class="tile-cover" [style.background]="theme.gradient">
+            @if (showCover(p.id)) {
+              <img [src]="theme.url" [alt]="p.title" (error)="onCoverError(p.id)" />
+            }
+            @if (isJoined(p.id)) {
+              <span class="enrolled-badge">Joined</span>
+            }
+          </div>
+          <div class="tile-body">
+            <p class="partner">{{ p.affiliatedInstitution || defaultInstitution }}</p>
+            <h3>{{ programmeHeading(p) }}</h3>
+            <p class="desc">{{ p.description || 'Published programme' }}</p>
+            <div class="tile-footer">
+              <button type="button" class="btn btn-sm btn-primary" [disabled]="joiningId() === p.id" (click)="openOrJoin(p, $event)">
+                @if (joiningId() === p.id) {
+                  <span class="spinner-border spinner-border-sm"></span>
+                } @else {
+                  {{ isJoined(p.id) ? 'Open' : 'Join' }}
+                }
+              </button>
+            </div>
+          </div>
+        </article>
+      }
+    </div>
+  }
+  </div>
+</div>

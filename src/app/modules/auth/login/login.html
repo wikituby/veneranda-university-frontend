@@ -1,0 +1,150 @@
+<div class="login-bg">
+  <div class="login-card card shadow-lg border-0" [class.signup]="tab() === 'signup'">
+    <div class="card-body" [class.signup-body]="tab() === 'signup'">
+      <div class="text-center mb-3">
+        <a routerLink="/welcome" class="login-home-link">Veneranda University</a>
+        <p class="text-muted mb-0">{{ tab() === 'signup' ? 'Create your account' : 'Sign in to continue' }}</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button type="button" [class.active]="tab() === 'signin'" (click)="setTab('signin')">Log in</button>
+        <button type="button" [class.active]="tab() === 'signup'" (click)="setTab('signup')">Sign up</button>
+      </div>
+
+      @if (errorMessage()) {
+        <div class="alert alert-danger d-flex align-items-center gap-2 py-2" role="alert">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <span>{{ errorMessage() }}</span>
+        </div>
+      }
+
+      @if (tab() === 'signin') {
+        <form #loginForm="ngForm" (ngSubmit)="onSubmit(loginForm)">
+          <div class="mb-3">
+            <label for="username" class="form-label fw-semibold">Username or email</label>
+            <input
+              type="text"
+              class="form-control"
+              id="username"
+              name="username"
+              [ngModel]="username()"
+              (ngModelChange)="username.set($event)"
+              required
+              placeholder="Enter your username"
+              autocomplete="username"
+            />
+          </div>
+          <div class="mb-4">
+            <label for="password" class="form-label fw-semibold">Password</label>
+            <div class="input-group">
+              <input
+                [type]="hidePassword() ? 'password' : 'text'"
+                class="form-control"
+                id="password"
+                name="password"
+                [ngModel]="password()"
+                (ngModelChange)="password.set($event)"
+                required
+                placeholder="Enter your password"
+                autocomplete="current-password"
+              />
+              <button class="btn btn-outline-secondary" type="button" (click)="hidePassword.set(!hidePassword())" tabindex="-1">
+                <i class="bi" [class.bi-eye-slash]="hidePassword()" [class.bi-eye]="!hidePassword()"></i>
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold" [disabled]="loading() || googleLoading()">
+            @if (loading()) {
+              <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+              Signing in...
+            } @else {
+              Log in
+            }
+          </button>
+        </form>
+      } @else {
+        <form #registerForm="ngForm" class="signup-form" (ngSubmit)="onRegister(registerForm)">
+          <div class="signup-grid">
+            <div>
+              <label for="fullName" class="form-label fw-semibold">Full name</label>
+              <input
+                type="text"
+                class="form-control"
+                id="fullName"
+                name="fullName"
+                [ngModel]="fullName()"
+                (ngModelChange)="fullName.set($event)"
+                required
+                placeholder="Your name"
+              />
+            </div>
+            <div>
+              <label for="email" class="form-label fw-semibold">Email</label>
+              <input
+                type="email"
+                class="form-control"
+                id="email"
+                name="email"
+                [ngModel]="email()"
+                (ngModelChange)="email.set($event)"
+                required
+                placeholder="you@example.com"
+                autocomplete="email"
+              />
+            </div>
+            <div>
+              <label for="newPassword" class="form-label fw-semibold">Password</label>
+              <input
+                type="password"
+                class="form-control"
+                id="newPassword"
+                name="password"
+                [ngModel]="password()"
+                (ngModelChange)="password.set($event)"
+                required
+                minlength="8"
+                placeholder="At least 8 characters"
+                autocomplete="new-password"
+              />
+            </div>
+            <div>
+              <label for="confirmPassword" class="form-label fw-semibold">Confirm password</label>
+              <input
+                type="password"
+                class="form-control"
+                id="confirmPassword"
+                name="confirmPassword"
+                [ngModel]="confirmPassword()"
+                (ngModelChange)="confirmPassword.set($event)"
+                required
+                placeholder="Repeat password"
+                autocomplete="new-password"
+              />
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold" [disabled]="loading() || googleLoading()">
+            @if (loading()) {
+              <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+              Creating account...
+            } @else {
+              Join for free
+            }
+          </button>
+        </form>
+      }
+
+      @if (googleEnabled) {
+        <div class="login-divider my-3"><span>or</span></div>
+        <div class="google-signin-wrap">
+          <div id="googleSignInBtn" class="google-signin-btn"></div>
+          @if (googleLoading()) {
+            <div class="google-signin-loading text-muted small mt-2">
+              <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+              Continuing with Google...
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>

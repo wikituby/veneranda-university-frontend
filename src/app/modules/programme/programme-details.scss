@@ -1,0 +1,267 @@
+.details-shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--bg-body, #f0f2f7);
+}
+
+.page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 20px 24px 64px;
+}
+
+.back {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #0056d2;
+  text-decoration: none;
+}
+
+.hero {
+  margin: 12px 0 24px;
+  overflow: hidden;
+  border: 1px solid var(--border-color, #e3e8ee);
+  border-radius: 16px;
+  background: var(--bg-card, #fff);
+}
+
+.hero-cover {
+  position: relative;
+  height: 220px;
+  overflow: hidden;
+
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.hero-copy {
+  padding: 18px 22px 20px;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted, #8b95a8);
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text-primary, #1a1f36);
+}
+
+.affil {
+  margin: 8px 0 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #0056d2;
+}
+
+.code-line {
+  margin: 0 0 4px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary, #697386);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 28px;
+  align-items: start;
+}
+
+.main section {
+  margin-bottom: 28px;
+
+  h2 {
+    margin: 0 0 10px;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text-primary, #1a1f36);
+  }
+
+  p {
+    margin: 0;
+    color: var(--text-secondary, #697386);
+    line-height: 1.6;
+  }
+}
+
+.enroll-steps,
+.ticks,
+.outline {
+  margin: 0;
+  padding-left: 1.15rem;
+  color: var(--text-secondary, #697386);
+  line-height: 1.55;
+
+  li + li {
+    margin-top: 8px;
+  }
+}
+
+.career {
+  margin-top: 12px !important;
+}
+
+.faculty-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.faculty-card {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px;
+  border: 1px solid var(--border-color, #e3e8ee);
+  border-radius: 12px;
+  background: var(--bg-card, #fff);
+
+  strong, span, em {
+    display: block;
+  }
+
+  strong {
+    font-size: 0.92rem;
+    color: var(--text-primary, #1a1f36);
+  }
+
+  span {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #0056d2;
+  }
+
+  em {
+    margin-top: 2px;
+    font-size: 0.8rem;
+    font-style: normal;
+    color: var(--text-secondary, #697386);
+  }
+}
+
+.faculty-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+  .cta {
+  position: sticky;
+  top: 72px;
+  padding: 18px;
+  border: 1px solid var(--border-color, #e3e8ee);
+  border-radius: 14px;
+  background: var(--bg-card, #fff);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+
+  .btn {
+    width: 100%;
+    margin-top: 8px;
+  }
+}
+
+.cta-kicker {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted, #8b95a8);
+}
+
+.cta-price {
+  margin: 6px 0 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--text-primary, #1a1f36);
+}
+
+.cta-note {
+  margin: 6px 0 10px;
+  font-size: 0.82rem;
+  color: var(--text-secondary, #697386);
+  line-height: 1.45;
+}
+
+.inline-alert {
+  margin-bottom: 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 0.85rem;
+}
+
+.empty, .state {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 28px 0;
+  color: var(--text-secondary, #697386);
+}
+
+@media (max-width: 860px) {
+  .page {
+    padding: 14px 14px max(48px, env(safe-area-inset-bottom));
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+  }
+
+  .layout {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .cta {
+    position: static;
+    order: -1;
+    padding: 14px;
+
+    .btn {
+      min-height: 44px;
+    }
+  }
+
+  .hero {
+    margin-bottom: 16px;
+  }
+
+  .hero-cover {
+    height: 140px;
+  }
+
+  .hero-copy {
+    padding: 14px 14px 16px;
+  }
+
+  h1 {
+    font-size: 1.35rem;
+    line-height: 1.25;
+  }
+
+  .faculty-card {
+    min-width: 0;
+  }
+}

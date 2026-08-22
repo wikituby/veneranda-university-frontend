@@ -1,0 +1,940 @@
+<div class="reader-container">
+  @if (loading()) {
+    <div class="reader-loading">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading content...</span>
+      </div>
+      <p class="text-muted mt-3 mb-0">Loading course content...</p>
+    </div>
+  } @else if (error() && !content()) {
+    <div class="reader-empty">
+      <mat-icon class="empty-icon">menu_book</mat-icon>
+      <h5 class="fw-700">Select a lesson</h5>
+      <p class="text-muted">{{ error() }}</p>
+    </div>
+  } @else {
+    <div class="reader-workspace">
+      <header class="reader-header">
+        <div class="reader-header-copy">
+          <h1 class="reader-title">{{ content()?.title }}</h1>
+          @if (outlineBreadcrumb()) {
+            <p class="reader-subtitle" aria-label="Outline path">{{ outlineBreadcrumb() }}</p>
+          }
+        </div>
+        @if (canManageCourseContent()) {
+          <div class="reader-publish-actions">
+            @if (saving()) {
+              <span class="reader-save-status"><span class="spinner-border spinner-border-sm"></span> Saving draft…</span>
+            } @else if (hasUnpublishedNotes() || notesDirty()) {
+              <span class="notes-draft-badge">Unpublished draft</span>
+            }
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm"
+              [disabled]="saving() || publishing()"
+              (click)="saveNotes()"
+            >
+              Save draft
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary btn-sm"
+              [disabled]="saving() || publishing() || (!hasUnpublishedNotes() && !notesDirty())"
+              (click)="publishNotes()"
+            >
+              @if (publishing()) { Publishing… } @else { Publish }
+            </button>
+          </div>
+        } @else if (saving()) {
+          <span class="reader-save-status"><span class="spinner-border spinner-border-sm"></span> Saving…</span>
+        }
+      </header>
+      @if (saveError()) {
+        <div class="reader-save-error">{{ saveError() }}</div>
+      }
+
+      <div
+        class="reader-stage"
+        #readerStage
+        [class.stage-fullscreen]="notesFullscreen()"
+        [class.is-reader]="!canManageCourseContent()"
+      >
+      <nav class="reader-tabs" role="tablist" aria-label="Lesson content tabs">
+        @for (tab of tabs; track tab.id) {
+          <button
+            type="button"
+            class="reader-tab"
+            role="tab"
+            [class.active]="activeTab() === tab.id"
+            [attr.aria-selected]="activeTab() === tab.id"
+            (click)="setTab(tab.id)"
+          >
+            <i class="bi" [ngClass]="tab.icon"></i>
+            <span>{{ tab.label }}</span>
+          </button>
+        }
+        <button
+          type="button"
+          class="notes-fullscreen-btn reader-tabs-fs"
+          (click)="toggleNotesFullscreen(readerStage)"
+          [attr.aria-label]="notesFullscreen() ? 'Exit fullscreen' : 'Enter fullscreen'"
+          title="Fullscreen"
+        >
+          <i class="bi" [ngClass]="notesFullscreen() ? 'bi-fullscreen-exit' : 'bi-arrows-fullscreen'"></i>
+        </button>
+      </nav>
+
+      <div class="reader-panel">
+        @if (activeTab() === 'notes') {
+          <section class="tab-panel notes-panel" role="tabpanel">
+            @if (isSystemAdmin() || canManageCourseContent()) {
+            <div class="notes-panel-head">
+              @if (isSystemAdmin()) {
+                <div>
+                  <h6 class="notes-label">Lesson notes</h6>
+                  <p class="notes-hint">
+                    @if (notesWordPreview()) {
+                      Imported Word document — shown with original layout.
+                    } @else {
+                      Write and format real lesson content — headings, lists, links, and more.
+                    }
+                  </p>
+                </div>
+              }
+              @if (canManageCourseContent()) {
+              <div class="notes-panel-actions">
+                  @if (saving()) {
+                    <span class="reader-save-status"><span class="spinner-border spinner-border-sm"></span> Saving draft…</span>
+                  } @else if (hasUnpublishedNotes() || notesDirty()) {
+                    <span class="notes-draft-badge">Unpublished draft</span>
+                  }
+                  @if (notesWordPreview()) {
+                    <button type="button" class="btn btn-outline-secondary btn-sm" (click)="editImportedNotesAsText()">
+                      <i class="bi bi-pencil-square me-1"></i> Edit as text
+                    </button>
+                  }
+                  <label class="btn btn-outline-secondary btn-sm notes-import-btn" [class.disabled]="notesImportBusy() || saving()">
+                    <i class="bi bi-file-earmark-word me-1"></i>
+                    @if (notesImportBusy()) { Importing… } @else { Import Word }
+                    <input
+                      type="file"
+                      accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                      hidden
+                      [disabled]="notesImportBusy() || saving()"
+                      (change)="onNotesWordSelected($event)"
+                    />
+                  </label>
+                  <button type="button" class="btn btn-outline-primary btn-sm" [disabled]="saving() || publishing()" (click)="saveNotes()">
+                    @if (saving()) { Saving… } @else { Save draft }
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-primary btn-sm"
+                    [disabled]="saving() || publishing() || (!hasUnpublishedNotes() && !notesDirty())"
+                    (click)="publishNotes()"
+                  >
+                    @if (publishing()) { Publishing… } @else { Publish }
+                  </button>
+              </div>
+              }
+            </div>
+            }
+            @if (notesImportError()) {
+              <div class="reader-save-error">{{ notesImportError() }}</div>
+            }
+            @if (notesWordPreview()) {
+              <div class="notes-docx-shell">
+                <div id="notes-docx-host" class="notes-docx-host"></div>
+              </div>
+            } @else if (canManageCourseContent()) {
+              <div class="notes-editor-shell" [class.is-busy]="notesEditorBusy()">
+                @if (notesEditorBusy()) {
+                  <div class="notes-editor-busy">Loading editor…</div>
+                }
+                <div id="lesson-notes-quill" class="notes-quill-host"></div>
+              </div>
+              @if (tablePickerOpen()) {
+                <div
+                  class="notes-table-picker"
+                  [style.left.px]="tablePickerLeft()"
+                  [style.top.px]="tablePickerTop()"
+                  (click)="$event.stopPropagation()"
+                >
+                  <div class="notes-table-picker-label">
+                    {{ tablePickerHoverRows() }} × {{ tablePickerHoverCols() }}
+                  </div>
+                  <div class="notes-table-grid" (mouseleave)="hoverTableSize(3, 3)">
+                    @for (row of tablePickerSizes; track row) {
+                      <div class="notes-table-grid-row">
+                        @for (col of tablePickerSizes; track col) {
+                          <button
+                            type="button"
+                            class="notes-table-cell"
+                            [class.is-on]="row <= tablePickerHoverRows() && col <= tablePickerHoverCols()"
+                            (mouseenter)="hoverTableSize(row, col)"
+                            (click)="insertNotesTable(row, col)"
+                            [attr.aria-label]="'Insert ' + row + ' by ' + col + ' table'"
+                          ></button>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            } @else {
+              <div class="notes-readonly" [innerHTML]="notesHtml()"></div>
+            }
+          </section>
+        }
+
+        @if (activeTab() === 'slides') {
+          <section class="tab-panel slides-panel" role="tabpanel">
+            <div class="media-cards-list">
+              @if (canManageCourseContent()) {
+                <article class="video-card media-action-card">
+                  <div class="video-card-body media-action-card-body">
+                    <div class="media-action-toolbar">
+                      <button
+                        type="button"
+                        class="btn btn-outline-primary btn-sm"
+                        (click)="openSlideBuilder()"
+                        [disabled]="slideUploadBusy() || slideBuilderBusy()"
+                      >
+                        <i class="bi bi-easel2 me-1"></i>
+                        New presentation
+                      </button>
+                    </div>
+                    @if (r2Enabled()) {
+                      <div class="video-upload-card">
+                        <div class="video-upload-copy">
+                          <strong>Private upload</strong>
+                          <span>PDF / PPTX — stored in R2</span>
+                        </div>
+                        <input
+                          type="text"
+                          class="form-control"
+                          [(ngModel)]="slideTitle"
+                          placeholder="Title (optional)"
+                        />
+                        <label class="btn btn-primary video-upload-btn" [class.disabled]="slideUploadBusy()">
+                          <i class="bi bi-cloud-upload me-1"></i>
+                          @if (slideUploadBusy()) { Uploading… } @else { Choose slide file }
+                          <input
+                            type="file"
+                            accept="application/pdf,.pdf,application/vnd.ms-powerpoint,.ppt,application/vnd.openxmlformats-officedocument.presentationml.presentation,.pptx,.ppsx"
+                            hidden
+                            [disabled]="slideUploadBusy()"
+                            (change)="onR2SlideSelected($event)"
+                          />
+                        </label>
+                      </div>
+                    }
+                  </div>
+                </article>
+              }
+
+              @if (slideError()) {
+                <div class="media-error">{{ slideError() }}</div>
+              }
+
+              @if (slides().length === 0) {
+                <div class="panel-empty">
+                  <i class="bi" [ngClass]="r2Enabled() ? 'bi-cloud-arrow-up' : 'bi-easel2'"></i>
+                  <h6>No presentations yet</h6>
+                  <p>
+                    @if (r2Enabled()) {
+                      Upload a private PDF or PowerPoint above.
+                    } @else {
+                      Connect Cloudflare R2 to upload lesson slides.
+                    }
+                  </p>
+                </div>
+              } @else {
+                @for (slide of slides(); track slide.id) {
+                  <article
+                    class="video-card"
+                    [class.is-collapsed]="isMediaCollapsed(slide.id)"
+                    (contextmenu)="blockMediaContextMenu($event)"
+                  >
+                    <div
+                      class="slide-stage"
+                      #slideStage
+                      [class.stage-fullscreen]="slideFullscreenId() === slide.id"
+                    >
+                      <div
+                        class="video-card-head"
+                        role="button"
+                        tabindex="0"
+                        [attr.aria-expanded]="!isMediaCollapsed(slide.id)"
+                        (click)="toggleMediaCollapsed(slide.id)"
+                        (keydown.enter)="toggleMediaCollapsed(slide.id)"
+                        (keydown.space)="$event.preventDefault(); toggleMediaCollapsed(slide.id)"
+                      >
+                        <div class="slide-head-meta">
+                          <i
+                            class="bi card-fold-chevron"
+                            [ngClass]="isMediaCollapsed(slide.id) ? 'bi-chevron-right' : 'bi-chevron-down'"
+                            aria-hidden="true"
+                          ></i>
+                          <strong>{{ slide.title }}</strong>
+                          @if (isR2Slide(slide)) {
+                            <span class="video-badge r2">Private · R2</span>
+                          } @else {
+                            <span class="slide-provider">
+                              {{ slide.provider === 'google-slides' ? 'Google Slides' : slide.provider === 'google-drive' ? 'Google Drive' : 'Link' }}
+                            </span>
+                          }
+                        </div>
+                        <div class="slide-head-actions" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+                          @if (showSlideFullscreen(slide)) {
+                            <button
+                              type="button"
+                              class="slide-open-link"
+                              (click)="toggleSlideFullscreen(slide.id, slideStage)"
+                              aria-label="Toggle fullscreen"
+                              title="Fullscreen"
+                            >
+                              <i class="bi" [ngClass]="slideFullscreenId() === slide.id ? 'bi-fullscreen-exit' : 'bi-arrows-fullscreen'"></i>
+                            </button>
+                          }
+                          @if (canManageCourseContent()) {
+                            <button type="button" class="slide-remove" (click)="requestDeleteSlide(slide)" aria-label="Remove presentation">
+                              <i class="bi bi-trash"></i>
+                            </button>
+                          }
+                        </div>
+                      </div>
+
+                      <div class="video-card-body">
+                        @if (isR2Slide(slide)) {
+                          <div class="slide-viewer-shell">
+                            @if (!isSlideActive(slide.id)) {
+                              <button type="button" class="video-play-btn" (click)="openR2Slide(slide)">
+                                <i class="bi bi-file-earmark-slides"></i>
+                                <span>Open private slides</span>
+                              </button>
+                            } @else if (r2SlideFormat(slide.id) === 'pdf' && r2SlideSrc(slide.id); as embed) {
+                              <iframe
+                                class="slide-frame"
+                                [src]="embed"
+                                [title]="slide.title"
+                                allowfullscreen
+                              ></iframe>
+                            } @else if (r2SlideRawUrl(slide.id); as href) {
+                              <div class="panel-empty compact r2-slide-open">
+                                <p>PowerPoint can’t embed in the browser. Open with the signed link (expires soon):</p>
+                                <a class="btn btn-primary btn-sm" [href]="href" target="_blank" rel="noopener noreferrer">
+                                  Open presentation
+                                </a>
+                              </div>
+                            }
+                          </div>
+                        } @else if (slideEmbedUrl(slide.url); as embed) {
+                          <div class="slide-viewer-shell">
+                            <iframe
+                              class="slide-frame"
+                              [src]="embed"
+                              [title]="slide.title"
+                              allow="autoplay; fullscreen"
+                              allowfullscreen
+                            ></iframe>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  </article>
+                }
+              }
+            </div>
+          </section>
+        }
+
+        @if (activeTab() === 'documents') {
+          <section class="tab-panel documents-panel" role="tabpanel">
+            <div class="media-cards-list">
+              @if (canManageCourseContent() && r2Enabled()) {
+                <article class="video-card media-action-card">
+                  <div class="video-card-body media-action-card-body">
+                    <div class="video-upload-card">
+                      <div class="video-upload-copy">
+                        <strong>Upload document</strong>
+                        <span>PDF, Word, Excel, PowerPoint, TXT, CSV…</span>
+                      </div>
+                      <input
+                        type="text"
+                        class="form-control"
+                        [(ngModel)]="documentTitle"
+                        placeholder="Title (optional)"
+                      />
+                      <label class="btn btn-primary video-upload-btn" [class.disabled]="documentUploadBusy()">
+                        <i class="bi bi-cloud-upload me-1"></i>
+                        @if (documentUploadBusy()) { Uploading… } @else { Choose file }
+                        <input
+                          type="file"
+                          accept=".pdf,.doc,.docx,.ppt,.pptx,.ppsx,.xls,.xlsx,.odt,.odp,.rtf,.txt,.csv,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain,text/csv"
+                          hidden
+                          [disabled]="documentUploadBusy()"
+                          (change)="onR2DocumentSelected($event)"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </article>
+              }
+
+              @if (documentError()) {
+                <div class="media-error">{{ documentError() }}</div>
+              }
+
+              @if (documents().length === 0) {
+                <div class="panel-empty">
+                  <i class="bi bi-file-earmark-text"></i>
+                  <h6>No documents yet</h6>
+                  <p>
+                    @if (r2Enabled()) {
+                      Upload a PDF, Word file, or other handout above.
+                    } @else {
+                      Enable Cloudflare R2 to store private lesson documents.
+                    }
+                  </p>
+                </div>
+              } @else {
+                @for (doc of documents(); track doc.id) {
+                  <article
+                    class="video-card"
+                    [class.is-collapsed]="isMediaCollapsed(doc.id)"
+                    (contextmenu)="blockMediaContextMenu($event)"
+                  >
+                    <div
+                      class="document-stage"
+                      #documentStage
+                      [class.stage-fullscreen]="documentFullscreenId() === doc.id"
+                    >
+                      <div
+                        class="video-card-head"
+                        role="button"
+                        tabindex="0"
+                        [attr.aria-expanded]="!isMediaCollapsed(doc.id)"
+                        (click)="toggleMediaCollapsed(doc.id)"
+                        (keydown.enter)="toggleMediaCollapsed(doc.id)"
+                        (keydown.space)="$event.preventDefault(); toggleMediaCollapsed(doc.id)"
+                      >
+                        <div class="slide-head-meta">
+                          <i
+                            class="bi card-fold-chevron"
+                            [ngClass]="isMediaCollapsed(doc.id) ? 'bi-chevron-right' : 'bi-chevron-down'"
+                            aria-hidden="true"
+                          ></i>
+                          <strong>{{ doc.title }}</strong>
+                          <span class="video-badge r2">{{ documentFormatLabel(doc.fileFormat) }}</span>
+                          @if (isR2Document(doc)) {
+                            <span class="video-badge r2">Private · R2</span>
+                          }
+                        </div>
+                        <div class="slide-head-actions" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+                          @if (showDocumentFullscreen(doc)) {
+                            <button
+                              type="button"
+                              class="slide-open-link"
+                              (click)="toggleDocumentFullscreen(doc.id, documentStage)"
+                              aria-label="Toggle fullscreen"
+                              title="Fullscreen"
+                            >
+                              <i class="bi" [ngClass]="documentFullscreenId() === doc.id ? 'bi-fullscreen-exit' : 'bi-arrows-fullscreen'"></i>
+                            </button>
+                          }
+                          @if (canManageCourseContent()) {
+                            <button type="button" class="slide-remove" (click)="requestDeleteDocument(doc)" aria-label="Remove document">
+                              <i class="bi bi-trash"></i>
+                            </button>
+                          }
+                        </div>
+                      </div>
+
+                      <div class="video-card-body">
+                        <div class="document-viewer-shell">
+                          @if (!isDocumentActive(doc.id)) {
+                            <button type="button" class="video-play-btn" (click)="openR2Document(doc)">
+                              <i class="bi bi-file-earmark-text"></i>
+                              <span>Open document</span>
+                            </button>
+                          } @else if (r2DocumentHtml(doc.id); as html) {
+                            <div class="document-html-viewer" [innerHTML]="html"></div>
+                            @if (r2DocumentRawUrl(doc.id); as href) {
+                              <div class="document-viewer-actions">
+                                <a class="btn btn-outline-secondary btn-sm" [href]="href" target="_blank" rel="noopener noreferrer">
+                                  Download original
+                                </a>
+                              </div>
+                            }
+                          } @else if (r2DocumentSrc(doc.id); as embed) {
+                            <iframe
+                              class="document-frame"
+                              [src]="embed"
+                              [title]="doc.title"
+                              allowfullscreen
+                            ></iframe>
+                            @if (r2DocumentRawUrl(doc.id); as href) {
+                              <div class="document-viewer-actions">
+                                <a class="btn btn-outline-secondary btn-sm" [href]="href" target="_blank" rel="noopener noreferrer">
+                                  Download original
+                                </a>
+                              </div>
+                            }
+                          } @else if (r2DocumentRawUrl(doc.id); as href) {
+                            <div class="panel-empty compact r2-slide-open">
+                              <p>Preview isn’t available for this file. Use the signed link (expires soon):</p>
+                              <a class="btn btn-primary btn-sm" [href]="href" target="_blank" rel="noopener noreferrer">
+                                Open / download
+                              </a>
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                }
+              }
+            </div>
+          </section>
+        }
+
+        @if (activeTab() === 'videos') {
+          <section class="tab-panel videos-panel" role="tabpanel">
+            <div class="media-cards-list">
+              @if (canManageCourseContent() && r2Enabled()) {
+                <article class="video-card media-action-card">
+                  <div class="video-card-body media-action-card-body">
+                    <div class="video-upload-card">
+                      <div class="video-upload-copy">
+                        <strong>Private upload</strong>
+                        <span>MP4 / WebM — stored in your R2 bucket</span>
+                      </div>
+                      <input
+                        type="text"
+                        class="form-control"
+                        [(ngModel)]="videoTitle"
+                        placeholder="Title (optional)"
+                      />
+                      <label class="btn btn-primary video-upload-btn" [class.disabled]="uploadBusy()">
+                        <i class="bi bi-cloud-upload me-1"></i>
+                        @if (uploadBusy()) { Uploading… } @else { Choose video file }
+                        <input
+                          type="file"
+                          accept="video/mp4,video/webm,video/ogg,video/quicktime,.mp4,.webm,.ogg,.mov"
+                          hidden
+                          [disabled]="uploadBusy()"
+                          (change)="onR2FileSelected($event)"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </article>
+              }
+
+              @if (mediaError()) {
+                <div class="media-error">{{ mediaError() }}</div>
+              }
+
+              @if (videos().length === 0) {
+                <div class="panel-empty">
+                  <i class="bi" [ngClass]="r2Enabled() ? 'bi-cloud-arrow-up' : 'bi-camera-video'"></i>
+                  <h6>No videos yet</h6>
+                  <p>
+                    @if (r2Enabled()) {
+                      Upload a private video file above.
+                    } @else {
+                      Connect Cloudflare R2 to store private lesson videos.
+                    }
+                  </p>
+                </div>
+              } @else {
+                @for (video of videos(); track video.id) {
+                  <article
+                    class="video-card protected-video-card"
+                    [class.is-collapsed]="isMediaCollapsed(video.id)"
+                    (contextmenu)="blockMediaContextMenu($event)"
+                  >
+                    <div
+                      class="video-stage"
+                      #videoStage
+                      [class.stage-fullscreen]="videoFullscreenId() === video.id"
+                    >
+                      <div
+                        class="video-card-head"
+                        role="button"
+                        tabindex="0"
+                        [attr.aria-expanded]="!isMediaCollapsed(video.id)"
+                        (click)="toggleMediaCollapsed(video.id)"
+                        (keydown.enter)="toggleMediaCollapsed(video.id)"
+                        (keydown.space)="$event.preventDefault(); toggleMediaCollapsed(video.id)"
+                      >
+                        <div class="video-title-block">
+                          <i
+                            class="bi card-fold-chevron"
+                            [ngClass]="isMediaCollapsed(video.id) ? 'bi-chevron-right' : 'bi-chevron-down'"
+                            aria-hidden="true"
+                          ></i>
+                          <strong>{{ video.title }}</strong>
+                          @if (isR2Video(video)) {
+                            <span class="video-badge r2">Private · R2</span>
+                          } @else if (isYouTube(video.url)) {
+                            <span class="video-badge yt">YouTube</span>
+                          }
+                        </div>
+                        <div class="slide-head-actions" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+                          @if (showVideoControls(video)) {
+                            <button
+                              type="button"
+                              class="slide-open-link"
+                              (click)="toggleVideoPause(video.id)"
+                              [attr.aria-label]="isVideoPaused(video.id) ? 'Play video' : 'Pause video'"
+                              [title]="isVideoPaused(video.id) ? 'Play' : 'Pause'"
+                            >
+                              <i class="bi" [ngClass]="isVideoPaused(video.id) ? 'bi-play-fill' : 'bi-pause-fill'"></i>
+                            </button>
+                            <button
+                              type="button"
+                              class="slide-open-link"
+                              (click)="toggleVideoFullscreen(video.id, videoStage)"
+                              aria-label="Toggle fullscreen"
+                              title="Fullscreen"
+                            >
+                              <i class="bi" [ngClass]="videoFullscreenId() === video.id ? 'bi-fullscreen-exit' : 'bi-arrows-fullscreen'"></i>
+                            </button>
+                          }
+                          @if (canManageCourseContent()) {
+                            <button type="button" class="slide-remove" (click)="requestDeleteVideo(video)" aria-label="Remove video">
+                              <i class="bi bi-trash"></i>
+                            </button>
+                          }
+                        </div>
+                      </div>
+
+                      <div class="video-card-body">
+                        @if (isR2Video(video)) {
+                          <div class="protected-media-shell youtube-shell">
+                            @if (!isVideoActive(video.id)) {
+                              <button type="button" class="video-play-btn" (click)="activateVideo(video.id)">
+                                <i class="bi bi-play-fill"></i>
+                                <span>Play private video</span>
+                              </button>
+                            } @else if (r2PlaybackSrc(video.id); as src) {
+                              <video
+                                #r2Video
+                                class="video-frame"
+                                [src]="src"
+                                autoplay
+                                playsinline
+                                (loadedmetadata)="onHtmlVideoRef(video.id, r2Video)"
+                              ></video>
+                              <div class="media-shield" aria-hidden="true"></div>
+                              @if (isVideoPaused(video.id)) {
+                                <div class="video-paused-badge">
+                                  <i class="bi bi-pause-fill"></i>
+                                  Paused
+                                </div>
+                              }
+                            }
+                          </div>
+                        } @else if (isYouTube(video.url)) {
+                          <div class="protected-media-shell youtube-shell">
+                            @if (!isVideoActive(video.id)) {
+                              <button type="button" class="video-play-btn" (click)="activateVideo(video.id)">
+                                <i class="bi bi-play-fill"></i>
+                                <span>Play video</span>
+                              </button>
+                            } @else if (youtubeEmbedSrc(video.id); as embed) {
+                              <iframe
+                                #ytFrame
+                                class="video-frame"
+                                [src]="embed"
+                                [title]="video.title"
+                                allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                                (load)="onYtFrameLoad(video.id, ytFrame)"
+                              ></iframe>
+                              <div class="media-shield" aria-hidden="true"></div>
+                              @if (isVideoPaused(video.id)) {
+                                <div class="video-paused-badge">
+                                  <i class="bi bi-pause-fill"></i>
+                                  Paused
+                                </div>
+                              }
+                            }
+                          </div>
+                        } @else if (embedUrl(video.url); as embed) {
+                          <div class="protected-media-shell youtube-shell">
+                            @if (isDirectVideo(video.url)) {
+                              @if (!isVideoActive(video.id)) {
+                                <button type="button" class="video-play-btn" (click)="activateDirectVideo(video.id, htmlVideo)">
+                                  <i class="bi bi-play-fill"></i>
+                                  <span>Play video</span>
+                                </button>
+                              }
+                              <video
+                                #htmlVideo
+                                class="video-frame"
+                                [class.is-hidden]="!isVideoActive(video.id)"
+                                [src]="video.url"
+                                (loadedmetadata)="onHtmlVideoRef(video.id, htmlVideo)"
+                              ></video>
+                              @if (isVideoActive(video.id)) {
+                                <div class="media-shield" aria-hidden="true"></div>
+                              }
+                            } @else {
+                              <iframe
+                                class="video-frame"
+                                [src]="embed"
+                                [title]="video.title"
+                                allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                              ></iframe>
+                              <div class="media-shield" aria-hidden="true"></div>
+                            }
+                          </div>
+                        } @else {
+                          <div class="panel-empty compact">
+                            <p>Unsupported video format. Use YouTube or a direct MP4 link.</p>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  </article>
+                }
+              }
+            </div>
+          </section>
+        }
+
+        @if (activeTab() === 'live') {
+          <section class="tab-panel live-panel" role="tabpanel">
+            <div class="media-cards-list">
+              @if (canManageCourseContent()) {
+                <article class="video-card media-action-card live-add-card">
+                  <div class="video-card-body media-action-card-body">
+                    <div class="live-session-form">
+                      <h6 class="live-form-title">Add live online lesson</h6>
+                      <p class="live-form-hint">Share a Zoom, Google Meet, or Teams link. Optionally set a start time so students see upcoming / live status.</p>
+                      <div class="live-form-grid">
+                        <label class="live-form-field">
+                          <span>Session title</span>
+                          <input type="text" class="form-control" [(ngModel)]="liveSessionTitle" placeholder="e.g. Week 4 live tutorial" maxlength="120" />
+                        </label>
+                        <label class="live-form-field">
+                          <span>Meeting link</span>
+                          <input type="url" class="form-control" [(ngModel)]="liveSessionUrl" placeholder="https://zoom.us/j/… or meet.google.com/…" />
+                        </label>
+                        <label class="live-form-field">
+                          <span>Platform</span>
+                          <select class="form-select" [(ngModel)]="liveSessionProvider">
+                            <option value="other">Auto-detect / Other</option>
+                            <option value="zoom">Zoom</option>
+                            <option value="google-meet">Google Meet</option>
+                            <option value="microsoft-teams">Microsoft Teams</option>
+                          </select>
+                        </label>
+                        <label class="live-form-field">
+                          <span>Scheduled start (optional)</span>
+                          <input type="datetime-local" class="form-control" [(ngModel)]="liveSessionScheduledAt" />
+                        </label>
+                        <label class="live-form-field">
+                          <span>Duration (minutes)</span>
+                          <input type="number" class="form-control" min="15" max="480" [(ngModel)]="liveSessionDuration" />
+                        </label>
+                        <label class="live-form-field live-form-field-wide">
+                          <span>Notes for students (optional)</span>
+                          <textarea class="form-control" rows="2" [(ngModel)]="liveSessionNotes" placeholder="Join 5 minutes early, camera optional, etc."></textarea>
+                        </label>
+                      </div>
+                      @if (liveSessionError()) {
+                        <p class="text-danger small mb-2">{{ liveSessionError() }}</p>
+                      }
+                      <button type="button" class="btn btn-primary btn-sm" (click)="addLiveSession()">
+                        <i class="bi bi-plus-lg me-1"></i> Add live session
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              }
+
+              @if (!liveSessions().length) {
+                <div class="panel-empty">
+                  <i class="bi bi-broadcast panel-empty-icon"></i>
+                  <p>No live online lessons yet.</p>
+                  @if (canManageCourseContent()) {
+                    <p class="text-muted small">Add a meeting link above, then publish when ready.</p>
+                  }
+                </div>
+              } @else {
+                @for (session of liveSessions(); track session.id) {
+                  <article
+                    class="video-card live-session-card"
+                    [class.is-collapsed]="isMediaCollapsed(session.id)"
+                    [class.is-live]="liveSessionStatus(session) === 'live'"
+                  >
+                    <div
+                      class="video-card-head"
+                      role="button"
+                      tabindex="0"
+                      [attr.aria-expanded]="!isMediaCollapsed(session.id)"
+                      (click)="toggleMediaCollapsed(session.id)"
+                      (keydown.enter)="toggleMediaCollapsed(session.id)"
+                      (keydown.space)="$event.preventDefault(); toggleMediaCollapsed(session.id)"
+                    >
+                      <div class="video-title-block">
+                        <i
+                          class="bi card-fold-chevron"
+                          [ngClass]="isMediaCollapsed(session.id) ? 'bi-chevron-right' : 'bi-chevron-down'"
+                          aria-hidden="true"
+                        ></i>
+                        <strong>{{ session.title }}</strong>
+                        <span class="video-badge live-status" [class.upcoming]="liveSessionStatus(session) === 'upcoming'" [class.live-now]="liveSessionStatus(session) === 'live'" [class.past]="liveSessionStatus(session) === 'past'">
+                          {{ liveSessionStatusLabel(session) }}
+                        </span>
+                        <span class="video-badge provider">{{ liveProviderLabel(session.provider) }}</span>
+                      </div>
+                      <div class="slide-head-actions" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+                        @if (canManageCourseContent()) {
+                          <button type="button" class="slide-remove" (click)="requestDeleteLiveSession(session)" aria-label="Remove live session">
+                            <i class="bi bi-trash"></i>
+                          </button>
+                        }
+                      </div>
+                    </div>
+
+                    <div class="video-card-body">
+                      <div class="live-session-body">
+                        <p class="live-schedule"><i class="bi bi-calendar-event me-1"></i>{{ formatLiveSchedule(session) }}</p>
+                        @if (session.notes) {
+                          <p class="live-notes">{{ session.notes }}</p>
+                        }
+                        <a
+                          class="btn btn-primary live-join-btn"
+                          [href]="session.url"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          [class.btn-success]="liveSessionStatus(session) === 'live'"
+                        >
+                          <i class="bi bi-box-arrow-up-right me-1"></i>
+                          @if (liveSessionStatus(session) === 'live') {
+                            Join live session
+                          } @else if (liveSessionStatus(session) === 'upcoming') {
+                            Open meeting link
+                          } @else {
+                            View meeting link
+                          }
+                        </a>
+                      </div>
+                    </div>
+                  </article>
+                }
+              }
+            </div>
+          </section>
+        }
+      </div>
+      </div>
+    </div>
+  }
+</div>
+
+@if (slideBuilderOpen()) {
+  <div class="slide-builder-backdrop" (click)="closeSlideBuilder()"></div>
+  <div class="slide-builder-modal" role="dialog" aria-modal="true" aria-labelledby="slideBuilderTitle">
+    <div class="slide-builder-card" (click)="$event.stopPropagation()">
+      <div class="slide-builder-accent"></div>
+      <div class="slide-builder-header">
+        <div class="slide-builder-icon"><i class="bi bi-easel2"></i></div>
+        <div class="slide-builder-heading">
+          <h5 id="slideBuilderTitle">Create a presentation</h5>
+          <p>Add a title and bullet points per slide. Optionally attach an image, then save as PowerPoint.</p>
+        </div>
+        <button type="button" class="slide-builder-close" (click)="closeSlideBuilder()" aria-label="Close">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="slide-builder-body">
+        <label class="slide-builder-field">
+          <span>Presentation title</span>
+          <input type="text" class="form-control" [(ngModel)]="slideBuilderDeckTitle" placeholder="e.g. Week 3: Introduction" maxlength="120" />
+        </label>
+        <div class="slide-builder-deck">
+          @for (slide of slideBuilderSlides(); track slide.id; let i = $index) {
+            <article class="slide-builder-card-item">
+              <div class="slide-builder-card-head">
+                <strong>Slide {{ i + 1 }}</strong>
+                <button type="button" class="btn btn-sm btn-outline-danger" (click)="removeBuilderSlide(slide.id)" [disabled]="slideBuilderSlides().length === 1">
+                  Remove
+                </button>
+              </div>
+              <label class="slide-builder-field">
+                <span>Title</span>
+                <input type="text" class="form-control" [ngModel]="slide.title" (ngModelChange)="updateBuilderSlide(slide.id, 'title', $event)" placeholder="Slide title" maxlength="120" />
+              </label>
+              <label class="slide-builder-field">
+                <span>Bullet points</span>
+                <textarea class="form-control" rows="5" [ngModel]="slide.bullets" (ngModelChange)="updateBuilderSlide(slide.id, 'bullets', $event)" placeholder="One point per line"></textarea>
+              </label>
+              <div class="slide-builder-image-row">
+                <label class="btn btn-outline-secondary btn-sm">
+                  <i class="bi bi-image me-1"></i>
+                  {{ slide.imageName || 'Add image' }}
+                  <input type="file" accept="image/*" hidden (change)="onBuilderImage(slide.id, $event)" />
+                </label>
+                @if (slide.imageDataUrl) {
+                  <img class="slide-builder-thumb" [src]="slide.imageDataUrl" alt="" />
+                  <button type="button" class="btn btn-sm btn-link text-danger" (click)="clearBuilderImage(slide.id)">Remove image</button>
+                }
+              </div>
+            </article>
+          }
+        </div>
+        <button type="button" class="btn btn-outline-primary" (click)="addBuilderSlide()">
+          <i class="bi bi-plus-lg me-1"></i> Add slide
+        </button>
+        @if (slideBuilderError()) {
+          <div class="media-error mt-3">{{ slideBuilderError() }}</div>
+        }
+      </div>
+      <div class="slide-builder-footer">
+        <button type="button" class="btn btn-outline-secondary" (click)="closeSlideBuilder()" [disabled]="slideBuilderBusy()">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="exportSlideBuilder()" [disabled]="slideBuilderBusy()">
+          @if (slideBuilderBusy()) {
+            Saving…
+          } @else {
+            <i class="bi bi-file-earmark-ppt me-1"></i> Save as PowerPoint
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (deleteConfirm(); as target) {
+  <div class="delete-modal-backdrop" (click)="closeDeleteConfirm()"></div>
+  <div class="delete-modal" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+    <div class="delete-modal-card">
+      <div class="delete-modal-accent"></div>
+      <div class="delete-modal-header">
+        <div class="delete-modal-icon">
+          <i class="bi bi-trash3"></i>
+        </div>
+        <div class="delete-modal-heading">
+          <h5 id="deleteModalTitle">{{ deleteConfirmHeading() }}</h5>
+          <p>{{ deleteConfirmMessage() }}</p>
+        </div>
+        <button type="button" class="delete-modal-close" (click)="closeDeleteConfirm()" aria-label="Close">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="delete-modal-footer">
+        <button type="button" class="btn btn-outline-secondary" (click)="closeDeleteConfirm()">
+          Cancel
+        </button>
+        <button type="button" class="btn btn-danger" (click)="confirmDelete()">
+          <i class="bi bi-trash3 me-1"></i>
+          Delete {{ target.kind === 'slide' ? 'presentation' : 'video' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

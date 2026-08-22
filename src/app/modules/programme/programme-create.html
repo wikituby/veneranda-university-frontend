@@ -1,0 +1,92 @@
+<div class="page">
+  <a routerLink="/home" class="back">Home</a>
+  <h1>Register a programme</h1>
+  <p class="lede">Cascade from the top: programme → year → semester → course unit. The unit outline is added later in the course workspace, the same way categories get a parent.</p>
+
+  <ol class="steps">
+    <li [class.active]="step() === 1">Programme</li>
+    <li [class.active]="step() === 2">Years, semesters &amp; units</li>
+  </ol>
+
+  @if (error()) {
+    <div class="inline-alert">{{ error() }}</div>
+  }
+
+  @if (step() === 1) {
+    <form (submit)="$event.preventDefault(); createProgramme()">
+      <label class="form-label fw-semibold">Programme name</label>
+      <input class="form-control mb-3" [(ngModel)]="title" name="title" placeholder="e.g. Diploma in Clinical Medicine and Community Health" required />
+      <div class="form-pair mb-3">
+        <div>
+          <label class="form-label fw-semibold">Programme code</label>
+          <input class="form-control" [(ngModel)]="programmeCode" name="programmeCode" placeholder="e.g. DCMCH-001" maxlength="50" />
+        </div>
+        <div>
+          <label class="form-label fw-semibold">Abbreviation</label>
+          <input class="form-control" [(ngModel)]="abbreviation" name="abbreviation" placeholder="e.g. DCMCH" maxlength="50" />
+        </div>
+      </div>
+      <label class="form-label fw-semibold">Institution affiliated to</label>
+      <select class="form-select mb-3" [(ngModel)]="institution" name="institution">
+        @for (inst of institutions; track inst) {
+          <option [ngValue]="inst">{{ inst }}</option>
+        }
+      </select>
+      <label class="form-label fw-semibold">Description</label>
+      <textarea class="form-control mb-3" rows="3" [(ngModel)]="description" name="description" placeholder="What a learner gets from this programme"></textarea>
+      <button class="btn btn-primary" type="submit" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Create programme' }}</button>
+    </form>
+  } @else {
+    <p class="ok">Registered: <strong>{{ programmeHeading(programme()) }}</strong>
+      <span class="hint-inline"> · Affiliated to {{ programme()?.affiliatedInstitution || institution }}</span>
+    </p>
+
+    <section class="panel">
+      <h2>Years</h2>
+      <div class="chips">
+        @for (year of years(); track year.id) {
+          <button type="button" class="chip" [class.active]="selectedYear()?.id === year.id" (click)="selectYear(year)">{{ year.title }}</button>
+        }
+      </div>
+      <div class="inline-add">
+        <input class="form-control" [(ngModel)]="yearTitle" name="yearTitle" />
+        <button type="button" class="btn btn-outline-primary" [disabled]="saving()" (click)="addYear()">Add year</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Semesters under {{ selectedYear()?.title || 'a year' }}</h2>
+      <div class="chips">
+        @for (sem of semesters(); track sem.id) {
+          <button type="button" class="chip" [class.active]="selectedSemester()?.id === sem.id" (click)="selectSemester(sem)">{{ sem.title }}</button>
+        }
+      </div>
+      <div class="inline-add">
+        <input class="form-control" [(ngModel)]="semesterTitle" name="semesterTitle" />
+        <input class="form-control price" type="number" [(ngModel)]="semesterPrice" name="semesterPrice" />
+        <button type="button" class="btn btn-outline-primary" [disabled]="saving() || !selectedYear()" (click)="addSemester()">Add semester</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Course units under {{ selectedSemester()?.title || 'a semester' }}</h2>
+      <ul class="unit-list">
+        @for (unit of units(); track unit.id) {
+          <li>{{ programmeHeading(unit) }}@if (unit.programmeCode) { <span class="hint-inline"> · {{ unit.programmeCode }}</span> }</li>
+        }
+      </ul>
+      <div class="form-pair mb-2">
+        <input class="form-control" [(ngModel)]="unitCode" name="unitCode" placeholder="Course code, e.g. ANAT-101" maxlength="50" />
+        <input class="form-control" [(ngModel)]="unitAbbreviation" name="unitAbbreviation" placeholder="Abbreviation, e.g. ANAT" maxlength="50" />
+      </div>
+      <div class="inline-add">
+        <input class="form-control" [(ngModel)]="unitTitle" name="unitTitle" placeholder="e.g. Human Anatomy" />
+        <input class="form-control price" type="number" [(ngModel)]="unitPrice" name="unitPrice" />
+        <button type="button" class="btn btn-outline-primary" [disabled]="saving() || !selectedSemester()" (click)="addUnit()">Add unit</button>
+      </div>
+    </section>
+
+    <button type="button" class="btn btn-primary" (click)="finish()">Open programme page</button>
+    <p class="hint">Add lesson outline under each course unit from the sidebar after you open the unit.</p>
+  }
+</div>

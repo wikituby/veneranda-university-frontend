@@ -1,0 +1,171 @@
+import { Component, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { CourseService } from '../../core/services/course.service';
+import { CourseCategory } from '../../core/models/course.model';
+import { AFFILIATED_INSTITUTIONS, DEFAULT_INSTITUTION, programmeHeading } from '../../core/utils/programme.util';
+
+@Component({
+  selector: 'app-programme-create',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterLink],
+  templateUrl: './programme-create.html',
+  styleUrl: './programme-create.scss',
+})
+export class ProgrammeCreate {
+  private courses = inject(CourseService);
+  private router = inject(Router);
+
+  step = signal(1);
+  saving = signal(false);
+  error = signal('');
+
+  title = '';
+  description = '';
+  programmeCode = '';
+  abbreviation = '';
+  institution = DEFAULT_INSTITUTION;
+  readonly institutions = AFFILIATED_INSTITUTIONS;
+  readonly programmeHeading = programmeHeading;
+  programme = signal<CourseCategory | null>(null);
+  years = signal<CourseCategory[]>([]);
+  yearTitle = 'Year 1';
+  selectedYear = signal<CourseCategory | null>(null);
+  semesters = signal<CourseCategory[]>([]);
+  semesterTitle = 'Semester 1';
+  semesterPrice = 40000;
+  selectedSemester = signal<CourseCategory | null>(null);
+  units = signal<CourseCategory[]>([]);
+  unitTitle = '';
+  unitCode = '';
+  unitAbbreviation = '';
+  unitPrice = 15000;
+
+  createProgramme(): void {
+    if (!this.title.trim()) {
+      this.error.set('Enter the programme name.');
+      return;
+    }
+    this.saving.set(true);
+    this.error.set('');
+    this.courses
+      .createCategory({
+        title: this.title.trim(),
+        description: this.description.trim(),
+        programmeCode: this.programmeCode.trim() || null,
+        abbreviation: this.abbreviation.trim() || null,
+        affiliatedInstitution: this.institution,
+        nodeKind: 'PROGRAMME',
+        isPublished: true,
+        icon: 'school',
+      })
+      .subscribe({
+        next: (created) => {
+          this.saving.set(false);
+          this.programme.set(created);
+          this.step.set(2);
+        },
+        error: () => {
+          this.saving.set(false);
+          this.error.set('Could not register the programme.');
+        },
+      });
+  }
+
+  addYear(): void {
+    const parent = this.programme();
+    if (!parent || !this.yearTitle.trim()) return;
+    this.saving.set(true);
+    this.courses
+      .createChildCategory(parent.id, this.yearTitle.trim(), '', undefined, { nodeKind: 'YEAR', icon: 'calendar_month' })
+      .subscribe({
+        next: (year) => {
+          this.years.update((list) => [...list, year]);
+          this.selectedYear.set(year);
+          this.yearTitle = `Year ${this.years().length + 1}`;
+          this.saving.set(false);
+        },
+        error: () => {
+          this.saving.set(false);
+          this.error.set('Could not add the year.');
+        },
+      });
+  }
+
+  selectYear(year: CourseCategory): void {
+    this.selectedYear.set(year);
+    this.selectedSemester.set(null);
+    this.semesters.set([]);
+    this.units.set([]);
+    this.courses.getCategories(false).subscribe((cats) => {
+      this.semesters.set((cats || []).filter((c) => c.parentId === year.id));
+    });
+  }
+
+  addSemester(): void {
+    const year = this.selectedYear();
+    if (!year) {
+      this.error.set('Select a year first.');
+      return;
+    }
+    this.saving.set(true);
+    this.courses
+      .createChildCategory(year.id, this.semesterTitle.trim(), '', undefined, {
+        nodeKind: 'SEMESTER',
+        icon: 'view_week',
+        priceAmount: this.semesterPrice,
+      })
+      .subscribe({
+        next: (sem) => {
+          this.semesters.update((list) => [...list, sem]);
+          this.selectedSemester.set(sem);
+          this.saving.set(false);
+        },
+        error: () => {
+          this.saving.set(false);
+          this.error.set('Could not add the semester.');
+        },
+      });
+  }
+
+  selectSemester(sem: CourseCategory): void {
+    this.selectedSemester.set(sem);
+    this.courses.getCategories(false).subscribe((cats) => {
+      this.units.set((cats || []).filter((c) => c.parentId === sem.id));
+    });
+  }
+
+  addUnit(): void {
+    const sem = this.selectedSemester();
+    if (!sem || !this.unitTitle.trim()) return;
+    this.saving.set(true);
+    this.courses
+      .createChildCategory(sem.id, this.unitTitle.trim(), '', undefined, {
+        nodeKind: 'UNIT',
+        icon: 'menu_book',
+        priceAmount: this.unitPrice,
+        programmeCode: this.unitCode.trim() || null,
+        abbreviation: this.unitAbbreviation.trim() || null,
+      })
+      .subscribe({
+        next: (unit) => {
+          this.units.update((list) => [...list, unit]);
+          this.unitTitle = '';
+          this.unitCode = '';
+          this.unitAbbreviation = '';
+          this.saving.set(false);
+        },
+        error: () => {
+          this.saving.set(false);
+          this.error.set('Could not add the course unit.');
+        },
+      });
+  }
+
+  finish(): void {
+    const p = this.programme();
+    if (p) this.router.navigate(['/programmes', p.id]);
+    else this.router.navigateByUrl('/home');
+  }
+}

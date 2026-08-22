@@ -1,0 +1,176 @@
+<div class="container-fluid py-4">
+  <!-- ===== Toast ===== -->
+  @if (showToast()) {
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index:9999">
+      <div class="toast show align-items-center text-bg-{{ toastType() }} border-0" role="alert">
+        <div class="d-flex">
+          <div class="toast-body">{{ toastMessage() }}</div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" (click)="showToast.set(false)"></button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ===== Page Header ===== -->
+  <div class="d-flex align-items-center mb-4">
+    <a routerLink="/routers" class="btn btn-outline-secondary btn-sm me-3">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <div>
+      <h4 class="fw-bold mb-1">{{ pageTitle() }}</h4>
+      <p class="text-muted small mb-0">{{ isEditMode() ? 'Update router configuration' : 'Register a new network device' }}</p>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  } @else {
+    <form (ngSubmit)="onSubmit()" #routerForm="ngForm">
+      <div class="row g-4">
+        <div class="col-lg-8">
+          <!-- Basic Information -->
+          <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent border-bottom py-3">
+              <h6 class="fw-bold mb-0"><i class="bi bi-info-circle text-primary me-2"></i>Basic Information</h6>
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-8">
+                  <label class="form-label fw-semibold">Router Name <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" [(ngModel)]="name" name="name" required placeholder="e.g. Main Gateway Router">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-semibold">Vendor <span class="text-danger">*</span></label>
+                  <select class="form-select" [(ngModel)]="vendor" name="vendor" required>
+                    <option value="" disabled>Select vendor...</option>
+                    @for (opt of vendorOptions; track opt.value) {
+                      <option [value]="opt.value">{{ opt.label }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold">Model</label>
+                  <input type="text" class="form-control" [(ngModel)]="model" name="model" placeholder="e.g. RB4011, EdgeRouter 4">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold">Serial Number</label>
+                  <input type="text" class="form-control" [(ngModel)]="serialNumber" name="serialNumber" placeholder="Device serial number">
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold">Location</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                    <input type="text" class="form-control" [(ngModel)]="location" name="location" placeholder="e.g. Server Room A, Floor 2">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Network Configuration -->
+          <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent border-bottom py-3">
+              <h6 class="fw-bold mb-0"><i class="bi bi-ethernet text-primary me-2"></i>Network Configuration</h6>
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-8">
+                  <label class="form-label fw-semibold">IP Address <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" [(ngModel)]="ipAddress" name="ipAddress" required placeholder="e.g. 192.168.88.1">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-semibold">API Port <span class="text-danger">*</span></label>
+                  <input type="number" class="form-control" [(ngModel)]="apiPort" name="apiPort" required>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Credentials -->
+          <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent border-bottom py-3">
+              <h6 class="fw-bold mb-0"><i class="bi bi-shield-lock text-primary me-2"></i>Credentials</h6>
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold">Username <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" [(ngModel)]="username" name="username" required placeholder="API username">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold">{{ isEditMode() ? 'Password (leave blank to keep)' : 'Password' }} <span class="text-danger" *ngIf="!isEditMode()">*</span></label>
+                  <input type="password" class="form-control" [(ngModel)]="password" name="password" [required]="!isEditMode()" placeholder="{{ isEditMode() ? 'Leave blank to keep current' : 'Enter password' }}">
+                </div>
+              </div>
+              <div class="alert alert-info d-flex align-items-center gap-2 mt-3 mb-0 py-2 small">
+                <i class="bi bi-shield-check"></i>
+                Password is encrypted using BCrypt before storage. Never stored in plain text.
+              </div>
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent border-bottom py-3">
+              <h6 class="fw-bold mb-0"><i class="bi bi-journal-text text-primary me-2"></i>Notes</h6>
+            </div>
+            <div class="card-body">
+              <textarea class="form-control" [(ngModel)]="notes" name="notes" rows="3" placeholder="Any relevant information about this router..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-4">
+          <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent border-bottom py-3">
+              <h6 class="fw-bold mb-0"><i class="bi bi-sliders2 text-primary me-2"></i>Settings</h6>
+            </div>
+            <div class="card-body">
+              <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" role="switch" [(ngModel)]="isEnabled" name="isEnabled" id="routerEnabled">
+                <label class="form-check-label fw-medium" for="routerEnabled">Router Enabled</label>
+              </div>
+              <div class="alert mb-0 py-2 small d-flex align-items-center gap-2" [class.alert-success]="isEnabled()" [class.alert-secondary]="!isEnabled()">
+                <i class="bi" [class.bi-check-circle-fill]="isEnabled()" [class.bi-slash-circle]="!isEnabled()"></i>
+                Router is currently <strong>{{ isEnabled() ? 'Enabled' : 'Disabled' }}</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent border-bottom py-3">
+              <h6 class="fw-bold mb-0"><i class="bi bi-cpu text-primary me-2"></i>Firmware & Version</h6>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Firmware</label>
+                <input type="text" class="form-control" [(ngModel)]="firmware" name="firmware" placeholder="e.g. 7.10.2">
+              </div>
+              <div>
+                <label class="form-label fw-semibold">Router Version</label>
+                <input type="text" class="form-control" [(ngModel)]="routerVersion" name="routerVersion" placeholder="e.g. 6.49.7">
+              </div>
+            </div>
+          </div>
+
+          <div class="card border-0 shadow-sm">
+            <div class="card-body">
+              <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary" [disabled]="loading()">
+                  <i class="bi me-1" [class.bi-plus-circle]="!isEditMode()" [class.bi-check-circle]="isEditMode()"></i>
+                  {{ isEditMode() ? 'Update Router' : 'Register Router' }}
+                </button>
+                <a routerLink="/routers" class="btn btn-outline-secondary">Cancel</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  }
+</div>
