@@ -25,7 +25,7 @@ export interface CourseCategory {
   affiliatedInstitution?: string | null;
   programmeCode?: string | null;
   abbreviation?: string | null;
-  /** Programme card / hero image URL or data URL. */
+  /** Programme card image URL (external or presigned R2 URL). */
   coverImageUrl?: string | null;
 }
 

@@ -28,6 +28,7 @@ export class ProgrammeCreate {
   institution = DEFAULT_INSTITUTION;
   coverImageUrl = '';
   coverError = '';
+  pendingCoverFile: File | null = null;
   readonly institutions = AFFILIATED_INSTITUTIONS;
   readonly programmeHeading = programmeHeading;
   programme = signal<CourseCategory | null>(null);
@@ -53,22 +54,19 @@ export class ProgrammeCreate {
       this.coverError = 'Choose an image file (JPG, PNG, WebP, or GIF).';
       return;
     }
-    if (file.size > 1_500_000) {
-      this.coverError = 'Image must be under 1.5 MB. Compress it or paste an image URL instead.';
+    if (file.size > 5_000_000) {
+      this.coverError = 'Image must be under 5 MB.';
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.coverImageUrl = typeof reader.result === 'string' ? reader.result : '';
-      this.coverError = '';
-    };
-    reader.onerror = () => {
-      this.coverError = 'Could not read that image file.';
-    };
-    reader.readAsDataURL(file);
+    this.revokeCoverPreview();
+    this.pendingCoverFile = file;
+    this.coverImageUrl = URL.createObjectURL(file);
+    this.coverError = '';
   }
 
   clearCoverImage(): void {
+    this.revokeCoverPreview();
+    this.pendingCoverFile = null;
     this.coverImageUrl = '';
     this.coverError = '';
   }
@@ -80,6 +78,7 @@ export class ProgrammeCreate {
     }
     this.saving.set(true);
     this.error.set('');
+    const pastedUrl = this.pendingCoverFile ? null : this.coverImageUrl.trim() || null;
     this.courses
       .createCategory({
         title: this.title.trim(),
@@ -87,22 +86,55 @@ export class ProgrammeCreate {
         programmeCode: this.programmeCode.trim() || null,
         abbreviation: this.abbreviation.trim() || null,
         affiliatedInstitution: this.institution,
-        coverImageUrl: this.coverImageUrl.trim() || null,
+        coverImageUrl: pastedUrl,
         nodeKind: 'PROGRAMME',
         isPublished: true,
         icon: 'school',
       })
       .subscribe({
         next: (created) => {
-          this.saving.set(false);
-          this.programme.set(created);
-          this.step.set(2);
+          if (this.pendingCoverFile) {
+            this.uploadCoverAfterCreate(created);
+            return;
+          }
+          this.finishCreate(created);
         },
         error: () => {
           this.saving.set(false);
           this.error.set('Could not register the programme.');
         },
       });
+  }
+
+  private uploadCoverAfterCreate(created: CourseCategory): void {
+    const file = this.pendingCoverFile;
+    if (!file) {
+      this.finishCreate(created);
+      return;
+    }
+    this.courses.uploadCoverImage(created.id, file).subscribe({
+      next: () => this.finishCreate(created),
+      error: (err) => {
+        this.saving.set(false);
+        this.error.set(err?.error?.message || 'Programme created, but the cover image could not be uploaded.');
+        this.programme.set(created);
+        this.step.set(2);
+      },
+    });
+  }
+
+  private finishCreate(created: CourseCategory): void {
+    this.revokeCoverPreview();
+    this.pendingCoverFile = null;
+    this.saving.set(false);
+    this.programme.set(created);
+    this.step.set(2);
+  }
+
+  private revokeCoverPreview(): void {
+    if (this.coverImageUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(this.coverImageUrl);
+    }
   }
 
   addYear(): void {

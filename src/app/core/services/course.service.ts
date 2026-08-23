@@ -192,6 +192,18 @@ export class CourseService {
     return this.r2Status$;
   }
 
+  uploadCoverImage(categoryId: string, file: File): Observable<CourseCategory> {
+    const form = new FormData();
+    form.append('file', file, file.name);
+    return this.http.post<CourseCategory>(`${this.baseUrl}/${categoryId}/cover/upload`, form);
+  }
+
+  getCoverImage(categoryId: string): Observable<{ categoryId: string; url: string; expiresAt: string; provider: string }> {
+    return this.http.get<{ categoryId: string; url: string; expiresAt: string; provider: string }>(
+      `${this.baseUrl}/${categoryId}/cover`
+    );
+  }
+
   uploadR2Video(categoryId: string, file: File, title = ''): Observable<CourseVideo> {
     const form = new FormData();
     form.append('file', file, file.name);

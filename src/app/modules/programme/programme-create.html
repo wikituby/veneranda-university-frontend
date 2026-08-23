@@ -45,7 +45,7 @@
             <input type="file" accept="image/*" hidden (change)="onCoverFileSelected($event)" />
           </label>
           <button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="!coverImageUrl" (click)="clearCoverImage()">Clear</button>
-          <input class="form-control" [(ngModel)]="coverImageUrl" name="coverImageUrl" placeholder="Or paste an image URL" [disabled]="coverImageUrl.startsWith('data:')" />
+          <input class="form-control" [(ngModel)]="coverImageUrl" name="coverImageUrl" placeholder="Or paste an image URL" [disabled]="!!pendingCoverFile" />
           @if (coverError) {
             <p class="cover-error">{{ coverError }}</p>
           }

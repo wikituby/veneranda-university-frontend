@@ -245,17 +245,18 @@
           </div>
           <div class="cover-edit-controls">
             <label class="btn btn-outline-secondary btn-sm cover-upload">
-              Upload image
-              <input type="file" accept="image/*" hidden (change)="onCoverFileSelected($event)" />
+              {{ coverUploadBusy() ? 'Uploading…' : 'Upload image' }}
+              <input type="file" accept="image/*" hidden [disabled]="coverUploadBusy()" (change)="onCoverFileSelected($event)" />
             </label>
-            <button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="!formCoverImageUrl()" (click)="clearCoverImage()">
+            <button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="!formCoverImageUrl() || coverUploadBusy()" (click)="clearCoverImage()">
               Use default
             </button>
             <input
               class="form-control"
-              [value]="formCoverImageUrl().startsWith('data:') ? '' : formCoverImageUrl()"
+              [value]="formCoverImageUrl()"
               (input)="onFormCoverUrl($event)"
               placeholder="Or paste an image URL"
+              [disabled]="coverUploadBusy()"
             />
             @if (formCoverError()) {
               <p class="cover-error">{{ formCoverError() }}</p>

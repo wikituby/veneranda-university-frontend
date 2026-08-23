@@ -47,6 +47,8 @@ export class StudentHome implements OnInit {
   formInstitution = signal<string>(DEFAULT_INSTITUTION);
   formCoverImageUrl = signal('');
   formCoverError = signal('');
+  coverDirty = signal(false);
+  coverUploadBusy = signal(false);
   formBusy = signal(false);
   deleteBusy = signal(false);
   failedCovers = signal(new Set<string>());
@@ -246,6 +248,8 @@ export class StudentHome implements OnInit {
     this.formInstitution.set(p.affiliatedInstitution || this.defaultInstitution);
     this.formCoverImageUrl.set(p.coverImageUrl || '');
     this.formCoverError.set('');
+    this.coverDirty.set(false);
+    this.coverUploadBusy.set(false);
     this.error.set('');
   }
 
@@ -277,34 +281,48 @@ export class StudentHome implements OnInit {
   onFormCoverUrl(event: Event): void {
     this.formCoverImageUrl.set((event.target as HTMLInputElement).value);
     this.formCoverError.set('');
+    this.coverDirty.set(true);
   }
 
   clearCoverImage(): void {
     this.formCoverImageUrl.set('');
     this.formCoverError.set('');
+    this.coverDirty.set(true);
   }
 
   onCoverFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     input.value = '';
-    if (!file) return;
+    const draft = this.editing();
+    if (!file || !draft) return;
     if (!file.type.startsWith('image/')) {
       this.formCoverError.set('Choose an image file (JPG, PNG, WebP, or GIF).');
       return;
     }
-    if (file.size > 1_500_000) {
-      this.formCoverError.set('Image must be under 1.5 MB. Compress it or paste an image URL instead.');
+    if (file.size > 5_000_000) {
+      this.formCoverError.set('Image must be under 5 MB.');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = typeof reader.result === 'string' ? reader.result : '';
-      this.formCoverImageUrl.set(result);
-      this.formCoverError.set('');
-    };
-    reader.onerror = () => this.formCoverError.set('Could not read that image file.');
-    reader.readAsDataURL(file);
+    this.coverUploadBusy.set(true);
+    this.formCoverError.set('');
+    this.courses.uploadCoverImage(draft.id, file).subscribe({
+      next: (updated) => {
+        this.formCoverImageUrl.set(updated.coverImageUrl || '');
+        this.coverDirty.set(false);
+        this.coverUploadBusy.set(false);
+        this.programmes.update((list) => list.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)));
+        this.failedCovers.update((set) => {
+          const next = new Set(set);
+          next.delete(updated.id);
+          return next;
+        });
+      },
+      error: (err) => {
+        this.coverUploadBusy.set(false);
+        this.formCoverError.set(err?.error?.message || 'Could not upload cover image. Check that file storage is configured.');
+      },
+    });
   }
 
   institutionOptions(): string[] {
@@ -321,14 +339,17 @@ export class StudentHome implements OnInit {
     if (!draft || !title || this.formBusy()) return;
     this.formBusy.set(true);
     this.error.set('');
-    this.courses.updateCategory(draft.id, {
+    const patch: Partial<CourseCategory> = {
       title,
       description: this.formDescription().trim(),
       programmeCode: this.formProgrammeCode().trim() || null,
       abbreviation: this.formAbbreviation().trim() || null,
       affiliatedInstitution: this.formInstitution(),
-      coverImageUrl: this.formCoverImageUrl().trim(),
-    }).subscribe({
+    };
+    if (this.coverDirty()) {
+      patch.coverImageUrl = this.formCoverImageUrl().trim();
+    }
+    this.courses.updateCategory(draft.id, patch).subscribe({
       next: (updated) => {
         this.programmes.update((list) => list.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)));
         this.failedCovers.update((set) => {
