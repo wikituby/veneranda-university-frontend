@@ -44,7 +44,7 @@ export class ProgrammeDetails implements OnInit {
 
   readonly theme = computed(() => {
     const p = this.programme();
-    return p ? coverTheme(p.title, p.id) : coverTheme('', '');
+    return p ? coverTheme(p.title, p.id, p.coverImageUrl) : coverTheme('', '');
   });
 
   readonly story = computed(() => {

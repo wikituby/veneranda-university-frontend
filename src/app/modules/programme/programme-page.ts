@@ -56,6 +56,8 @@ export class ProgrammePage implements OnInit {
   formProgrammeCode = signal('');
   formAbbreviation = signal('');
   formInstitution = signal<string>(DEFAULT_INSTITUTION);
+  formCoverImageUrl = signal('');
+  formCoverError = signal('');
   addingBusy = signal(false);
 
   canManage = computed(() => {
@@ -589,6 +591,8 @@ export class ProgrammePage implements OnInit {
     this.formProgrammeCode.set(item.programmeCode || '');
     this.formAbbreviation.set(item.abbreviation || '');
     this.formInstitution.set(item.affiliatedInstitution || DEFAULT_INSTITUTION);
+    this.formCoverImageUrl.set(item.coverImageUrl || '');
+    this.formCoverError.set('');
   }
 
   closeForm(): void {
@@ -599,6 +603,8 @@ export class ProgrammePage implements OnInit {
     this.formProgrammeCode.set('');
     this.formAbbreviation.set('');
     this.formInstitution.set(DEFAULT_INSTITUTION);
+    this.formCoverImageUrl.set('');
+    this.formCoverError.set('');
   }
 
   formOpen(): boolean {
@@ -696,6 +702,39 @@ export class ProgrammePage implements OnInit {
     this.formAbbreviation.set((event.target as HTMLInputElement).value);
   }
 
+  onFormCoverUrl(event: Event): void {
+    this.formCoverImageUrl.set((event.target as HTMLInputElement).value);
+    this.formCoverError.set('');
+  }
+
+  clearCoverImage(): void {
+    this.formCoverImageUrl.set('');
+    this.formCoverError.set('');
+  }
+
+  onCoverFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      this.formCoverError.set('Choose an image file (JPG, PNG, WebP, or GIF).');
+      return;
+    }
+    if (file.size > 1_500_000) {
+      this.formCoverError.set('Image must be under 1.5 MB. Compress it or paste an image URL instead.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === 'string' ? reader.result : '';
+      this.formCoverImageUrl.set(result);
+      this.formCoverError.set('');
+    };
+    reader.onerror = () => this.formCoverError.set('Could not read that image file.');
+    reader.readAsDataURL(file);
+  }
+
   institutionOptions(): string[] {
     const current = this.formInstitution();
     if (current && !(this.institutions as readonly string[]).includes(current)) {
@@ -726,6 +765,7 @@ export class ProgrammePage implements OnInit {
     if (draft.kind === 'PROGRAMME' || draft.kind === 'UNIT') {
       if (draft.kind === 'PROGRAMME') {
         patch.affiliatedInstitution = this.formInstitution();
+        patch.coverImageUrl = this.formCoverImageUrl().trim();
       }
       patch.programmeCode = this.formProgrammeCode().trim() || null;
       patch.abbreviation = this.formAbbreviation().trim() || null;

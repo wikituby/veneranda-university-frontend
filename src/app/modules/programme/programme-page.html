@@ -231,6 +231,36 @@
             }
           </select>
         </label>
+        <div class="modal-field">
+          <span>Programme card image</span>
+          <div class="cover-edit">
+            <div class="cover-preview" [style.background]="coverTheme(formTitle() || programme()?.title || '', editing()!.id, formCoverImageUrl()).gradient">
+              @if (formCoverImageUrl()) {
+                <img [src]="formCoverImageUrl()" [alt]="formTitle()" />
+              } @else {
+                <img [src]="coverTheme(formTitle() || programme()?.title || '', editing()!.id).url" [alt]="formTitle()" />
+              }
+            </div>
+            <div class="cover-edit-controls">
+              <label class="btn btn-outline-secondary btn-sm cover-upload">
+                Upload image
+                <input type="file" accept="image/*" hidden (change)="onCoverFileSelected($event)" />
+              </label>
+              <button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="!formCoverImageUrl()" (click)="clearCoverImage()">
+                Use default
+              </button>
+              <input
+                class="form-control"
+                [value]="formCoverImageUrl().startsWith('data:') ? '' : formCoverImageUrl()"
+                (input)="onFormCoverUrl($event)"
+                placeholder="Or paste an image URL"
+              />
+              @if (formCoverError()) {
+                <p class="cover-error">{{ formCoverError() }}</p>
+              }
+            </div>
+          </div>
+        </div>
       }
       <div class="modal-actions">
         <button type="button" class="btn btn-outline-secondary" (click)="closeForm()">Cancel</button>

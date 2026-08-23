@@ -25,6 +25,8 @@ export interface CourseCategory {
   affiliatedInstitution?: string | null;
   programmeCode?: string | null;
   abbreviation?: string | null;
+  /** Programme card / hero image URL or data URL. */
+  coverImageUrl?: string | null;
 }
 
 export interface CourseContent {

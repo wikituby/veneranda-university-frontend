@@ -35,7 +35,8 @@
           @if (enrollments().length) {
             <div class="continue-row">
               @for (item of enrollments(); track item.categoryId) {
-                @let theme = coverTheme(item.categoryTitle || '', item.categoryId);
+                @let prog = programmeById(item.categoryId);
+                @let theme = coverTheme(item.categoryTitle || '', item.categoryId, prog?.coverImageUrl);
                 <article class="continue-card" (click)="openDetailsById(item.categoryId)">
                   <div class="continue-cover" [style.background]="theme.gradient">
                     @if (showCover(item.categoryId)) {
@@ -115,7 +116,7 @@
             @if (exploreProgrammes().length) {
               <div class="catalog-grid">
                 @for (p of exploreProgrammes(); track p.id) {
-                  @let theme = coverTheme(p.title, p.id);
+                  @let theme = coverTheme(p.title, p.id, p.coverImageUrl);
                   <article class="course-tile" (click)="openDetails(p)">
                     <div class="tile-cover" [style.background]="theme.gradient">
                       @if (showCover(p.id)) {
@@ -232,6 +233,36 @@
           }
         </select>
       </label>
+      <div class="modal-field">
+        <span>Programme card image</span>
+        <div class="cover-edit">
+          <div class="cover-preview" [style.background]="coverTheme(formTitle() || draft.title, draft.id, formCoverImageUrl()).gradient">
+            @if (formCoverImageUrl()) {
+              <img [src]="formCoverImageUrl()" [alt]="formTitle() || draft.title" />
+            } @else {
+              <img [src]="coverTheme(formTitle() || draft.title, draft.id).url" [alt]="formTitle() || draft.title" />
+            }
+          </div>
+          <div class="cover-edit-controls">
+            <label class="btn btn-outline-secondary btn-sm cover-upload">
+              Upload image
+              <input type="file" accept="image/*" hidden (change)="onCoverFileSelected($event)" />
+            </label>
+            <button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="!formCoverImageUrl()" (click)="clearCoverImage()">
+              Use default
+            </button>
+            <input
+              class="form-control"
+              [value]="formCoverImageUrl().startsWith('data:') ? '' : formCoverImageUrl()"
+              (input)="onFormCoverUrl($event)"
+              placeholder="Or paste an image URL"
+            />
+            @if (formCoverError()) {
+              <p class="cover-error">{{ formCoverError() }}</p>
+            }
+          </div>
+        </div>
+      </div>
       <div class="modal-actions">
         <button type="button" class="btn btn-outline-secondary" [disabled]="formBusy()" (click)="cancelEdit()">Cancel</button>
         <button type="button" class="btn btn-primary" [disabled]="formBusy()" (click)="confirmEdit()">

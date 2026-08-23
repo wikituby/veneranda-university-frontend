@@ -17,24 +17,30 @@ const FALLBACKS: CoverTheme[] = [
   },
 ];
 
-export function coverTheme(title: string, id = ''): CoverTheme {
+export function coverTheme(title: string, id = '', coverImageUrl?: string | null): CoverTheme {
   const t = (title || '').toLowerCase();
+  let theme: CoverTheme;
   if (/health|nurs|medic|clinic|pharma|care|midwif|mbchb|surgery|anatomy/.test(t)) {
-    return {
+    theme = {
       url: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?auto=format&fit=crop&w=1400&q=80',
       gradient: 'linear-gradient(135deg, #0d9488, #134e4a)',
       icon: 'bi-heart-pulse',
     };
-  }
-  if (/engineer|civil|mechanic/.test(t)) {
-    return {
+  } else if (/engineer|civil|mechanic/.test(t)) {
+    theme = {
       url: 'https://images.unsplash.com/photo-1581092795442-8dce0b4d8f0f?auto=format&fit=crop&w=1400&q=80',
       gradient: 'linear-gradient(135deg, #334155, #0f172a)',
       icon: 'bi-gear-wide-connected',
     };
+  } else {
+    const hash = [...(id || title || '')].reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+    theme = FALLBACKS[hash % FALLBACKS.length];
   }
-  const hash = [...(id || title || '')].reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-  return FALLBACKS[hash % FALLBACKS.length];
+  const custom = (coverImageUrl || '').trim();
+  if (custom) {
+    return { ...theme, url: custom };
+  }
+  return theme;
 }
 
 export const AFFILIATED_INSTITUTIONS = [

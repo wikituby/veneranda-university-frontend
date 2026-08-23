@@ -45,6 +45,8 @@ export class StudentHome implements OnInit {
   formProgrammeCode = signal('');
   formAbbreviation = signal('');
   formInstitution = signal<string>(DEFAULT_INSTITUTION);
+  formCoverImageUrl = signal('');
+  formCoverError = signal('');
   formBusy = signal(false);
   deleteBusy = signal(false);
   failedCovers = signal(new Set<string>());
@@ -242,6 +244,8 @@ export class StudentHome implements OnInit {
     this.formProgrammeCode.set(p.programmeCode || '');
     this.formAbbreviation.set(p.abbreviation || '');
     this.formInstitution.set(p.affiliatedInstitution || this.defaultInstitution);
+    this.formCoverImageUrl.set(p.coverImageUrl || '');
+    this.formCoverError.set('');
     this.error.set('');
   }
 
@@ -270,6 +274,39 @@ export class StudentHome implements OnInit {
     this.formAbbreviation.set((event.target as HTMLInputElement).value);
   }
 
+  onFormCoverUrl(event: Event): void {
+    this.formCoverImageUrl.set((event.target as HTMLInputElement).value);
+    this.formCoverError.set('');
+  }
+
+  clearCoverImage(): void {
+    this.formCoverImageUrl.set('');
+    this.formCoverError.set('');
+  }
+
+  onCoverFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      this.formCoverError.set('Choose an image file (JPG, PNG, WebP, or GIF).');
+      return;
+    }
+    if (file.size > 1_500_000) {
+      this.formCoverError.set('Image must be under 1.5 MB. Compress it or paste an image URL instead.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === 'string' ? reader.result : '';
+      this.formCoverImageUrl.set(result);
+      this.formCoverError.set('');
+    };
+    reader.onerror = () => this.formCoverError.set('Could not read that image file.');
+    reader.readAsDataURL(file);
+  }
+
   institutionOptions(): string[] {
     const current = this.formInstitution();
     if (current && !(this.institutions as readonly string[]).includes(current)) {
@@ -290,9 +327,15 @@ export class StudentHome implements OnInit {
       programmeCode: this.formProgrammeCode().trim() || null,
       abbreviation: this.formAbbreviation().trim() || null,
       affiliatedInstitution: this.formInstitution(),
+      coverImageUrl: this.formCoverImageUrl().trim(),
     }).subscribe({
       next: (updated) => {
         this.programmes.update((list) => list.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)));
+        this.failedCovers.update((set) => {
+          const next = new Set(set);
+          next.delete(updated.id);
+          return next;
+        });
         this.formBusy.set(false);
         this.editing.set(null);
       },

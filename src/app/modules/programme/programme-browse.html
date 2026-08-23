@@ -18,7 +18,7 @@
     }
     <div class="catalog-grid">
       @for (p of programmes(); track p.id) {
-        @let theme = coverTheme(p.title, p.id);
+        @let theme = coverTheme(p.title, p.id, p.coverImageUrl);
         <article class="course-tile" (click)="openOrJoin(p)">
           <div class="tile-cover" [style.background]="theme.gradient">
             @if (showCover(p.id)) {

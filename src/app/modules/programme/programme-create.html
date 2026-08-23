@@ -34,6 +34,23 @@
       </select>
       <label class="form-label fw-semibold">Description</label>
       <textarea class="form-control mb-3" rows="3" [(ngModel)]="description" name="description" placeholder="What a learner gets from this programme"></textarea>
+      <label class="form-label fw-semibold">Programme card image</label>
+      <div class="cover-edit mb-3">
+        @if (coverImageUrl) {
+          <div class="cover-preview"><img [src]="coverImageUrl" [alt]="title || 'Programme cover'" /></div>
+        }
+        <div class="cover-edit-controls">
+          <label class="btn btn-outline-secondary btn-sm cover-upload">
+            Upload image
+            <input type="file" accept="image/*" hidden (change)="onCoverFileSelected($event)" />
+          </label>
+          <button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="!coverImageUrl" (click)="clearCoverImage()">Clear</button>
+          <input class="form-control" [(ngModel)]="coverImageUrl" name="coverImageUrl" placeholder="Or paste an image URL" [disabled]="coverImageUrl.startsWith('data:')" />
+          @if (coverError) {
+            <p class="cover-error">{{ coverError }}</p>
+          }
+        </div>
+      </div>
       <button class="btn btn-primary" type="submit" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Create programme' }}</button>
     </form>
   } @else {

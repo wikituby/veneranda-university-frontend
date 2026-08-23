@@ -26,6 +26,8 @@ export class ProgrammeCreate {
   programmeCode = '';
   abbreviation = '';
   institution = DEFAULT_INSTITUTION;
+  coverImageUrl = '';
+  coverError = '';
   readonly institutions = AFFILIATED_INSTITUTIONS;
   readonly programmeHeading = programmeHeading;
   programme = signal<CourseCategory | null>(null);
@@ -42,6 +44,35 @@ export class ProgrammeCreate {
   unitAbbreviation = '';
   unitPrice = 15000;
 
+  onCoverFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      this.coverError = 'Choose an image file (JPG, PNG, WebP, or GIF).';
+      return;
+    }
+    if (file.size > 1_500_000) {
+      this.coverError = 'Image must be under 1.5 MB. Compress it or paste an image URL instead.';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.coverImageUrl = typeof reader.result === 'string' ? reader.result : '';
+      this.coverError = '';
+    };
+    reader.onerror = () => {
+      this.coverError = 'Could not read that image file.';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  clearCoverImage(): void {
+    this.coverImageUrl = '';
+    this.coverError = '';
+  }
+
   createProgramme(): void {
     if (!this.title.trim()) {
       this.error.set('Enter the programme name.');
@@ -56,6 +87,7 @@ export class ProgrammeCreate {
         programmeCode: this.programmeCode.trim() || null,
         abbreviation: this.abbreviation.trim() || null,
         affiliatedInstitution: this.institution,
+        coverImageUrl: this.coverImageUrl.trim() || null,
         nodeKind: 'PROGRAMME',
         isPublished: true,
         icon: 'school',
