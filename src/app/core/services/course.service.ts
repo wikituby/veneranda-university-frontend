@@ -136,11 +136,15 @@ export class CourseService {
   }
 
   createCategory(payload: Partial<CourseCategory> & { title: string }): Observable<CourseCategory> {
-    return this.http.post<CourseCategory>(this.baseUrl, payload);
+    return this.http.post<Record<string, unknown>>(this.baseUrl, payload).pipe(
+      map((raw) => this.normalizeCategory(raw))
+    );
   }
 
   updateCategory(id: string, patch: Partial<CourseCategory>): Observable<CourseCategory> {
-    return this.http.put<CourseCategory>(`${this.baseUrl}/${id}`, patch);
+    return this.http.put<Record<string, unknown>>(`${this.baseUrl}/${id}`, patch).pipe(
+      map((raw) => this.normalizeCategory(raw))
+    );
   }
 
   deleteCategory(id: string): Observable<void> {
@@ -195,7 +199,9 @@ export class CourseService {
   uploadCoverImage(categoryId: string, file: File): Observable<CourseCategory> {
     const form = new FormData();
     form.append('file', file, file.name);
-    return this.http.post<CourseCategory>(`${this.baseUrl}/${categoryId}/cover/upload`, form);
+    return this.http.post<Record<string, unknown>>(`${this.baseUrl}/${categoryId}/cover/upload`, form).pipe(
+      map((raw) => this.normalizeCategory(raw))
+    );
   }
 
   getCoverImage(categoryId: string): Observable<{ categoryId: string; url: string; expiresAt: string; provider: string }> {
@@ -262,6 +268,7 @@ export class CourseService {
       nodeKind: (raw['nodeKind'] as CourseCategory['nodeKind']) || (raw['node_kind'] as CourseCategory['nodeKind']),
       programmeCode: String(raw['programmeCode'] ?? raw['programme_code'] ?? '') || null,
       abbreviation: String(raw['abbreviation'] ?? '') || null,
+      coverImageUrl: String(raw['coverImageUrl'] ?? raw['cover_image_url'] ?? '') || null,
     };
   }
 

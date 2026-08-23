@@ -22,7 +22,7 @@
         <article class="course-tile" (click)="openOrJoin(p)">
           <div class="tile-cover" [style.background]="theme.gradient">
             @if (showCover(p.id)) {
-              <img [src]="theme.url" [alt]="p.title" (error)="onCoverError(p.id)" />
+              <img [src]="programmeCoverUrl(p.title, p.id, p.coverImageUrl)" [alt]="p.title" (error)="onCoverError(p.id)" />
             }
             @if (isJoined(p.id)) {
               <span class="enrolled-badge">Joined</span>

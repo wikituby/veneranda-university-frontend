@@ -5,7 +5,7 @@ import { forkJoin } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { CourseService } from '../../core/services/course.service';
 import { CourseCategory, CourseNode, CourseSubscription } from '../../core/models/course.model';
-import { coverTheme, defaultPrice, formatKes, AFFILIATED_INSTITUTIONS, DEFAULT_INSTITUTION, programmeHeading } from '../../core/utils/programme.util';
+import { coverTheme, defaultPrice, formatKes, AFFILIATED_INSTITUTIONS, DEFAULT_INSTITUTION, programmeHeading, bumpCoverImageVersion, programmeCoverUrl } from '../../core/utils/programme.util';
 import { CatalogueTopbar } from '../../layout/catalogue-topbar/catalogue-topbar';
 
 @Component({
@@ -737,10 +737,16 @@ export class ProgrammePage implements OnInit {
     this.coverUploadBusy.set(true);
     this.formCoverError.set('');
     this.courses.uploadCoverImage(draft.id, file).subscribe({
-      next: (updated) => {
-        this.formCoverImageUrl.set(updated.coverImageUrl || '');
+      next: () => {
         this.coverDirty.set(false);
         this.coverUploadBusy.set(false);
+        this.formCoverError.set('');
+        const programme = this.programme();
+        if (programme) {
+          bumpCoverImageVersion(programme.id);
+          this.load(programme.id, true);
+        }
+        this.closeForm();
       },
       error: (err) => {
         this.coverUploadBusy.set(false);

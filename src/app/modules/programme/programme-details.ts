@@ -12,6 +12,7 @@ import {
   programmeStory,
   DEFAULT_INSTITUTION,
   programmeHeading,
+  programmeCoverUrl,
 } from '../../core/utils/programme.util';
 import { CatalogueTopbar } from '../../layout/catalogue-topbar/catalogue-topbar';
 
@@ -28,6 +29,7 @@ export class ProgrammeDetails implements OnInit {
   private courses = inject(CourseService);
 
   readonly coverTheme = coverTheme;
+  readonly programmeCoverUrl = programmeCoverUrl;
   readonly formatKes = formatKes;
   readonly programmeHeading = programmeHeading;
   readonly defaultInstitution = DEFAULT_INSTITUTION;
@@ -84,6 +86,7 @@ export class ProgrammeDetails implements OnInit {
         const list = cats || [];
         const programme = list.find((c) => c.id === id && (c.nodeKind || 'PROGRAMME') === 'PROGRAMME') || null;
         this.programme.set(programme);
+        this.coverFailed.set(false);
         this.enrolled.set((enrollments || []).some((e) => e.enrolled && e.categoryId === id));
         if (programme) {
           const years = list.filter((c) => c.parentId === programme.id);

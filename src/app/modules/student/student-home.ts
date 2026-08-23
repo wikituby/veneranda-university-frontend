@@ -6,7 +6,7 @@ import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { CourseService } from '../../core/services/course.service';
 import { CourseCategory, CourseEnrollment } from '../../core/models/course.model';
-import { coverTheme, programmeCategory, PROGRAMME_CATEGORIES, DEFAULT_INSTITUTION, AFFILIATED_INSTITUTIONS, programmeHeading } from '../../core/utils/programme.util';
+import { coverTheme, programmeCategory, PROGRAMME_CATEGORIES, DEFAULT_INSTITUTION, AFFILIATED_INSTITUTIONS, programmeHeading, bumpCoverImageVersion, programmeCoverUrl } from '../../core/utils/programme.util';
 import { CatalogueTopbar } from '../../layout/catalogue-topbar/catalogue-topbar';
 
 @Component({
@@ -22,6 +22,7 @@ export class StudentHome implements OnInit {
   private router = inject(Router);
 
   readonly coverTheme = coverTheme;
+  readonly programmeCoverUrl = programmeCoverUrl;
   readonly programmeCategory = programmeCategory;
   readonly programmeHeading = programmeHeading;
   readonly defaultInstitution = DEFAULT_INSTITUTION;
@@ -110,6 +111,25 @@ export class StudentHome implements OnInit {
     this.courses.listMyEnrollments().pipe(catchError(() => of([] as CourseEnrollment[]))).subscribe({
       next: (enrollments) => {
         this.enrollments.set((enrollments || []).filter((e) => e.enrolled));
+      },
+    });
+  }
+
+  private refreshProgrammeCover(programmeId: string, closeEdit = false): void {
+    this.courses.getCategories(true).subscribe({
+      next: (categories) => {
+        this.programmes.set((categories || []).filter((c) => !c.parentId && (c.nodeKind || 'PROGRAMME') === 'PROGRAMME'));
+        bumpCoverImageVersion(programmeId);
+        this.failedCovers.update((set) => {
+          const next = new Set(set);
+          next.delete(programmeId);
+          return next;
+        });
+        if (closeEdit) {
+          this.editing.set(null);
+          this.formBusy.set(false);
+          this.coverUploadBusy.set(false);
+        }
       },
     });
   }
@@ -307,16 +327,11 @@ export class StudentHome implements OnInit {
     this.coverUploadBusy.set(true);
     this.formCoverError.set('');
     this.courses.uploadCoverImage(draft.id, file).subscribe({
-      next: (updated) => {
-        this.formCoverImageUrl.set(updated.coverImageUrl || '');
+      next: () => {
         this.coverDirty.set(false);
         this.coverUploadBusy.set(false);
-        this.programmes.update((list) => list.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)));
-        this.failedCovers.update((set) => {
-          const next = new Set(set);
-          next.delete(updated.id);
-          return next;
-        });
+        this.formCoverError.set('');
+        this.refreshProgrammeCover(draft.id, true);
       },
       error: (err) => {
         this.coverUploadBusy.set(false);
@@ -350,15 +365,8 @@ export class StudentHome implements OnInit {
       patch.coverImageUrl = this.formCoverImageUrl().trim();
     }
     this.courses.updateCategory(draft.id, patch).subscribe({
-      next: (updated) => {
-        this.programmes.update((list) => list.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)));
-        this.failedCovers.update((set) => {
-          const next = new Set(set);
-          next.delete(updated.id);
-          return next;
-        });
-        this.formBusy.set(false);
-        this.editing.set(null);
+      next: () => {
+        this.refreshProgrammeCover(draft.id, true);
       },
       error: (err) => {
         this.formBusy.set(false);

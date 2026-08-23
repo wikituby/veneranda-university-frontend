@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { CourseService } from '../../core/services/course.service';
 import { CourseCategory } from '../../core/models/course.model';
-import { coverTheme, DEFAULT_INSTITUTION, programmeHeading } from '../../core/utils/programme.util';
+import { coverTheme, DEFAULT_INSTITUTION, programmeHeading, programmeCoverUrl } from '../../core/utils/programme.util';
 import { CatalogueTopbar } from '../../layout/catalogue-topbar/catalogue-topbar';
 
 @Component({
@@ -19,6 +19,7 @@ export class ProgrammeBrowse implements OnInit {
   private router = inject(Router);
 
   readonly coverTheme = coverTheme;
+  readonly programmeCoverUrl = programmeCoverUrl;
   readonly programmeHeading = programmeHeading;
   readonly defaultInstitution = DEFAULT_INSTITUTION;
   loading = signal(true);

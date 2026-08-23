@@ -17,6 +17,28 @@ const FALLBACKS: CoverTheme[] = [
   },
 ];
 
+const coverVersions = new Map<string, number>();
+
+/** Bust browser img cache after a cover upload so cards reload the new image. */
+export function bumpCoverImageVersion(id: string): number {
+  const next = (coverVersions.get(id) ?? 0) + 1;
+  coverVersions.set(id, next);
+  return next;
+}
+
+export function coverImageSrc(url: string, programmeId = ''): string {
+  const trimmed = (url || '').trim();
+  if (!trimmed) return trimmed;
+  const version = programmeId ? coverVersions.get(programmeId) ?? 0 : 0;
+  if (version <= 0) return trimmed;
+  const sep = trimmed.includes('?') ? '&' : '?';
+  return `${trimmed}${sep}v=${version}`;
+}
+
+export function programmeCoverUrl(title: string, id: string, coverImageUrl?: string | null): string {
+  return coverImageSrc(coverTheme(title, id, coverImageUrl).url, id);
+}
+
 export function coverTheme(title: string, id = '', coverImageUrl?: string | null): CoverTheme {
   const t = (title || '').toLowerCase();
   let theme: CoverTheme;

@@ -40,7 +40,7 @@
                 <article class="continue-card" (click)="openDetailsById(item.categoryId)">
                   <div class="continue-cover" [style.background]="theme.gradient">
                     @if (showCover(item.categoryId)) {
-                      <img [src]="theme.url" [alt]="item.categoryTitle" (error)="onCoverError(item.categoryId)" />
+                      <img [src]="programmeCoverUrl(item.categoryTitle || '', item.categoryId, prog?.coverImageUrl)" [alt]="item.categoryTitle" (error)="onCoverError(item.categoryId)" />
                     }
                     <div class="cover-actions">
                       <button type="button" class="continue-open" (click)="openProgramme(item.categoryId, $event)">
@@ -120,7 +120,7 @@
                   <article class="course-tile" (click)="openDetails(p)">
                     <div class="tile-cover" [style.background]="theme.gradient">
                       @if (showCover(p.id)) {
-                        <img [src]="theme.url" [alt]="p.title" (error)="onCoverError(p.id)" />
+                        <img [src]="programmeCoverUrl(p.title, p.id, p.coverImageUrl)" [alt]="p.title" (error)="onCoverError(p.id)" />
                       }
                       <button type="button" class="continue-open" [disabled]="joiningId() === p.id" (click)="joinProgramme(p, $event)">
                         @if (joiningId() === p.id) {
