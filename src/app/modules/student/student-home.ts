@@ -6,7 +6,7 @@ import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { CourseService } from '../../core/services/course.service';
 import { CourseCategory, CourseEnrollment } from '../../core/models/course.model';
-import { coverTheme, programmeCategory, PROGRAMME_CATEGORIES, DEFAULT_INSTITUTION, AFFILIATED_INSTITUTIONS, programmeHeading, bumpCoverImageVersion, programmeCoverUrl } from '../../core/utils/programme.util';
+import { coverTheme, programmeCategory, PROGRAMME_CATEGORIES, DEFAULT_INSTITUTION, AFFILIATED_INSTITUTIONS, programmeHeading, programmeCoverUrl } from '../../core/utils/programme.util';
 import { CatalogueTopbar } from '../../layout/catalogue-topbar/catalogue-topbar';
 
 @Component({
@@ -98,6 +98,7 @@ export class StudentHome implements OnInit {
   reload(): void {
     this.loading.set(true);
     this.error.set('');
+    this.failedCovers.set(new Set());
     this.courses.getCategories(true).subscribe({
       next: (categories) => {
         this.programmes.set((categories || []).filter((c) => !c.parentId && (c.nodeKind || 'PROGRAMME') === 'PROGRAMME'));
@@ -119,7 +120,6 @@ export class StudentHome implements OnInit {
     this.courses.getCategories(true).subscribe({
       next: (categories) => {
         this.programmes.set((categories || []).filter((c) => !c.parentId && (c.nodeKind || 'PROGRAMME') === 'PROGRAMME'));
-        bumpCoverImageVersion(programmeId);
         this.failedCovers.update((set) => {
           const next = new Set(set);
           next.delete(programmeId);
@@ -188,8 +188,16 @@ export class StudentHome implements OnInit {
     return !this.failedCovers().has(id);
   }
 
-  onCoverError(id: string): void {
+  onCoverError(id: string, coverImageUrl?: string | null): void {
+    if (!coverImageUrl?.trim() || this.failedCovers().has(id)) return;
     this.failedCovers.update((prev) => new Set(prev).add(id));
+  }
+
+  cardCoverSrc(title: string, id: string, coverImageUrl?: string | null): string {
+    if (coverImageUrl && !this.failedCovers().has(id)) {
+      return this.programmeCoverUrl(title, id, coverImageUrl);
+    }
+    return this.coverTheme(title, id).url;
   }
 
   toggleYours(): void {

@@ -70,8 +70,16 @@ export class ProgrammeBrowse implements OnInit {
     });
   }
 
-  onCoverError(id: string): void {
+  onCoverError(id: string, coverImageUrl?: string | null): void {
+    if (!coverImageUrl?.trim() || this.failedCovers().has(id)) return;
     this.failedCovers.update((s) => new Set(s).add(id));
+  }
+
+  cardCoverSrc(title: string, id: string, coverImageUrl?: string | null): string {
+    if (coverImageUrl && !this.failedCovers().has(id)) {
+      return this.programmeCoverUrl(title, id, coverImageUrl);
+    }
+    return this.coverTheme(title, id).url;
   }
 
   showCover(id: string): boolean {

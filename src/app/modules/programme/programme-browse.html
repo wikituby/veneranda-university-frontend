@@ -21,9 +21,7 @@
         @let theme = coverTheme(p.title, p.id, p.coverImageUrl);
         <article class="course-tile" (click)="openOrJoin(p)">
           <div class="tile-cover" [style.background]="theme.gradient">
-            @if (showCover(p.id)) {
-              <img [src]="programmeCoverUrl(p.title, p.id, p.coverImageUrl)" [alt]="p.title" (error)="onCoverError(p.id)" />
-            }
+            <img [src]="cardCoverSrc(p.title, p.id, p.coverImageUrl)" [alt]="p.title" (error)="onCoverError(p.id, p.coverImageUrl)" />
             @if (isJoined(p.id)) {
               <span class="enrolled-badge">Joined</span>
             }

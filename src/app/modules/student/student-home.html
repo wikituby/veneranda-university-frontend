@@ -39,9 +39,7 @@
                 @let theme = coverTheme(item.categoryTitle || '', item.categoryId, prog?.coverImageUrl);
                 <article class="continue-card" (click)="openDetailsById(item.categoryId)">
                   <div class="continue-cover" [style.background]="theme.gradient">
-                    @if (showCover(item.categoryId)) {
-                      <img [src]="programmeCoverUrl(item.categoryTitle || '', item.categoryId, prog?.coverImageUrl)" [alt]="item.categoryTitle" (error)="onCoverError(item.categoryId)" />
-                    }
+                    <img [src]="cardCoverSrc(item.categoryTitle || '', item.categoryId, prog?.coverImageUrl)" [alt]="item.categoryTitle" (error)="onCoverError(item.categoryId, prog?.coverImageUrl)" />
                     <div class="cover-actions">
                       <button type="button" class="continue-open" (click)="openProgramme(item.categoryId, $event)">
                         Open
@@ -119,9 +117,7 @@
                   @let theme = coverTheme(p.title, p.id, p.coverImageUrl);
                   <article class="course-tile" (click)="openDetails(p)">
                     <div class="tile-cover" [style.background]="theme.gradient">
-                      @if (showCover(p.id)) {
-                        <img [src]="programmeCoverUrl(p.title, p.id, p.coverImageUrl)" [alt]="p.title" (error)="onCoverError(p.id)" />
-                      }
+                      <img [src]="cardCoverSrc(p.title, p.id, p.coverImageUrl)" [alt]="p.title" (error)="onCoverError(p.id, p.coverImageUrl)" />
                       <button type="button" class="continue-open" [disabled]="joiningId() === p.id" (click)="joinProgramme(p, $event)">
                         @if (joiningId() === p.id) {
                           <span class="spinner-border spinner-border-sm"></span>
