@@ -467,10 +467,8 @@ export class MainLayout implements OnInit, OnDestroy {
     return context ? `${name} · ${context}` : name;
   });
 
-  /** Prefer the focused unit course page so the rail header does not dump the outline. */
+  /** Programme page — pick a year / semester / unit to load into the outline. */
   sidebarProgrammeLink = computed(() => {
-    const unit = this.outlineUnitNode();
-    if (unit?.id) return ['/course', unit.id] as string[];
     const programme = this.programmeNode();
     if (programme?.id) return ['/programmes', programme.id] as string[];
     return '/home';
@@ -1187,6 +1185,11 @@ export class MainLayout implements OnInit, OnDestroy {
     if (this.nodeMenuOpen()) return;
     this.clearHoverLeaveTimer();
     this.hoverLeaveTimer = setTimeout(() => this.collapseHoverSidebar(), 120);
+  }
+
+  onSidebarProgrammeClick(): void {
+    this.rememberOutlineUnit(null);
+    this.collapseHoverSidebar();
   }
 
   collapseHoverSidebar(): void {

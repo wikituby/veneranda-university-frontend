@@ -74,7 +74,7 @@
           [routerLink]="sidebarProgrammeLink()"
           [matTooltip]="railTip(sidebarProgrammeTooltip())"
           matTooltipPosition="right"
-          (click)="collapseHoverSidebar()"
+          (click)="onSidebarProgrammeClick()"
         >
           <mat-icon>menu_book</mat-icon>
         </a>
@@ -82,8 +82,8 @@
         <a
           class="sidebar-programme"
           [routerLink]="sidebarProgrammeLink()"
-          aria-label="Programme home"
-          (click)="collapseHoverSidebar()"
+          aria-label="Back to programme"
+          (click)="onSidebarProgrammeClick()"
         >
           <mat-icon class="sidebar-programme-icon">menu_book</mat-icon>
           <div class="sidebar-programme-text">
