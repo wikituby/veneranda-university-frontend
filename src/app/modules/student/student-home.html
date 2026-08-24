@@ -5,7 +5,7 @@
   <header class="student-home-hero">
     <p class="eyebrow">Your catalogue</p>
     <h1>Welcome, {{ userName }}</h1>
-    <p class="lede">Continue in programmes you have joined, or explore others below to join.</p>
+    <p class="lede">{{ enrollments().length ? 'Continue in programmes you have joined, or explore others below to join.' : 'Explore programmes below to join one and start learning.' }}</p>
   </header>
 
   @if (error()) {
@@ -23,7 +23,8 @@
   }
 
     <div class="sections-stack">
-    <section class="vu-accordion" [style.order]="enrollments().length ? 2 : 1">
+    @if (enrollments().length) {
+    <section class="vu-accordion">
       <button type="button" class="acc-head" [attr.aria-expanded]="yoursOpen()" (click)="toggleYours()">
         <span class="acc-label">
           Your programmes
@@ -33,7 +34,6 @@
       </button>
       @if (yoursOpen()) {
         <div class="acc-body">
-          @if (enrollments().length) {
             <div class="continue-row">
               @for (item of enrollments(); track item.categoryId) {
                 @let prog = programmeById(item.categoryId);
@@ -65,14 +65,12 @@
                 </article>
               }
             </div>
-          } @else {
-            <p class="empty">You have not joined a programme yet. Explore the catalogue below.</p>
-          }
         </div>
       }
     </section>
+    }
 
-    <section class="vu-accordion" [style.order]="enrollments().length ? 1 : 2">
+    <section class="vu-accordion">
       <div class="acc-head-split">
         <button type="button" class="acc-head" [attr.aria-expanded]="exploreOpen()" (click)="toggleExplore()">
           <span class="acc-label">
