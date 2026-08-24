@@ -143,9 +143,26 @@ h1 {
   cursor: default;
 }
 
+.acc-head-row,
+.sem-row {
+  grid-template-columns: auto minmax(0, 1fr);
+  padding-right: 16px;
+}
+
 .acc-head-row {
-  padding-right: 32px;
   cursor: pointer;
+  padding: 8px 12px 8px 16px;
+}
+
+.acc-head-row .acc-head {
+  padding: 6px 8px 6px 0;
+}
+
+.acc-head-row .row-actions,
+.sem-row .row-actions {
+  width: auto;
+  max-width: 100%;
+  justify-content: flex-start;
 }
 
 .add-row {
@@ -519,6 +536,20 @@ h1 {
 
   .acc-head-row {
     padding-right: 0;
+  }
+
+  .acc-head-row,
+  .sem-row,
+  .accordion > .level-row.acc-head-row {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .acc-head-row .row-actions,
+  .sem-row .row-actions {
+    width: auto;
+    max-width: calc(100% - 8px);
+    justify-content: flex-start;
   }
 
   .row-actions,

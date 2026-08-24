@@ -68,21 +68,6 @@
     @for (year of years(); track year.id) {
       <section class="accordion">
         <div class="level-row acc-head-row" (click)="toggleYear(year.id)">
-          <div class="acc-head">
-            <div class="section-label">
-              @if (isYearCovered(year.id)) {
-                <span class="sub-badge">
-                  Subscribed
-                  <span class="sub-badge-amt">{{ yearPaidLabel(year) }}</span>
-                </span>
-              }
-              <span class="section-title">{{ year.title }}</span>
-              @if (!isYearCovered(year.id)) {
-                <span class="price">{{ yearPaidLabel(year) }}</span>
-              }
-            </div>
-            <i class="bi" [class.bi-chevron-down]="isYearOpen(year.id)" [class.bi-chevron-right]="!isYearOpen(year.id)"></i>
-          </div>
           <div class="row-actions" (click)="$event.stopPropagation()">
             @if (ownsSubscription(year.id, [programme()!.id])) {
               <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="unsubscribingId() === year.id" (click)="unsubscribe(year.id, $event)">
@@ -100,25 +85,27 @@
               </button>
             }
           </div>
+          <div class="acc-head">
+            <div class="section-label">
+              @if (isYearCovered(year.id)) {
+                <span class="sub-badge">
+                  Subscribed
+                  <span class="sub-badge-amt">{{ yearPaidLabel(year) }}</span>
+                </span>
+              }
+              <span class="section-title">{{ year.title }}</span>
+              @if (!isYearCovered(year.id)) {
+                <span class="price">{{ yearPaidLabel(year) }}</span>
+              }
+            </div>
+            <i class="bi" [class.bi-chevron-down]="isYearOpen(year.id)" [class.bi-chevron-right]="!isYearOpen(year.id)"></i>
+          </div>
         </div>
         @if (isYearOpen(year.id)) {
           <div class="acc-body">
             @for (sem of year.children; track sem.id) {
               <div class="semester" (click)="toggleSemester(sem.id)">
                 <div class="level-row sem-row">
-                  <div class="sem-toggle">
-                    <i class="bi" [class.bi-chevron-down]="isSemesterOpen(sem.id)" [class.bi-chevron-right]="!isSemesterOpen(sem.id)"></i>
-                    @if (isSemesterCovered(sem.id, year.id)) {
-                      <span class="sub-badge">
-                        Subscribed
-                        <span class="sub-badge-amt">{{ semesterPaidLabel(sem, year.id) }}</span>
-                      </span>
-                    }
-                    <span class="sem-title">{{ sem.title }}</span>
-                    @if (!isSemesterCovered(sem.id, year.id)) {
-                      <span class="price">{{ semesterPaidLabel(sem, year.id) }}</span>
-                    }
-                  </div>
                   <div class="row-actions" (click)="$event.stopPropagation()">
                     @if (ownsSubscription(sem.id, [year.id, programme()!.id])) {
                       <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="unsubscribingId() === sem.id" (click)="unsubscribe(sem.id, $event)">
@@ -134,6 +121,19 @@
                       <button type="button" class="btn btn-sm btn-outline-primary" (click)="startAddUnit(sem, year.id, $event)">
                         Add section
                       </button>
+                    }
+                  </div>
+                  <div class="sem-toggle">
+                    <i class="bi" [class.bi-chevron-down]="isSemesterOpen(sem.id)" [class.bi-chevron-right]="!isSemesterOpen(sem.id)"></i>
+                    @if (isSemesterCovered(sem.id, year.id)) {
+                      <span class="sub-badge">
+                        Subscribed
+                        <span class="sub-badge-amt">{{ semesterPaidLabel(sem, year.id) }}</span>
+                      </span>
+                    }
+                    <span class="sem-title">{{ sem.title }}</span>
+                    @if (!isSemesterCovered(sem.id, year.id)) {
+                      <span class="price">{{ semesterPaidLabel(sem, year.id) }}</span>
                     }
                   </div>
                 </div>
