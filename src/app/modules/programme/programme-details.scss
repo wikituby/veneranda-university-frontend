@@ -18,7 +18,7 @@
 }
 
 .hero {
-  margin: 12px 0 24px;
+  margin: 0 0 24px;
   overflow: hidden;
   border: 1px solid var(--border-color, #e3e8ee);
   border-radius: 16px;
@@ -81,6 +81,11 @@ h1 {
   grid-template-columns: minmax(0, 1fr) 280px;
   gap: 28px;
   align-items: start;
+  margin-top: 12px;
+}
+
+.content-col {
+  min-width: 0;
 }
 
 .main section {
@@ -170,6 +175,7 @@ h1 {
   .cta {
   position: sticky;
   top: 72px;
+  align-self: start;
   padding: 18px;
   border: 1px solid var(--border-color, #e3e8ee);
   border-radius: 14px;

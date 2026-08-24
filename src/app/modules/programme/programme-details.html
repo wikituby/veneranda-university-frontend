@@ -9,28 +9,29 @@
     } @else {
       <a routerLink="/home" class="back">Home</a>
 
-      <div class="hero">
-        <div class="hero-cover" [style.background]="theme().gradient">
-          @if (!coverFailed()) {
-            <img [src]="programmeCoverUrl(programme()!.title, programme()!.id, programme()!.coverImageUrl)" [alt]="programme()!.title" (error)="coverFailed.set(true)" />
-          }
-        </div>
-        <div class="hero-copy">
-          <p class="eyebrow">{{ story()?.category }} programme</p>
-          @if (programme()!.programmeCode) {
-            <p class="code-line">{{ programme()!.programmeCode }}</p>
-          }
-          <h1>{{ programmeHeading(programme()!) }}</h1>
-          <p class="affil">Affiliated to {{ programme()!.affiliatedInstitution || defaultInstitution }}</p>
-        </div>
-      </div>
-
       @if (error()) {
         <div class="inline-alert">{{ error() }}</div>
       }
 
       <div class="layout">
-        <div class="main">
+        <div class="content-col">
+          <div class="hero">
+            <div class="hero-cover" [style.background]="theme().gradient">
+              @if (!coverFailed()) {
+                <img [src]="programmeCoverUrl(programme()!.title, programme()!.id, programme()!.coverImageUrl)" [alt]="programme()!.title" (error)="coverFailed.set(true)" />
+              }
+            </div>
+            <div class="hero-copy">
+              <p class="eyebrow">{{ story()?.category }} programme</p>
+              @if (programme()!.programmeCode) {
+                <p class="code-line">{{ programme()!.programmeCode }}</p>
+              }
+              <h1>{{ programmeHeading(programme()!) }}</h1>
+              <p class="affil">Affiliated to {{ programme()!.affiliatedInstitution || defaultInstitution }}</p>
+            </div>
+          </div>
+
+          <div class="main">
           <section>
             <h2>About this programme</h2>
             <p>{{ story()?.about }}</p>
@@ -98,6 +99,7 @@
               </ul>
             }
           </section>
+          </div>
         </div>
 
         <aside class="cta">
