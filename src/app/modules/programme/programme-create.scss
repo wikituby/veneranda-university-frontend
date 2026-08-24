@@ -1,3 +1,9 @@
+.create-shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--bg-body, #f0f2f7);
+}
+
 .page { max-width: 720px; margin: 0 auto; padding: 28px 24px 56px; }
 
 .form-pair {

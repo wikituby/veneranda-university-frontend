@@ -7,12 +7,12 @@ export interface CoverTheme {
 const FALLBACKS: CoverTheme[] = [
   {
     url: 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&w=1400&q=80',
-    gradient: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+    gradient: 'linear-gradient(135deg, #e2e8f0, #cbd5e1)',
     icon: 'bi-mortarboard',
   },
   {
     url: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?auto=format&fit=crop&w=1400&q=80',
-    gradient: 'linear-gradient(135deg, #0d9488, #134e4a)',
+    gradient: 'linear-gradient(135deg, #e2e8f0, #cbd5e1)',
     icon: 'bi-heart-pulse',
   },
 ];
@@ -55,13 +55,13 @@ export function coverTheme(title: string, id = '', coverImageUrl?: string | null
   if (/health|nurs|medic|clinic|pharma|care|midwif|mbchb|surgery|anatomy/.test(t)) {
     theme = {
       url: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?auto=format&fit=crop&w=1400&q=80',
-      gradient: 'linear-gradient(135deg, #0d9488, #134e4a)',
+      gradient: 'linear-gradient(135deg, #e2e8f0, #cbd5e1)',
       icon: 'bi-heart-pulse',
     };
   } else if (/engineer|civil|mechanic/.test(t)) {
     theme = {
       url: 'https://images.unsplash.com/photo-1581092795442-8dce0b4d8f0f?auto=format&fit=crop&w=1400&q=80',
-      gradient: 'linear-gradient(135deg, #334155, #0f172a)',
+      gradient: 'linear-gradient(135deg, #e2e8f0, #cbd5e1)',
       icon: 'bi-gear-wide-connected',
     };
   } else {

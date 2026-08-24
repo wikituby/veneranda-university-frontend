@@ -5,11 +5,12 @@ import { Router, RouterLink } from '@angular/router';
 import { CourseService } from '../../core/services/course.service';
 import { CourseCategory } from '../../core/models/course.model';
 import { AFFILIATED_INSTITUTIONS, DEFAULT_INSTITUTION, programmeHeading } from '../../core/utils/programme.util';
+import { CatalogueTopbar } from '../../layout/catalogue-topbar/catalogue-topbar';
 
 @Component({
   selector: 'app-programme-create',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, CatalogueTopbar],
   templateUrl: './programme-create.html',
   styleUrl: './programme-create.scss',
 })
