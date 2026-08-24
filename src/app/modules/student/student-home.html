@@ -22,7 +22,8 @@
     </div>
   }
 
-    <section class="vu-accordion">
+    <div class="sections-stack">
+    <section class="vu-accordion" [style.order]="enrollments().length ? 2 : 1">
       <button type="button" class="acc-head" [attr.aria-expanded]="yoursOpen()" (click)="toggleYours()">
         <span class="acc-label">
           Your programmes
@@ -71,7 +72,7 @@
       }
     </section>
 
-    <section class="vu-accordion">
+    <section class="vu-accordion" [style.order]="enrollments().length ? 1 : 2">
       <div class="acc-head-split">
         <button type="button" class="acc-head" [attr.aria-expanded]="exploreOpen()" (click)="toggleExplore()">
           <span class="acc-label">
@@ -149,6 +150,7 @@
         </div>
       }
     </section>
+    </div>
   </div>
 </div>
 

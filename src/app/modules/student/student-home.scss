@@ -11,6 +11,11 @@
   min-width: 0;
 }
 
+.sections-stack {
+  display: flex;
+  flex-direction: column;
+}
+
 .student-home-hero {
   margin-bottom: 28px;
 
