@@ -2,6 +2,7 @@
   height: 100vh;
   overflow: hidden;
   --app-sidebar-width: 270px;
+  --app-sidenav-width: 270px;
   background: var(--bg-body) !important;
 }
 
@@ -9,8 +10,10 @@
   background: var(--sidebar-bg) !important;
   border-right: 1px solid var(--sidebar-border) !important;
   overflow: hidden !important;
-  transition: width .22s ease, background .2s ease, border-color .2s ease;
-  width: var(--app-sidebar-width) !important;
+  transition: width .22s ease, min-width .22s ease, max-width .22s ease, background .2s ease, border-color .2s ease, box-shadow .22s ease;
+  width: var(--app-sidenav-width) !important;
+  min-width: var(--app-sidenav-width) !important;
+  max-width: var(--app-sidenav-width) !important;
   color: var(--sidebar-text);
   // Do not set position:relative — it overrides mat-sidenav-fixed (position:fixed)
   // and pushes the toolbar + content one viewport below the fold.
@@ -666,6 +669,22 @@
   // Keep content flush with the live sidebar width (Material often lags on collapse).
   margin-left: var(--app-sidebar-width) !important;
   transition: margin-left .22s ease;
+}
+
+.app-sidenav-container.hover-rail {
+  .app-sidenav {
+    z-index: 4;
+  }
+
+  .app-sidenav.hover-overlay {
+    z-index: 200 !important;
+    box-shadow: 16px 0 40px rgba(15, 23, 42, 0.28);
+  }
+
+  .main-content {
+    margin-left: var(--app-sidebar-width) !important;
+    transition: none;
+  }
 }
 
 .app-toolbar {

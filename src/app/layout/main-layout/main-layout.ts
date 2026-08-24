@@ -1,4 +1,4 @@
-import { Component, HostListener, inject, signal, OnInit, computed, effect } from '@angular/core';
+import { Component, HostListener, inject, signal, OnInit, OnDestroy, computed, effect } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterOutlet, Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -12,6 +12,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { map } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { CourseService } from '../../core/services/course.service';
+import { LayoutSettingsService } from '../../core/services/layout-settings.service';
 import { CourseCategory, CourseNode } from '../../core/models/course.model';
 import { programmeHeading } from '../../core/utils/programme.util';
 
@@ -60,11 +61,12 @@ interface ToolbarMessage {
   templateUrl: './main-layout.html',
   styleUrl: './main-layout.scss',
 })
-export class MainLayout implements OnInit {
+export class MainLayout implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private courseService = inject(CourseService);
   private router = inject(Router);
   private breakpoint = inject(BreakpointObserver);
+  private layoutSettings = inject(LayoutSettingsService);
 
   readonly isMobile = toSignal(
     this.breakpoint.observe('(max-width: 768px)').pipe(map((state) => state.matches)),
@@ -79,6 +81,16 @@ export class MainLayout implements OnInit {
   appearance = signal<AppearanceMode>('split');
   /** Full sidebar vs icon-only rail. Sidenav stays open either way. */
   sidebarCollapsed = signal<boolean>(false);
+  /** Hover overlay open when compact hover mode is on. */
+  sidebarHovered = signal(false);
+
+  hoverSidebar = this.layoutSettings.hoverSidebar;
+
+  /**
+   * Unit that owns the Course Outline list. Persists across sidebar collapse/expand
+   * and in-layout routes (settings, etc.) so the outline does not jump back to programme.
+   */
+  private outlineFocusUnitId = signal<string | null>(this.readStoredOutlineUnit());
 
   sidebarWidth = signal<number>(270);
   private readonly collapsedWidth = 72;
@@ -351,16 +363,41 @@ export class MainLayout implements OnInit {
 
   courseModalIcon = computed(() => (this.courseModalEditNode() ? 'bi-pencil-square' : 'bi-journal-plus'));
 
-  effectiveSidebarWidth = computed(() => {
+  /** Width reserved for the page (does not grow when hover overlay expands). */
+  contentSidebarWidth = computed(() => {
     if (this.isMobile()) return this.sidebarWidth();
+    if (this.hoverSidebar()) return this.collapsedWidth;
     return this.sidebarCollapsed() ? this.collapsedWidth : this.sidebarWidth();
   });
+
+  /** Visible sidenav width, including overlay expansion. */
+  sidenavDisplayWidth = computed(() => {
+    if (this.isMobile()) return this.sidebarWidth();
+    if (this.hoverSidebar() && this.sidebarHovered()) return this.sidebarWidth();
+    return this.contentSidebarWidth();
+  });
+
+  /** Icon-only rail (no labels). */
+  iconRail = computed(() => {
+    if (this.isMobile()) return false;
+    if (this.hoverSidebar()) return !this.sidebarHovered();
+    return this.sidebarCollapsed();
+  });
+
+  hoverOverlayOpen = computed(
+    () => this.hoverSidebar() && !this.isMobile() && this.sidebarHovered()
+  );
+
+  private hoverLeaveTimer: ReturnType<typeof setTimeout> | null = null;
 
   sidenavOpened = computed(() => (this.isMobile() ? this.mobileDrawerOpen() : true));
   sidenavMode = computed<'over' | 'side'>(() => (this.isMobile() ? 'over' : 'side'));
   burgerLabel = computed(() => {
     if (this.isMobile()) {
       return this.mobileDrawerOpen() ? 'Close course outline' : 'Open course outline';
+    }
+    if (this.hoverSidebar()) {
+      return 'Sidebar expands on hover';
     }
     return this.sidebarCollapsed() ? 'Expand sidebar' : 'Collapse sidebar';
   });
@@ -372,13 +409,25 @@ export class MainLayout implements OnInit {
   activeUnitNode = computed(() => {
     const activeId = this.activeContentId();
     if (!activeId || !this.routeUrl().includes('/course')) return null;
-    const path = this.findNodePath(this.courseTree(), activeId);
-    if (!path.length) return null;
-    return [...path].reverse().find((node) => node.nodeKind === 'UNIT') ?? path[path.length - 1];
+    return this.unitNodeFor(activeId);
+  });
+
+  /** Unit used for the sidebar outline — focused unit, else route/selection. */
+  outlineUnitNode = computed(() => {
+    const focusedId = this.outlineFocusUnitId();
+    if (focusedId) {
+      const focused = this.categoryById().get(focusedId);
+      if (focused?.nodeKind === 'UNIT') return focused as CourseNode;
+    }
+    const active = this.activeUnitNode();
+    if (active?.nodeKind === 'UNIT') return active;
+    const selected = this.selectedUnitNode();
+    if (selected?.nodeKind === 'UNIT') return selected as CourseNode;
+    return null;
   });
 
   programmeNode = computed(() => {
-    const start = this.selectedUnitNode() ?? this.selectedCategory();
+    const start = this.outlineUnitNode() ?? this.selectedUnitNode() ?? this.selectedCategory();
     if (start) {
       const ancestors = this.ancestorsOf(start);
       const chain = [...ancestors, start];
@@ -396,7 +445,7 @@ export class MainLayout implements OnInit {
 
   /** Year › Semester › Unit shown under the programme name in the sidebar. */
   sidebarContextBreadcrumb = computed(() => {
-    const unit = this.selectedUnitNode();
+    const unit = this.outlineUnitNode() ?? this.selectedUnitNode();
     if (!unit) return '';
 
     const parts = this.ancestorsOf(unit)
@@ -418,9 +467,18 @@ export class MainLayout implements OnInit {
     return context ? `${name} · ${context}` : name;
   });
 
+  /** Prefer the focused unit course page so the rail header does not dump the outline. */
+  sidebarProgrammeLink = computed(() => {
+    const unit = this.outlineUnitNode();
+    if (unit?.id) return ['/course', unit.id] as string[];
+    const programme = this.programmeNode();
+    if (programme?.id) return ['/programmes', programme.id] as string[];
+    return '/home';
+  });
+
   displayCourseTree = computed(() => {
-    const unit = this.activeUnitNode();
-    if (unit && this.routeUrl().includes('/course')) {
+    const unit = this.outlineUnitNode();
+    if (unit?.id) {
       return this.filterCourseTree(this.childrenOf(unit.id), this.sidebarSearch());
     }
     return this.filteredCourseTree();
@@ -449,6 +507,7 @@ export class MainLayout implements OnInit {
     effect(() => {
       if (this.isMobile()) {
         this.sidebarCollapsed.set(false);
+        this.sidebarHovered.set(false);
       } else {
         this.mobileDrawerOpen.set(false);
       }
@@ -477,8 +536,13 @@ export class MainLayout implements OnInit {
         if (this.isMobile()) {
           this.mobileDrawerOpen.set(false);
         }
+        this.collapseHoverSidebar();
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.clearHoverLeaveTimer();
   }
 
   private outlineRootFor(node: CourseCategory): CourseCategory | null {
@@ -613,6 +677,7 @@ export class MainLayout implements OnInit {
           this.expandNodes([expandNodeId]);
           this.expandAncestorsOf(expandNodeId);
         }
+        this.pinOutlineUnitFor(this.activeContentId());
         this.loadingCourseTree.set(false);
       },
       error: () => {
@@ -663,7 +728,56 @@ export class MainLayout implements OnInit {
     if (match) {
       this.activeContentId.set(match[1]);
       this.expandAncestorsOf(match[1]);
+      this.pinOutlineUnitFor(match[1]);
     }
+  }
+
+  private readStoredOutlineUnit(): string | null {
+    try {
+      return sessionStorage.getItem('isp_outline_unit');
+    } catch {
+      return null;
+    }
+  }
+
+  private rememberOutlineUnit(unitId: string | null): void {
+    this.outlineFocusUnitId.set(unitId);
+    try {
+      if (unitId) sessionStorage.setItem('isp_outline_unit', unitId);
+      else sessionStorage.removeItem('isp_outline_unit');
+    } catch {
+      /* ignore quota / private mode */
+    }
+  }
+
+  private unitNodeFor(activeId: string): CourseNode | null {
+    const path = this.findNodePath(this.courseTree(), activeId);
+    if (path.length) {
+      return [...path].reverse().find((node) => node.nodeKind === 'UNIT') ?? path[path.length - 1];
+    }
+    const category = this.unitCategoryFor(activeId);
+    return category ? (category as CourseNode) : null;
+  }
+
+  private unitCategoryFor(activeId: string): CourseCategory | null {
+    const byId = this.categoryById();
+    let current: CourseCategory | null =
+      byId.get(activeId) ??
+      this.allCategories().find((category) => category.contentId === activeId || category.id === activeId) ??
+      null;
+    const seen = new Set<string>();
+    while (current && !seen.has(current.id)) {
+      seen.add(current.id);
+      if (current.nodeKind === 'UNIT') return current;
+      current = current.parentId ? (byId.get(current.parentId) ?? null) : null;
+    }
+    return null;
+  }
+
+  private pinOutlineUnitFor(activeId: string | null): void {
+    if (!activeId) return;
+    const unit = this.unitCategoryFor(activeId);
+    if (unit?.id) this.rememberOutlineUnit(unit.id);
   }
 
   toggleNode(node: CourseNode): void {
@@ -685,6 +799,7 @@ export class MainLayout implements OnInit {
     const id = node.contentId || node.id;
     this.activeContentId.set(id);
     this.closeMobileDrawer();
+    this.collapseHoverSidebar();
 
     if (node.contentPath) {
       this.router.navigate(['/course/file', id]);
@@ -719,6 +834,7 @@ export class MainLayout implements OnInit {
   closeNodeMenu(): void {
     this.nodeMenuOpen.set(false);
     this.contextMenuNode.set(null);
+    this.collapseHoverSidebar();
   }
 
   toggleProfileMenu(event: MouseEvent): void {
@@ -847,7 +963,7 @@ export class MainLayout implements OnInit {
   }
 
   addRootOutlineItem(): void {
-    const unit = this.activeUnitNode();
+    const unit = this.outlineUnitNode();
     if (!unit) return;
     this.openCourseModal(unit);
   }
@@ -909,14 +1025,19 @@ export class MainLayout implements OnInit {
     this.parentPickerDropUp.set(false);
   }
 
-  @HostListener('document:click')
-  onDocumentClick(): void {
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
     if (this.parentPickerOpen()) this.closeParentPicker();
+    if (!this.hoverOverlayOpen()) return;
+    const target = event.target as HTMLElement | null;
+    if (target?.closest('.app-sidenav, .toolbar-burger')) return;
+    this.collapseHoverSidebar();
   }
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
     if (this.parentPickerOpen()) this.closeParentPicker();
+    this.collapseHoverSidebar();
   }
 
   submitCourseModal(): void {
@@ -1042,13 +1163,51 @@ export class MainLayout implements OnInit {
       this.selectLeaf(node);
       return;
     }
-    this.sidebarCollapsed.set(false);
+    if (!this.hoverSidebar()) {
+      this.sidebarCollapsed.set(false);
+    } else {
+      this.sidebarHovered.set(true);
+    }
     this.expandNodes([node.id]);
+  }
+
+  railTip(text: string): string {
+    return this.hoverSidebar() ? '' : text;
+  }
+
+  onSidebarMouseEnter(): void {
+    this.clearHoverLeaveTimer();
+    if (this.hoverSidebar() && !this.isMobile()) {
+      this.sidebarHovered.set(true);
+    }
+  }
+
+  onSidebarMouseLeave(): void {
+    if (!this.hoverSidebar() || this.isMobile()) return;
+    if (this.nodeMenuOpen()) return;
+    this.clearHoverLeaveTimer();
+    this.hoverLeaveTimer = setTimeout(() => this.collapseHoverSidebar(), 120);
+  }
+
+  collapseHoverSidebar(): void {
+    this.clearHoverLeaveTimer();
+    if (this.hoverSidebar() && !this.isMobile()) {
+      this.sidebarHovered.set(false);
+    }
+  }
+
+  private clearHoverLeaveTimer(): void {
+    if (this.hoverLeaveTimer) {
+      clearTimeout(this.hoverLeaveTimer);
+      this.hoverLeaveTimer = null;
+    }
   }
 
   toggleSidebar(): void {
     if (this.isMobile()) {
       this.mobileDrawerOpen.update((open) => !open);
+    } else if (this.hoverSidebar()) {
+      this.sidebarHovered.update((open) => !open);
     } else {
       this.sidebarCollapsed.update((v) => !v);
     }
@@ -1079,7 +1238,7 @@ export class MainLayout implements OnInit {
 
   canEditOutline(): boolean {
     return this.authService.canManageProgramme(
-      this.programmeNode()?.createdBy ?? this.activeUnitNode()?.createdBy
+      this.programmeNode()?.createdBy ?? this.outlineUnitNode()?.createdBy ?? this.activeUnitNode()?.createdBy
     );
   }
 

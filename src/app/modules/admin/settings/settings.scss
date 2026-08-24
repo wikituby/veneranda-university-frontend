@@ -1,0 +1,52 @@
+.settings-page {
+  max-width: 720px;
+}
+
+.settings-section-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted, #64748b);
+  margin-bottom: 10px;
+}
+
+.settings-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 0;
+  padding: 18px 0;
+  border-top: 1px solid var(--border-color, #e2e8f0);
+  cursor: pointer;
+}
+
+.settings-row-copy {
+  min-width: 0;
+}
+
+.settings-row-title {
+  font-weight: 600;
+  color: var(--text-primary, #0f172a);
+}
+
+.settings-row-desc {
+  margin: 6px 0 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--text-muted, #64748b);
+}
+
+.settings-switch {
+  flex-shrink: 0;
+  padding-top: 2px;
+  min-height: 0;
+
+  .form-check-input {
+    width: 2.6rem;
+    height: 1.35rem;
+    margin: 0;
+    cursor: pointer;
+  }
+}

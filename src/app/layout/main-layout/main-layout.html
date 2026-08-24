@@ -1,29 +1,35 @@
 <mat-sidenav-container
   class="app-sidenav-container"
   [class.mobile-overlay]="isMobile()"
-  [style.--app-sidebar-width.px]="effectiveSidebarWidth()"
+  [class.hover-rail]="hoverSidebar() && !isMobile()"
+  [style.--app-sidebar-width.px]="contentSidebarWidth()"
+  [style.--app-sidenav-width.px]="sidenavDisplayWidth()"
 >
   <!-- ===== Sidebar ===== -->
   <mat-sidenav
     #drawer
     class="app-sidenav"
-    [class.collapsed]="sidebarCollapsed() && !isMobile()"
+    [class.collapsed]="iconRail()"
+    [class.hover-overlay]="hoverOverlayOpen()"
     [mode]="sidenavMode()"
     [opened]="sidenavOpened()"
     [disableClose]="!isMobile()"
     (openedChange)="onSidenavOpenedChange($event)"
+    (mouseenter)="onSidebarMouseEnter()"
+    (mouseleave)="onSidebarMouseLeave()"
     fixedInViewport
   >
     <div class="sidebar-header-row">
       <a
         class="sidebar-header"
         routerLink="/home"
-        [matTooltip]="sidebarCollapsed() ? (programmeName() || 'Programme') : ''"
+        [matTooltip]="railTip(programmeName() || 'Programme')"
         matTooltipPosition="right"
         aria-label="Programme home"
+        (click)="collapseHoverSidebar()"
       >
         <mat-icon class="logo-icon">school</mat-icon>
-        @if (!sidebarCollapsed() || isMobile()) {
+        @if (!iconRail()) {
           <span class="logo-text">Veneranda University</span>
         }
       </a>
@@ -40,7 +46,7 @@
     </div>
 
     <div class="sidebar-top-fixed">
-      @if (!sidebarCollapsed()) {
+      @if (!iconRail()) {
         <div class="sidebar-search">
           <mat-icon class="sidebar-search-icon">search</mat-icon>
           <input
@@ -62,20 +68,22 @@
 
     <!-- Scrollable Nav Area -->
     <div class="sidebar-nav-scroll">
-      @if (sidebarCollapsed()) {
+      @if (iconRail()) {
         <a
           class="rail-icon-btn home-rail"
-          [routerLink]="programmeNode()?.id ? ['/programmes', programmeNode()!.id] : '/home'"
-          [matTooltip]="sidebarProgrammeTooltip()"
+          [routerLink]="sidebarProgrammeLink()"
+          [matTooltip]="railTip(sidebarProgrammeTooltip())"
           matTooltipPosition="right"
+          (click)="collapseHoverSidebar()"
         >
           <mat-icon>menu_book</mat-icon>
         </a>
       } @else {
         <a
           class="sidebar-programme"
-          [routerLink]="programmeNode()?.id ? ['/programmes', programmeNode()!.id] : '/home'"
+          [routerLink]="sidebarProgrammeLink()"
           aria-label="Programme home"
+          (click)="collapseHoverSidebar()"
         >
           <mat-icon class="sidebar-programme-icon">menu_book</mat-icon>
           <div class="sidebar-programme-text">
@@ -88,11 +96,11 @@
         </a>
       }
       <!-- Course Outline -->
-      <div class="sidebar-section-header outline-header" [class.collapsed-section]="sidebarCollapsed()">
-        @if (!sidebarCollapsed()) {
+      <div class="sidebar-section-header outline-header" [class.collapsed-section]="iconRail()">
+        @if (!iconRail()) {
           <span class="sidebar-section-label">Course Outline</span>
         }
-        @if (canEditOutline() && !sidebarCollapsed()) {
+        @if (canEditOutline() && !iconRail()) {
           <button
             type="button"
             class="section-add-btn"
@@ -108,12 +116,12 @@
       @if (loadingCourseTree()) {
         <div class="tree-loading">
           <div class="spinner-border spinner-border-sm text-light" role="status"></div>
-          @if (!sidebarCollapsed()) {
+          @if (!iconRail()) {
             <span class="text-light-50">Loading outline...</span>
           }
         </div>
       } @else if (displayCourseTree().length === 0) {
-        @if (!sidebarCollapsed()) {
+        @if (!iconRail()) {
           <div class="tree-empty">
             @if (sidebarSearch()) {
               <p>No outline matches “{{ sidebarSearch() }}”.</p>
@@ -127,14 +135,14 @@
             }
           </div>
         }
-      } @else if (sidebarCollapsed()) {
+      } @else if (iconRail()) {
         <nav class="course-tree course-tree-rail">
           @for (node of displayCourseTree(); track node.id) {
             <button
               type="button"
               class="rail-icon-btn"
               [class.active]="isActive(node) || isDescendantActive(node)"
-              [matTooltip]="node.title"
+              [matTooltip]="railTip(node.title)"
               matTooltipPosition="right"
               (click)="onRailNodeClick(node)"
             >
@@ -149,13 +157,13 @@
       }
 
       <!-- Administration -->
-      <div class="sidebar-section-header mt-3" [class.collapsed-section]="sidebarCollapsed()">
-        @if (!sidebarCollapsed()) {
+      <div class="sidebar-section-header mt-3" [class.collapsed-section]="iconRail()">
+        @if (!iconRail()) {
           <span class="sidebar-section-label">Administration</span>
         }
       </div>
 
-      @if (sidebarCollapsed()) {
+      @if (iconRail()) {
         <nav class="admin-rail">
           @for (item of adminNavItems; track item.route) {
             @if (hasPermission(item.permission)) {
@@ -163,8 +171,9 @@
                 class="rail-icon-btn"
                 [routerLink]="item.route"
                 routerLinkActive="active"
-                [matTooltip]="item.label"
+                [matTooltip]="railTip(item.label)"
                 matTooltipPosition="right"
+                (click)="collapseHoverSidebar()"
               >
                 <mat-icon>{{ item.icon }}</mat-icon>
               </a>
@@ -175,7 +184,7 @@
         <mat-nav-list>
           @for (item of filteredAdminNavItems(); track item.route) {
             @if (hasPermission(item.permission)) {
-              <a mat-list-item [routerLink]="item.route" routerLinkActive="active-nav-item">
+              <a mat-list-item [routerLink]="item.route" routerLinkActive="active-nav-item" (click)="collapseHoverSidebar()">
                 <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
                 <span matListItemTitle>{{ item.label }}</span>
               </a>
@@ -191,10 +200,10 @@
     </div>
 
     <!-- Fixed Profile Section -->
-    <div class="sidebar-profile" [class.collapsed-profile]="sidebarCollapsed()">
+    <div class="sidebar-profile" [class.collapsed-profile]="iconRail()">
       @if (currentUser | async; as user) {
-        @if (sidebarCollapsed()) {
-          <div class="profile-avatar rail-avatar" [matTooltip]="user.fullName" matTooltipPosition="right">
+        @if (iconRail()) {
+          <div class="profile-avatar rail-avatar" [matTooltip]="railTip(user.fullName)" matTooltipPosition="right">
             {{ getInitials() }}
           </div>
         } @else {
@@ -220,7 +229,7 @@
       }
     </div>
 
-    @if (!sidebarCollapsed() && !isMobile()) {
+    @if (!iconRail() && !isMobile() && !hoverSidebar()) {
       <div class="sidebar-resizer" (mousedown)="startResize($event)" matTooltip="Drag to resize"></div>
     }
   </mat-sidenav>
