@@ -727,6 +727,22 @@ export class MainLayout implements OnInit, OnDestroy {
       this.activeContentId.set(match[1]);
       this.expandAncestorsOf(match[1]);
       this.pinOutlineUnitFor(match[1]);
+      this.expandSidebarForCourse();
+    }
+  }
+
+  /** Open the sidebar at full width when viewing course content. */
+  private expandSidebarForCourse(): void {
+    if (this.isMobile()) return;
+    this.sidebarCollapsed.set(false);
+    this.sidebarWidth.set(this.maxSidebarWidth);
+    if (this.hoverSidebar()) {
+      this.sidebarHovered.set(true);
+    }
+    try {
+      localStorage.setItem('course_sidebar_width', this.maxSidebarWidth.toString());
+    } catch {
+      /* ignore quota / private mode */
     }
   }
 
@@ -797,7 +813,7 @@ export class MainLayout implements OnInit, OnDestroy {
     const id = node.contentId || node.id;
     this.activeContentId.set(id);
     this.closeMobileDrawer();
-    this.collapseHoverSidebar();
+    this.expandSidebarForCourse();
 
     if (node.contentPath) {
       this.router.navigate(['/course/file', id]);

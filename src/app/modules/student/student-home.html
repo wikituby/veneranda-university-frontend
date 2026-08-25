@@ -79,23 +79,23 @@
           </span>
           <i class="bi" [class.bi-chevron-down]="exploreOpen()" [class.bi-chevron-right]="!exploreOpen()" aria-hidden="true"></i>
         </button>
+        @if (exploreOpen() && availableProgrammes().length) {
+          <label class="search-field explore-search">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input
+              type="search"
+              [value]="searchQuery()"
+              (input)="onSearch($event)"
+              placeholder="Search programmes"
+              aria-label="Search programmes"
+            />
+          </label>
+        }
         <a routerLink="/programmes/new" class="btn btn-primary btn-sm create-programme-btn">Register a programme</a>
       </div>
       @if (exploreOpen()) {
         <div class="acc-body">
           @if (availableProgrammes().length) {
-            <div class="explore-toolbar">
-              <label class="search-field">
-                <i class="bi bi-search" aria-hidden="true"></i>
-                <input
-                  type="search"
-                  [value]="searchQuery()"
-                  (input)="onSearch($event)"
-                  placeholder="Search programmes"
-                  aria-label="Search programmes"
-                />
-              </label>
-            </div>
             @if (programmeFilters().length > 1) {
               <div class="filter-row" role="group" aria-label="Programme category">
                 @for (cat of programmeFilters(); track cat) {
