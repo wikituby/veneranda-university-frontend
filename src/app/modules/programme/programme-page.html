@@ -225,11 +225,7 @@
       @if (editing()?.kind === 'PROGRAMME') {
         <label class="modal-field">
           <span>Institution affiliated to</span>
-          <select class="form-select" [value]="formInstitution()" (change)="onFormInstitution($event)">
-            @for (inst of institutionOptions(); track inst) {
-              <option [value]="inst">{{ inst }}</option>
-            }
-          </select>
+          <app-institution-picker [value]="formInstitution()" (valueChange)="formInstitution.set($event)" />
         </label>
         <div class="modal-field">
           <span>Programme card image</span>

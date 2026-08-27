@@ -1,0 +1,88 @@
+<div class="inst-picker" [class.open]="open()">
+  <button type="button" class="inst-trigger" (click)="toggle()" [attr.aria-expanded]="open()">
+    <span class="inst-trigger-text" [class.placeholder]="!value()?.trim()">{{ displayValue() }}</span>
+    <i class="bi" [class.bi-chevron-up]="open()" [class.bi-chevron-down]="!open()" aria-hidden="true"></i>
+  </button>
+
+  @if (open()) {
+    <div #overlayHost class="inst-overlay" role="presentation">
+      <div class="inst-backdrop" (click)="close()"></div>
+      <div class="inst-panel" role="dialog" aria-modal="true" aria-label="Choose affiliated university" (click)="$event.stopPropagation()">
+        <div class="inst-panel-head">
+          <div>
+            <strong>{{ label() }}</strong>
+            <p class="inst-panel-sub">Search the list or add a university that is missing.</p>
+          </div>
+          <button type="button" class="inst-icon-btn" (click)="close()" aria-label="Close">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        @if (!adding()) {
+          <label class="inst-search">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input
+              #searchInput
+              type="search"
+              [value]="query()"
+              (input)="onQuery($event)"
+              placeholder="Search universities…"
+              aria-label="Search universities"
+            />
+          </label>
+
+          <div class="inst-list" role="listbox">
+            @if (filtered().length) {
+              @for (inst of filtered(); track inst) {
+                <button
+                  type="button"
+                  class="inst-option"
+                  role="option"
+                  [class.active]="inst === value()"
+                  (click)="select(inst)"
+                >
+                  <span>{{ inst }}</span>
+                  @if (inst === value()) {
+                    <i class="bi bi-check2" aria-hidden="true"></i>
+                  }
+                </button>
+              }
+            } @else {
+              <p class="inst-empty">No match for “{{ query() }}”. Add it below.</p>
+            }
+          </div>
+
+          <div class="inst-panel-foot">
+            <button type="button" class="btn btn-sm btn-primary inst-add-btn" (click)="startAdd()">
+              <i class="bi bi-plus-lg" aria-hidden="true"></i>
+              Add new university
+            </button>
+          </div>
+        } @else {
+          <div class="inst-add-form">
+            <p class="inst-add-lead">Type the university or college name. It will stay on this device for next time.</p>
+            <label class="inst-search">
+              <i class="bi bi-building" aria-hidden="true"></i>
+              <input
+                #addInput
+                type="text"
+                [value]="draftName()"
+                (input)="onDraft($event)"
+                (keydown.enter)="confirmAdd()"
+                placeholder="e.g. Great Lakes University"
+                aria-label="New university name"
+              />
+            </label>
+            @if (addError()) {
+              <p class="inst-error">{{ addError() }}</p>
+            }
+            <div class="inst-add-actions">
+              <button type="button" class="btn btn-sm btn-outline-secondary" (click)="cancelAdd()">Back</button>
+              <button type="button" class="btn btn-sm btn-primary" (click)="confirmAdd()">Save &amp; select</button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

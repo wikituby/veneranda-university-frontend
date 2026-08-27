@@ -4,13 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CourseService } from '../../core/services/course.service';
 import { CourseCategory } from '../../core/models/course.model';
-import { AFFILIATED_INSTITUTIONS, DEFAULT_INSTITUTION, programmeHeading } from '../../core/utils/programme.util';
+import { DEFAULT_INSTITUTION, programmeHeading } from '../../core/utils/programme.util';
 import { CatalogueTopbar } from '../../layout/catalogue-topbar/catalogue-topbar';
+import { InstitutionPicker } from '../../shared/institution-picker/institution-picker';
 
 @Component({
   selector: 'app-programme-create',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, CatalogueTopbar],
+  imports: [CommonModule, FormsModule, RouterLink, CatalogueTopbar, InstitutionPicker],
   templateUrl: './programme-create.html',
   styleUrl: './programme-create.scss',
 })
@@ -30,7 +31,6 @@ export class ProgrammeCreate {
   coverImageUrl = '';
   coverError = '';
   pendingCoverFile: File | null = null;
-  readonly institutions = AFFILIATED_INSTITUTIONS;
   readonly programmeHeading = programmeHeading;
   programme = signal<CourseCategory | null>(null);
   years = signal<CourseCategory[]>([]);

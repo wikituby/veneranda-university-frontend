@@ -30,11 +30,9 @@
         </div>
       </div>
       <label class="form-label fw-semibold">Institution affiliated to</label>
-      <select class="form-select mb-3" [(ngModel)]="institution" name="institution">
-        @for (inst of institutions; track inst) {
-          <option [ngValue]="inst">{{ inst }}</option>
-        }
-      </select>
+      <div class="mb-3">
+        <app-institution-picker [(value)]="institution" />
+      </div>
       <label class="form-label fw-semibold">Description</label>
       <textarea class="form-control mb-3" rows="3" [(ngModel)]="description" name="description" placeholder="What a learner gets from this programme"></textarea>
       <label class="form-label fw-semibold">Programme card image</label>

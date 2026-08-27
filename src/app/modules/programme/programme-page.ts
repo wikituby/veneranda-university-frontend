@@ -5,13 +5,14 @@ import { forkJoin } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { CourseService } from '../../core/services/course.service';
 import { CourseCategory, CourseNode, CourseSubscription } from '../../core/models/course.model';
-import { coverTheme, defaultPrice, formatKes, AFFILIATED_INSTITUTIONS, DEFAULT_INSTITUTION, programmeHeading, bumpCoverImageVersion, programmeCoverUrl } from '../../core/utils/programme.util';
+import { coverTheme, defaultPrice, formatKes, DEFAULT_INSTITUTION, programmeHeading, bumpCoverImageVersion, programmeCoverUrl } from '../../core/utils/programme.util';
 import { CatalogueTopbar } from '../../layout/catalogue-topbar/catalogue-topbar';
+import { InstitutionPicker } from '../../shared/institution-picker/institution-picker';
 
 @Component({
   selector: 'app-programme-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, CatalogueTopbar],
+  imports: [CommonModule, RouterLink, CatalogueTopbar, InstitutionPicker],
   templateUrl: './programme-page.html',
   styleUrl: './programme-page.scss',
 })
@@ -26,7 +27,6 @@ export class ProgrammePage implements OnInit {
   readonly defaultPrice = defaultPrice;
   readonly programmeHeading = programmeHeading;
   readonly defaultInstitution = DEFAULT_INSTITUTION;
-  readonly institutions = AFFILIATED_INSTITUTIONS;
 
   loading = signal(true);
   error = signal('');
@@ -696,10 +696,6 @@ export class ProgrammePage implements OnInit {
     this.formDescription.set((event.target as HTMLTextAreaElement).value);
   }
 
-  onFormInstitution(event: Event): void {
-    this.formInstitution.set((event.target as HTMLSelectElement).value);
-  }
-
   onFormProgrammeCode(event: Event): void {
     this.formProgrammeCode.set((event.target as HTMLInputElement).value);
   }
@@ -753,14 +749,6 @@ export class ProgrammePage implements OnInit {
         this.formCoverError.set(err?.error?.message || 'Could not upload cover image. Check that file storage is configured.');
       },
     });
-  }
-
-  institutionOptions(): string[] {
-    const current = this.formInstitution();
-    if (current && !(this.institutions as readonly string[]).includes(current)) {
-      return [current, ...this.institutions];
-    }
-    return [...this.institutions];
   }
 
   confirmForm(): void {

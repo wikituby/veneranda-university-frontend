@@ -96,6 +96,61 @@ export const AFFILIATED_INSTITUTIONS = [
 
 export const DEFAULT_INSTITUTION = AFFILIATED_INSTITUTIONS[0];
 
+const CUSTOM_INSTITUTIONS_KEY = 'vu_custom_institutions';
+
+function readCustomInstitutions(): string[] {
+  try {
+    const raw = localStorage.getItem(CUSTOM_INSTITUTIONS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((item) => String(item || '').trim())
+      .filter((item) => !!item);
+  } catch {
+    return [];
+  }
+}
+
+function writeCustomInstitutions(items: string[]): void {
+  try {
+    localStorage.setItem(CUSTOM_INSTITUTIONS_KEY, JSON.stringify(items));
+  } catch {
+    /* ignore quota / private mode */
+  }
+}
+
+/** Built-in list plus any institutions the user has added in this browser. */
+export function allAffiliatedInstitutions(extra: string | null | undefined = null): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  const push = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    const key = trimmed.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push(trimmed);
+  };
+
+  for (const item of AFFILIATED_INSTITUTIONS) push(item);
+  for (const item of readCustomInstitutions()) push(item);
+  if (extra) push(extra);
+  return out;
+}
+
+/** Persist a new institution so it appears in future pickers. */
+export function rememberAffiliatedInstitution(name: string): string {
+  const trimmed = name.trim();
+  if (!trimmed) return '';
+  const existing = allAffiliatedInstitutions();
+  if (existing.some((item) => item.toLowerCase() === trimmed.toLowerCase())) {
+    return existing.find((item) => item.toLowerCase() === trimmed.toLowerCase()) || trimmed;
+  }
+  writeCustomInstitutions([...readCustomInstitutions(), trimmed]);
+  return trimmed;
+}
+
 export const PROGRAMME_CATEGORIES = ['Certificate', 'Diploma', 'Bachelor', 'Masters', 'Doctorate', 'Other'] as const;
 export type ProgrammeCategory = (typeof PROGRAMME_CATEGORIES)[number];
 
