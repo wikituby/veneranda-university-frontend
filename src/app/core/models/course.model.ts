@@ -142,6 +142,7 @@ export interface CourseSubscription {
   nodeKind?: string;
   paymentStatus: string;
   amount?: number | null;
+  currency?: string;
   paymentMethod?: string;
   paid: boolean;
   paidAt?: string | null;

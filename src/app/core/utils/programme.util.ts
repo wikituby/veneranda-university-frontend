@@ -174,10 +174,32 @@ export function programmeHeading(
   return abbreviation ? `(${abbreviation}) ${title}` : title;
 }
 
-export function formatKes(amount?: number | null, currency = 'KES'): string {
+export function formatMoney(amount?: number | null, currency = 'UGX'): string {
   if (amount == null) return '';
   if (Number(amount) === 0) return 'Free';
-  return `${currency} ${Number(amount).toLocaleString('en-KE')}`;
+  const code = (currency || 'UGX').toUpperCase();
+  const locale = code === 'UGX' ? 'en-UG' : code === 'KES' ? 'en-KE' : 'en-US';
+  return `${code} ${Number(amount).toLocaleString(locale)}`;
+}
+
+export function formatKes(amount?: number | null, currency = 'UGX'): string {
+  return formatMoney(amount, currency);
+}
+
+/** Coordinator share from category; falls back to legacy defaults. */
+export function coordinatorShare(amount?: number | null, nodeKind?: string | null): number {
+  if (amount != null && !Number.isNaN(Number(amount))) return Number(amount);
+  return defaultPrice(nodeKind);
+}
+
+export function subscriptionTotal(
+  amount?: number | null,
+  nodeKind?: string | null,
+  serverFee = 5000,
+  totalFromApi?: number | null,
+): number {
+  if (totalFromApi != null && !Number.isNaN(Number(totalFromApi))) return Number(totalFromApi);
+  return coordinatorShare(amount, nodeKind) + Number(serverFee || 0);
 }
 
 export type NodeKind = 'PROGRAMME' | 'YEAR' | 'SEMESTER' | 'UNIT' | 'OUTLINE';
