@@ -54,16 +54,19 @@ export class StudentHome implements OnInit {
   deleteBusy = signal(false);
   failedCovers = signal(new Set<string>());
   yoursOpen = signal(true);
+  createdOpen = signal(true);
   exploreOpen = signal(true);
   searchQuery = signal('');
   selectedCategory = signal('All');
 
   readonly joinedIds = computed(() => new Set(this.enrollments().map((e) => e.categoryId)));
 
-  readonly availableProgrammes = computed(() => {
-    const joined = this.joinedIds();
-    return this.programmes().filter((p) => !joined.has(p.id));
-  });
+  readonly createdProgrammes = computed(() =>
+    this.programmes().filter((p) => this.canManageProgramme(p)),
+  );
+
+  /** Explore lists all published programmes, including ones already joined. */
+  readonly availableProgrammes = computed(() => this.programmes());
 
   readonly programmeFilters = computed(() => ['All', 'Diploma', 'Degree'] as const);
 
@@ -173,7 +176,12 @@ export class StudentHome implements OnInit {
   }
 
   joinLabel(p: CourseCategory): string {
+    if (this.joinedIds().has(p.id)) return 'Joined';
     return (p.joinMode || 'OPEN').toUpperCase() === 'REQUEST' ? 'Request to join' : 'Join';
+  }
+
+  isJoined(p: CourseCategory): boolean {
+    return this.joinedIds().has(p.id);
   }
 
   joinProgramme(p: CourseCategory, event?: Event): void {
@@ -227,6 +235,10 @@ export class StudentHome implements OnInit {
 
   toggleYours(): void {
     this.yoursOpen.update((open) => !open);
+  }
+
+  toggleCreated(): void {
+    this.createdOpen.update((open) => !open);
   }
 
   toggleExplore(): void {

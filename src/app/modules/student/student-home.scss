@@ -322,6 +322,27 @@
     border-color: #0047b3;
     color: #fff;
   }
+
+  &.is-joined {
+    background: #15803d;
+    border-color: #15803d;
+    color: #fff;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: #166534;
+      border-color: #166534;
+      color: #fff;
+    }
+
+    &:disabled {
+      opacity: 1;
+      cursor: default;
+      background: #15803d;
+      border-color: #15803d;
+      color: #fff;
+    }
+  }
 }
 
 .continue-unjoin:hover:not(:disabled) {
