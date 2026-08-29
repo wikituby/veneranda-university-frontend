@@ -244,13 +244,10 @@ export class StudentHome implements OnInit {
     this.unjoinPassword.set((event.target as HTMLInputElement).value);
   }
 
-  /** Drop accidental credential autofill that lands in Explore search. */
   private clearAutofillSearchLeak(): void {
     const scrub = () => {
       const q = this.searchQuery().trim();
-      if (q.includes('@')) {
-        this.searchQuery.set('');
-      }
+      if (q.includes('@')) this.searchQuery.set('');
     };
     scrub();
     setTimeout(scrub, 0);
