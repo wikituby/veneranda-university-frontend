@@ -365,14 +365,18 @@ export class MainLayout implements OnInit, OnDestroy {
 
   /** Width reserved for the page (does not grow when hover overlay expands). */
   contentSidebarWidth = computed(() => {
-    if (this.isMobile()) return this.sidebarWidth();
+    // Mobile drawer overlays content — reserve no sidebar gutter.
+    if (this.isMobile()) return 0;
     if (this.hoverSidebar()) return this.collapsedWidth;
     return this.sidebarCollapsed() ? this.collapsedWidth : this.sidebarWidth();
   });
 
   /** Visible sidenav width, including overlay expansion. */
   sidenavDisplayWidth = computed(() => {
-    if (this.isMobile()) return this.sidebarWidth();
+    // Full-bleed mobile drawer; CSS also forces 100% width.
+    if (this.isMobile()) {
+      return typeof window !== 'undefined' ? window.innerWidth : 390;
+    }
     if (this.hoverSidebar() && this.sidebarHovered()) return this.sidebarWidth();
     return this.contentSidebarWidth();
   });
