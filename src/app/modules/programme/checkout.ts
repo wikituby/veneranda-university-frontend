@@ -4,7 +4,8 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { CourseService } from '../../core/services/course.service';
 import { CourseCategory } from '../../core/models/course.model';
-import { formatKes, kindLabel, priceFor, programmeHeading } from '../../core/utils/programme.util';
+import { environment } from '../../../environments/environment';
+import { coordinatorShare, formatKes, formatMoney, kindLabel, priceFor, programmeHeading } from '../../core/utils/programme.util';
 import { CatalogueTopbar } from '../../layout/catalogue-topbar/catalogue-topbar';
 
 export interface PayOption {
@@ -14,6 +15,8 @@ export interface PayOption {
   title: string;
   blurb: string;
   amount: number;
+  coordinatorAmount?: number;
+  serverFeeAmount?: number;
   currency: string;
   paid: boolean;
   trial?: boolean;
@@ -32,6 +35,7 @@ export class Checkout implements OnInit {
   private courses = inject(CourseService);
 
   readonly formatKes = formatKes;
+  readonly formatMoney = formatMoney;
   readonly kindLabel = kindLabel;
 
   loading = signal(true);
@@ -194,16 +198,23 @@ export class Checkout implements OnInit {
       YEAR: 'Unlock every semester and course unit in this year. Other years stay locked.',
       PROGRAMME: 'Unlock the whole programme: every year, semester, and course unit.',
     };
-    const options: PayOption[] = chain.map((c) => ({
-      id: c.id,
-      categoryId: c.id,
-      kind: c.nodeKind || '',
-      title: programmeHeading(c),
-      blurb: blurbs[c.nodeKind || ''] || 'Unlock this item.',
-      amount: priceFor(c),
-      currency: c.currency || 'KES',
-      paid: this.paidIds().has(c.id) || this.coveredByAncestor(c.id, chain),
-    }));
+    const fee = environment.serverFeeAmount ?? 5000;
+    const options: PayOption[] = chain.map((c) => {
+      const share = coordinatorShare(c.priceAmount, c.nodeKind);
+      const serverFee = c.serverFeeAmount ?? fee;
+      return {
+        id: c.id,
+        categoryId: c.id,
+        kind: c.nodeKind || '',
+        title: programmeHeading(c),
+        blurb: blurbs[c.nodeKind || ''] || 'Unlock this item.',
+        amount: priceFor(c),
+        coordinatorAmount: share,
+        serverFeeAmount: serverFee,
+        currency: c.currency || environment.defaultCurrency || 'UGX',
+        paid: this.paidIds().has(c.id) || this.coveredByAncestor(c.id, chain),
+      };
+    });
     options.push({
       id: `free:${item.id}`,
       categoryId: item.id,
@@ -211,7 +222,9 @@ export class Checkout implements OnInit {
       title: 'Free trial',
       blurb: `Unlock only “${programmeHeading(item)}” for 48 hours. Nothing above it is included.`,
       amount: 0,
-      currency: item.currency || 'KES',
+      coordinatorAmount: 0,
+      serverFeeAmount: 0,
+      currency: item.currency || environment.defaultCurrency || 'UGX',
       paid: this.paidIds().has(item.id) || this.coveredByAncestor(item.id, chain),
       trial: true,
     });

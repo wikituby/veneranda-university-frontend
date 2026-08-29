@@ -318,3 +318,12 @@ h1 {
     min-height: 48px;
   }
 }
+
+.fee-split {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: var(--text-secondary, #697386);
+  font-weight: 500;
+  line-height: 1.35;
+}

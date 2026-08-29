@@ -4,7 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CourseService } from '../../core/services/course.service';
 import { CourseCategory } from '../../core/models/course.model';
-import { DEFAULT_INSTITUTION, programmeHeading } from '../../core/utils/programme.util';
+import { environment } from '../../../environments/environment';
+import { DEFAULT_INSTITUTION, formatMoney, programmeHeading, subscriptionTotal } from '../../core/utils/programme.util';
 import { CatalogueTopbar } from '../../layout/catalogue-topbar/catalogue-topbar';
 import { InstitutionPicker } from '../../shared/institution-picker/institution-picker';
 
@@ -28,6 +29,13 @@ export class ProgrammeCreate {
   programmeCode = '';
   abbreviation = '';
   institution = DEFAULT_INSTITUTION;
+  /** OPEN = free join; REQUEST = approval required. */
+  joinMode: 'OPEN' | 'REQUEST' = 'OPEN';
+  currency = environment.defaultCurrency || 'UGX';
+  /** Coordinator share for the programme-level subscription. */
+  coordinatorShare = 250000;
+  readonly serverFee = environment.serverFeeAmount ?? 5000;
+  readonly formatMoney = formatMoney;
   coverImageUrl = '';
   coverError = '';
   pendingCoverFile: File | null = null;
@@ -39,12 +47,19 @@ export class ProgrammeCreate {
   semesters = signal<CourseCategory[]>([]);
   semesterTitle = 'Semester 1';
   semesterPrice = 40000;
+  semesterCurrency = environment.defaultCurrency || 'UGX';
   selectedSemester = signal<CourseCategory | null>(null);
   units = signal<CourseCategory[]>([]);
   unitTitle = '';
   unitCode = '';
   unitAbbreviation = '';
   unitPrice = 15000;
+  unitCurrency = environment.defaultCurrency || 'UGX';
+
+  get programmeTotal(): number {
+    return subscriptionTotal(this.coordinatorShare, 'PROGRAMME', this.serverFee);
+  }
+
 
   onCoverFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -91,6 +106,9 @@ export class ProgrammeCreate {
         nodeKind: 'PROGRAMME',
         isPublished: true,
         icon: 'school',
+        joinMode: this.joinMode,
+        currency: this.currency,
+        priceAmount: this.coordinatorShare,
       })
       .subscribe({
         next: (created) => {
@@ -180,6 +198,7 @@ export class ProgrammeCreate {
         nodeKind: 'SEMESTER',
         icon: 'view_week',
         priceAmount: this.semesterPrice,
+        currency: this.semesterCurrency || this.currency,
       })
       .subscribe({
         next: (sem) => {
@@ -210,6 +229,7 @@ export class ProgrammeCreate {
         nodeKind: 'UNIT',
         icon: 'menu_book',
         priceAmount: this.unitPrice,
+        currency: this.unitCurrency || this.currency,
         programmeCode: this.unitCode.trim() || null,
         abbreviation: this.unitAbbreviation.trim() || null,
       })

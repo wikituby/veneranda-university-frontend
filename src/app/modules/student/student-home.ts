@@ -54,35 +54,43 @@ export class StudentHome implements OnInit {
   deleteBusy = signal(false);
   failedCovers = signal(new Set<string>());
   yoursOpen = signal(true);
-  createdOpen = signal(true);
   exploreOpen = signal(true);
   searchQuery = signal('');
   selectedCategory = signal('All');
 
   readonly joinedIds = computed(() => new Set(this.enrollments().map((e) => e.categoryId)));
 
-  readonly createdProgrammes = computed(() =>
-    this.programmes().filter((p) => this.canManageProgramme(p)),
-  );
-
-  readonly createdIds = computed(() => new Set(this.createdProgrammes().map((p) => p.id)));
-
   readonly availableProgrammes = computed(() => {
     const joined = this.joinedIds();
-    const created = this.createdIds();
-    return this.programmes().filter((p) => !joined.has(p.id) && !created.has(p.id));
+    return this.programmes().filter((p) => !joined.has(p.id));
   });
 
   readonly programmeFilters = computed(() => ['All', 'Diploma', 'Degree'] as const);
 
+  readonly exploreUniversities = computed(() => {
+    const names = new Set(
+      this.availableProgrammes()
+        .map((p) => (p.affiliatedInstitution || '').trim())
+        .filter(Boolean),
+    );
+    return ['All universities', ...Array.from(names).sort((a, b) => a.localeCompare(b))];
+  });
+
+  selectedUniversity = signal('All universities');
+
   readonly exploreProgrammes = computed(() => {
     const q = this.searchQuery().trim().toLowerCase();
     const cat = this.selectedCategory();
+    const uni = this.selectedUniversity();
     return this.availableProgrammes().filter((p) => {
       if (cat !== 'All') {
         const kind = programmeCategory(p.title);
         if (cat === 'Diploma' && kind !== 'Diploma') return false;
         if (cat === 'Degree' && !['Bachelor', 'Masters', 'Doctorate'].includes(kind)) return false;
+      }
+      if (uni && uni !== 'All universities') {
+        const inst = (p.affiliatedInstitution || '').trim();
+        if (inst.toLowerCase() !== uni.toLowerCase()) return false;
       }
       if (!q) return true;
       const haystack = `${p.title} ${p.abbreviation || ''} ${p.programmeCode || ''} ${p.description || ''} ${p.affiliatedInstitution || ''}`.toLowerCase();
@@ -164,6 +172,10 @@ export class StudentHome implements OnInit {
     return this.auth.canManageProgramme(p.createdBy);
   }
 
+  joinLabel(p: CourseCategory): string {
+    return (p.joinMode || 'OPEN').toUpperCase() === 'REQUEST' ? 'Request to join' : 'Join';
+  }
+
   joinProgramme(p: CourseCategory, event?: Event): void {
     event?.stopPropagation();
     if (this.joinedIds().has(p.id) || this.joiningId() === p.id) {
@@ -173,18 +185,22 @@ export class StudentHome implements OnInit {
     this.joiningId.set(p.id);
     this.error.set('');
     this.courses.enroll(p.id).subscribe({
-      next: () => {
+      next: (enrollment) => {
         this.joiningId.set(null);
-        this.enrollments.update((list) => [
-          ...list,
-          {
-            categoryId: p.id,
-            categoryTitle: p.title,
-            enrollmentStatus: 'ENROLLED',
-            groupSyncStatus: 'PENDING',
-            enrolled: true,
-          },
-        ]);
+        if (enrollment.enrolled) {
+          this.enrollments.update((list) => [
+            ...list,
+            {
+              categoryId: p.id,
+              categoryTitle: p.title,
+              enrollmentStatus: enrollment.enrollmentStatus || 'ACTIVE',
+              groupSyncStatus: enrollment.groupSyncStatus || 'PENDING',
+              enrolled: true,
+            },
+          ]);
+        } else if ((enrollment.enrollmentStatus || '').toUpperCase() === 'PENDING') {
+          this.error.set('Join request sent. The programme coordinator must accept it before you can continue.');
+        }
       },
       error: () => {
         this.joiningId.set(null);
@@ -213,10 +229,6 @@ export class StudentHome implements OnInit {
     this.yoursOpen.update((open) => !open);
   }
 
-  toggleCreated(): void {
-    this.createdOpen.update((open) => !open);
-  }
-
   toggleExplore(): void {
     this.exploreOpen.update((open) => !open);
   }
@@ -227,6 +239,10 @@ export class StudentHome implements OnInit {
 
   setCategory(category: string): void {
     this.selectedCategory.set(category);
+  }
+
+  setUniversity(university: string): void {
+    this.selectedUniversity.set(university);
   }
 
   startUnjoin(item: CourseEnrollment, event: Event): void {

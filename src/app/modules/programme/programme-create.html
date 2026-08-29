@@ -35,6 +35,45 @@
       </div>
       <label class="form-label fw-semibold">Description</label>
       <textarea class="form-control mb-3" rows="3" [(ngModel)]="description" name="description" placeholder="What a learner gets from this programme"></textarea>
+
+      <fieldset class="join-mode mb-3">
+        <legend class="form-label fw-semibold mb-2">How learners join</legend>
+        <label class="mode-option">
+          <input type="radio" name="joinMode" [(ngModel)]="joinMode" value="OPEN" />
+          <span>
+            <strong>Open join</strong>
+            <small>Anyone can join this programme without approval.</small>
+          </span>
+        </label>
+        <label class="mode-option">
+          <input type="radio" name="joinMode" [(ngModel)]="joinMode" value="REQUEST" />
+          <span>
+            <strong>Request to join</strong>
+            <small>Learners request access; you (or a coordinator) must accept before they join.</small>
+          </span>
+        </label>
+      </fieldset>
+
+      <div class="form-pair mb-3">
+        <div>
+          <label class="form-label fw-semibold">Currency</label>
+          <select class="form-select" [(ngModel)]="currency" name="currency">
+            <option value="UGX">UGX — Uganda shillings</option>
+            <option value="KES">KES — Kenya shillings</option>
+            <option value="USD">USD — US dollars</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label fw-semibold">Your share (coordinator)</label>
+          <input class="form-control" type="number" min="0" step="100" [(ngModel)]="coordinatorShare" name="coordinatorShare" />
+        </div>
+      </div>
+      <div class="fee-preview mb-3">
+        <div class="fee-line"><span>Your share</span><strong>{{ formatMoney(coordinatorShare, currency) }}</strong></div>
+        <div class="fee-line"><span>System server fee</span><strong>{{ formatMoney(serverFee, currency) }}</strong></div>
+        <div class="fee-line total"><span>Learner pays (lump sum)</span><strong>{{ formatMoney(programmeTotal, currency) }}</strong></div>
+        <p class="fee-hint">After payment, the lump sum is split: your share to the coordinator account, and the server fee to the system owner account.</p>
+      </div>
       <label class="form-label fw-semibold">Programme card image</label>
       <div class="cover-edit mb-3">
         @if (coverImageUrl) {
@@ -81,7 +120,7 @@
       </div>
       <div class="inline-add">
         <input class="form-control" [(ngModel)]="semesterTitle" name="semesterTitle" />
-        <input class="form-control price" type="number" [(ngModel)]="semesterPrice" name="semesterPrice" />
+        <input class="form-control price" type="number" [(ngModel)]="semesterPrice" name="semesterPrice" [attr.aria-label]="'Coordinator share (' + currency + ')'" />
         <button type="button" class="btn btn-outline-primary" [disabled]="saving() || !selectedYear()" (click)="addSemester()">Add semester</button>
       </div>
     </section>

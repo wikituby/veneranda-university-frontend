@@ -40,6 +40,9 @@
                 <span class="paid">Unlocked</span>
               } @else {
                 <span class="amount">{{ formatKes(option.amount, option.currency) }}</span>
+                @if (!option.trial && option.serverFeeAmount) {
+                  <span class="fee-split">Includes {{ formatMoney(option.coordinatorAmount, option.currency) }} coordinator + {{ formatMoney(option.serverFeeAmount, option.currency) }} server fee</span>
+                }
               }
             </div>
           </button>

@@ -31,7 +31,7 @@
               </button>
             } @else {
               <button type="button" class="btn btn-sm btn-primary" [disabled]="joining()" (click)="join()">
-                {{ joining() ? 'Joining…' : 'Join this programme' }}
+                {{ joinButtonLabel() }}
               </button>
             }
           }
@@ -61,6 +61,26 @@
       <div class="inline-alert">{{ error() }}</div>
     }
 
+    @if (canManage() && joinRequests().length) {
+      <section class="join-requests">
+        <h2>Pending join requests</h2>
+        <ul>
+          @for (req of joinRequests(); track req.id) {
+            <li>
+              <div>
+                <strong>{{ req.userFullName || req.userEmail || 'Learner' }}</strong>
+                @if (req.userEmail) { <span class="muted">{{ req.userEmail }}</span> }
+              </div>
+              <div class="req-actions">
+                <button type="button" class="btn btn-sm btn-primary" [disabled]="joinRequestBusy() === req.id" (click)="acceptJoin(req.id!)">Accept</button>
+                <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="joinRequestBusy() === req.id" (click)="rejectJoin(req.id!)">Reject</button>
+              </div>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
     @if (!years().length) {
       <p class="empty">No years have been added yet. Coordinators add years, then semesters, then course units.</p>
     }
@@ -81,8 +101,7 @@
             @if (canManage()) {
               <button type="button" class="btn btn-sm btn-outline-secondary" (click)="startEdit(year, $event, year.id)">Edit</button>
               <button type="button" class="btn btn-sm btn-outline-primary add-btn" (click)="startAddSemester(year, $event)">
-                <span class="btn-full">Add section</span>
-                <span class="btn-short">Add</span>
+                Add section
               </button>
             }
           </div>
@@ -119,9 +138,8 @@
                     }
                     @if (canManage()) {
                       <button type="button" class="btn btn-sm btn-outline-secondary" (click)="startEdit(sem, $event, year.id, sem.id)">Edit</button>
-                      <button type="button" class="btn btn-sm btn-outline-primary add-btn" (click)="startAddUnit(sem, year.id, $event)">
-                        <span class="btn-full">Add section</span>
-                        <span class="btn-short">Add</span>
+                      <button type="button" class="btn btn-sm btn-outline-primary" (click)="startAddUnit(sem, year.id, $event)">
+                        Add section
                       </button>
                     }
                   </div>

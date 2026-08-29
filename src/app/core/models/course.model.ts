@@ -27,7 +27,15 @@ export interface CourseCategory {
   abbreviation?: string | null;
   /** Programme card image URL (external or presigned R2 URL). */
   coverImageUrl?: string | null;
+  /** OPEN = free join; REQUEST = coordinator must accept. */
+  joinMode?: 'OPEN' | 'REQUEST' | string;
+  /** Coordinator share (what the creator sets). */
+  /** System/owner server fee (from API or environment). */
+  serverFeeAmount?: number | null;
+  /** Lump-sum total: coordinator share + server fee. */
+  totalPriceAmount?: number | null;
 }
+
 
 export interface CourseContent {
   id: string;
@@ -108,7 +116,11 @@ export interface CourseEnrollment {
   enrolledAt?: string | null;
   groupSyncedAt?: string | null;
   enrolled: boolean;
+  userId?: string | null;
+  userFullName?: string | null;
+  userEmail?: string | null;
 }
+
 
 export interface CourseAccess {
   categoryId: string;
@@ -119,17 +131,17 @@ export interface CourseAccess {
   canAccess: boolean;
   canManage: boolean;
   amount?: number | null;
-  currency?: string;
 }
 
 export interface CourseSubscription {
+  coordinatorAmount?: number | null;
+  serverFeeAmount?: number | null;
   id?: string;
   categoryId: string;
   categoryTitle?: string;
   nodeKind?: string;
   paymentStatus: string;
   amount?: number | null;
-  currency?: string;
   paymentMethod?: string;
   paid: boolean;
   paidAt?: string | null;

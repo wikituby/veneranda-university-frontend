@@ -159,6 +159,24 @@ export class CourseService {
     return this.http.post<CourseEnrollment>(`${this.baseUrl}/${categoryId}/enroll`, {});
   }
 
+  listJoinRequests(programmeId: string): Observable<CourseEnrollment[]> {
+    return this.http.get<CourseEnrollment[]>(`${this.baseUrl}/${programmeId}/join-requests`);
+  }
+
+  acceptJoinRequest(programmeId: string, enrollmentId: string): Observable<CourseEnrollment> {
+    return this.http.post<CourseEnrollment>(
+      `${this.baseUrl}/${programmeId}/join-requests/${enrollmentId}/accept`,
+      {}
+    );
+  }
+
+  rejectJoinRequest(programmeId: string, enrollmentId: string): Observable<CourseEnrollment> {
+    return this.http.post<CourseEnrollment>(
+      `${this.baseUrl}/${programmeId}/join-requests/${enrollmentId}/reject`,
+      {}
+    );
+  }
+
   unenroll(categoryId: string, password: string): Observable<CourseEnrollment> {
     return this.http.post<CourseEnrollment>(`${this.baseUrl}/${categoryId}/unenroll`, { password });
   }
@@ -269,6 +287,9 @@ export class CourseService {
       programmeCode: String(raw['programmeCode'] ?? raw['programme_code'] ?? '') || null,
       abbreviation: String(raw['abbreviation'] ?? '') || null,
       coverImageUrl: String(raw['coverImageUrl'] ?? raw['cover_image_url'] ?? '') || null,
+      joinMode: String(raw['joinMode'] ?? raw['join_mode'] ?? 'OPEN') || 'OPEN',
+      serverFeeAmount: raw['serverFeeAmount'] != null ? Number(raw['serverFeeAmount']) : null,
+      totalPriceAmount: raw['totalPriceAmount'] != null ? Number(raw['totalPriceAmount']) : null,
     };
   }
 

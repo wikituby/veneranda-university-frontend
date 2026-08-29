@@ -4,7 +4,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { CourseService } from '../../core/services/course.service';
-import { CourseCategory, CourseNode, CourseSubscription } from '../../core/models/course.model';
+import { CourseCategory, CourseEnrollment, CourseNode, CourseSubscription } from '../../core/models/course.model';
 import { coverTheme, defaultPrice, formatKes, DEFAULT_INSTITUTION, programmeHeading, bumpCoverImageVersion, programmeCoverUrl } from '../../core/utils/programme.util';
 import { CatalogueTopbar } from '../../layout/catalogue-topbar/catalogue-topbar';
 import { InstitutionPicker } from '../../shared/institution-picker/institution-picker';
@@ -30,6 +30,8 @@ export class ProgrammePage implements OnInit {
 
   loading = signal(true);
   error = signal('');
+  joinRequests = signal<CourseEnrollment[]>([]);
+  joinRequestBusy = signal<string | null>(null);
   joining = signal(false);
   unjoining = signal(false);
   unjoinStep = signal<'warn' | 'password' | null>(null);
@@ -114,6 +116,56 @@ export class ProgrammePage implements OnInit {
       error: () => {
         this.error.set('Could not load this programme.');
         this.loading.set(false);
+      },
+    });
+  }
+
+  joinButtonLabel(): string {
+    const mode = (this.programme()?.joinMode || 'OPEN').toUpperCase();
+    if (this.joining()) return mode === 'REQUEST' ? 'Sending request…' : 'Joining…';
+    return mode === 'REQUEST' ? 'Request to join' : 'Join this programme';
+  }
+
+  reloadJoinRequests(): void {
+    const prog = this.programme();
+    if (!prog || !this.canManage()) {
+      this.joinRequests.set([]);
+      return;
+    }
+    this.courses.listJoinRequests(prog.id).subscribe({
+      next: (list) => this.joinRequests.set(list || []),
+      error: () => this.joinRequests.set([]),
+    });
+  }
+
+  acceptJoin(enrollmentId: string): void {
+    const prog = this.programme();
+    if (!prog || !enrollmentId) return;
+    this.joinRequestBusy.set(enrollmentId);
+    this.courses.acceptJoinRequest(prog.id, enrollmentId).subscribe({
+      next: () => {
+        this.joinRequestBusy.set(null);
+        this.reloadJoinRequests();
+      },
+      error: () => {
+        this.joinRequestBusy.set(null);
+        this.error.set('Could not accept the join request.');
+      },
+    });
+  }
+
+  rejectJoin(enrollmentId: string): void {
+    const prog = this.programme();
+    if (!prog || !enrollmentId) return;
+    this.joinRequestBusy.set(enrollmentId);
+    this.courses.rejectJoinRequest(prog.id, enrollmentId).subscribe({
+      next: () => {
+        this.joinRequestBusy.set(null);
+        this.reloadJoinRequests();
+      },
+      error: () => {
+        this.joinRequestBusy.set(null);
+        this.error.set('Could not reject the join request.');
       },
     });
   }

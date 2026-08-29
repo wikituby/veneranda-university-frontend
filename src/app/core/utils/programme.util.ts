@@ -210,9 +210,18 @@ export function defaultPrice(kind?: string | null): number {
   }
 }
 
-export function priceFor(item: { priceAmount?: number | null; nodeKind?: string | null }): number {
-  if (item.priceAmount != null) return Number(item.priceAmount);
-  return defaultPrice(item.nodeKind);
+export function priceFor(item: {
+  priceAmount?: number | null;
+  nodeKind?: string | null;
+  totalPriceAmount?: number | null;
+  serverFeeAmount?: number | null;
+}): number {
+  return subscriptionTotal(
+    item.priceAmount,
+    item.nodeKind,
+    item.serverFeeAmount ?? 5000,
+    item.totalPriceAmount,
+  );
 }
 
 export function kindLabel(kind?: string | null): string {

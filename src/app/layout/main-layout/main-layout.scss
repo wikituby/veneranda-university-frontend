@@ -10,7 +10,6 @@
   --app-sidenav-width: 270px;
   background: var(--bg-body) !important;
 
-  // Material content pane must fill the shell so flex children can use remaining height.
   ::ng-deep > .mat-drawer-content.main-content,
   ::ng-deep > .mat-sidenav-content.main-content {
     position: absolute !important;
@@ -689,7 +688,6 @@
   overflow: hidden;
   // Keep content flush with the live sidebar width (Material often lags on collapse).
   margin-left: var(--app-sidebar-width) !important;
-  width: auto !important;
   transition: margin-left .22s ease;
 }
 
@@ -1504,7 +1502,7 @@
 .content-area {
   flex: 1 1 auto;
   min-height: 0;
-  height: 0; // force flex child to take remaining shell height
+  height: 0;
   padding: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -1828,22 +1826,22 @@ select.course-modal-input {
     max-height: 100dvh;
   }
 
-  .app-sidenav,
-  .app-sidenav.mobile-full {
-    width: 100vw !important;
-    min-width: 100vw !important;
-    max-width: 100vw !important;
+  .app-sidenav {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
   }
 
   .main-content {
     margin-left: 0 !important;
-    width: 100% !important;
+    height: 100%;
+    max-height: 100%;
+    min-height: 0;
   }
 
   .content-area {
     flex: 1 1 auto;
     min-height: 0;
-    height: 0;
   }
 
   .app-toolbar {
@@ -1874,27 +1872,15 @@ select.course-modal-input {
 .app-sidenav-container.mobile-overlay {
   .main-content {
     margin-left: 0 !important;
+    height: 100%;
+    max-height: 100%;
+    min-height: 0;
+  }
+
+  .app-sidenav {
     width: 100% !important;
-    left: 0 !important;
-    right: 0 !important;
-  }
-
-  .app-sidenav,
-  .app-sidenav.mobile-full {
-    width: 100vw !important;
-    min-width: 100vw !important;
-    max-width: 100vw !important;
-  }
-
-  ::ng-deep .mat-drawer.mat-sidenav.app-sidenav,
-  ::ng-deep .mat-sidenav.app-sidenav {
-    width: 100vw !important;
-    min-width: 100vw !important;
-    max-width: 100vw !important;
-  }
-
-  ::ng-deep .mat-drawer-inner-container {
-    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
   }
 
   ::ng-deep .mat-drawer-backdrop.mat-drawer-shown {

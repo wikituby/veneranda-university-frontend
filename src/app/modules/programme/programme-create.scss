@@ -124,3 +124,58 @@ h1 { margin: 8px 0; font-weight: 800; }
   color: #b42318;
   font-size: 0.8rem;
 }
+
+
+.join-mode {
+  border: 1px solid var(--border-color, #e3e8ee);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin: 0;
+
+  legend { float: none; width: auto; padding: 0; font-size: 0.9rem; }
+}
+
+.mode-option {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 8px;
+  border-radius: 10px;
+  cursor: pointer;
+
+  & + & { border-top: 1px solid var(--border-color, #e3e8ee); }
+
+  input { margin-top: 4px; }
+
+  strong { display: block; font-size: 0.92rem; }
+  small { display: block; color: var(--text-secondary, #697386); font-size: 0.8rem; line-height: 1.4; }
+}
+
+.fee-preview {
+  border: 1px solid var(--border-color, #e3e8ee);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: var(--bg-muted, #f8fafc);
+}
+
+.fee-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0;
+  font-size: 0.9rem;
+
+  &.total {
+    margin-top: 6px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border-color, #e3e8ee);
+    font-weight: 700;
+  }
+}
+
+.fee-hint {
+  margin: 10px 0 0;
+  font-size: 0.78rem;
+  color: var(--text-secondary, #697386);
+  line-height: 1.4;
+}

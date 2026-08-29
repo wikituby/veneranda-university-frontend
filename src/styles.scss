@@ -132,6 +132,7 @@ body.appearance-dark {
 
 // ===== Base =====
 html, body { height: 100%; margin: 0; overflow: auto; overflow-x: hidden; font-family: Roboto, 'Helvetica Neue', sans-serif; -webkit-font-smoothing: antialiased; }
+html.app-shell, body.app-shell { height: 100%; overflow: hidden; }
 body { background: var(--bg-body); color: var(--text-primary); transition: background-color .2s ease, color .2s ease; -webkit-tap-highlight-color: rgba(0, 86, 210, 0.12); }
 img, svg, video { max-width: 100%; }
 

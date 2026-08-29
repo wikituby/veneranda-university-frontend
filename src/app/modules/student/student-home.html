@@ -5,7 +5,7 @@
   <header class="student-home-hero">
     <p class="eyebrow">Your catalogue</p>
     <h1>Welcome, {{ userName }}</h1>
-    <p class="lede">Continue in programmes you joined, manage ones you created, or explore others below to join.</p>
+    <p class="lede">{{ enrollments().length ? 'Continue in programmes you have joined, or explore others below to join.' : 'Explore programmes below to join one and start learning.' }}</p>
   </header>
 
   @if (error()) {
@@ -71,56 +71,6 @@
     </section>
     }
 
-
-    @if (createdProgrammes().length) {
-    <section class="vu-accordion">
-      <button type="button" class="acc-head" [attr.aria-expanded]="createdOpen()" (click)="toggleCreated()">
-        <span class="acc-label">
-          Programmes you created
-          <span class="count">{{ createdProgrammes().length }}</span>
-        </span>
-        <i class="bi" [class.bi-chevron-down]="createdOpen()" [class.bi-chevron-right]="!createdOpen()" aria-hidden="true"></i>
-      </button>
-      @if (createdOpen()) {
-        <div class="acc-body">
-          <div class="catalog-grid">
-            @for (p of createdProgrammes(); track p.id) {
-              @let theme = coverTheme(p.title, p.id, p.coverImageUrl);
-              <article class="course-tile" (click)="openDetails(p)">
-                <div class="tile-cover" [style.background]="theme.gradient">
-                  <img [src]="cardCoverSrc(p.title, p.id, p.coverImageUrl)" [alt]="p.title" (error)="onCoverError(p.id, p.coverImageUrl)" />
-                </div>
-                <div class="tile-body">
-                  <p class="partner">{{ p.affiliatedInstitution || defaultInstitution }}</p>
-                  <h3>{{ programmeHeading(p) }}</h3>
-                  <p class="desc">{{ p.description || 'Published programme' }}</p>
-                  <div class="tile-footer" (click)="$event.stopPropagation()">
-                    <button type="button" class="tile-admin" (click)="startEdit(p, $event)">Edit</button>
-                    <button type="button" class="tile-admin danger" (click)="startDelete(p, $event)">Delete</button>
-                  </div>
-                  <div class="card-actions" (click)="$event.stopPropagation()">
-                    <button type="button" class="continue-open" (click)="openProgramme(p.id, $event)">
-                      Open
-                    </button>
-                    @if (!joinedIds().has(p.id)) {
-                      <button type="button" class="continue-unjoin" [disabled]="joiningId() === p.id" (click)="joinProgramme(p, $event)">
-                        @if (joiningId() === p.id) {
-                          <span class="spinner-border spinner-border-sm"></span>
-                        } @else {
-                          Join
-                        }
-                      </button>
-                    }
-                  </div>
-                </div>
-              </article>
-            }
-          </div>
-        </div>
-      }
-    </section>
-    }
-
     <section class="vu-accordion">
       <div class="acc-head-split">
         <button type="button" class="acc-head" [attr.aria-expanded]="exploreOpen()" (click)="toggleExplore()">
@@ -144,6 +94,18 @@
                 </button>
               }
             </div>
+            <label class="uni-field explore-university">
+              <span class="visually-hidden">University</span>
+              <select
+                [value]="selectedUniversity()"
+                (change)="setUniversity(($any($event.target).value))"
+                aria-label="Filter by university"
+              >
+                @for (uni of exploreUniversities(); track uni) {
+                  <option [value]="uni">{{ uni }}</option>
+                }
+              </select>
+            </label>
             <label class="search-field explore-search">
               <i class="bi bi-search" aria-hidden="true"></i>
               <input
@@ -157,7 +119,7 @@
                 data-lpignore="true"
                 [value]="searchQuery()"
                 (input)="onSearch($event)"
-                placeholder="Search programmes"
+                placeholder="Search by programme or university"
                 aria-label="Search programmes"
               />
             </label>
@@ -194,7 +156,7 @@
                           @if (joiningId() === p.id) {
                             <span class="spinner-border spinner-border-sm"></span>
                           } @else {
-                            Join
+                            {{ joinLabel(p) }}
                           }
                         </button>
                       </div>
