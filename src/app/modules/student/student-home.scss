@@ -16,18 +16,26 @@
   gap: 20px;
   align-items: stretch;
   min-height: calc(100dvh - 200px);
-  grid-template-columns: minmax(300px, 1fr) minmax(300px, 1fr) minmax(560px, 1.7fr);
+  grid-template-columns: 1fr;
 
-  &[data-cols='1'] {
+  /* Joined / Created stay fixed-width; Explore always absorbs leftover space */
+  &.has-joined.has-created.has-explore {
+    grid-template-columns: 320px 320px minmax(0, 1fr);
+  }
+
+  &.has-joined.has-explore:not(.has-created),
+  &.has-created.has-explore:not(.has-joined) {
+    grid-template-columns: 320px minmax(0, 1fr);
+  }
+
+  &.has-joined.has-created:not(.has-explore) {
+    grid-template-columns: repeat(2, minmax(320px, 1fr));
+  }
+
+  &.has-explore:not(.has-joined):not(.has-created),
+  &.has-joined:not(.has-created):not(.has-explore),
+  &.has-created:not(.has-joined):not(.has-explore) {
     grid-template-columns: 1fr;
-  }
-
-  &[data-cols='2'] {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  &[data-cols='3'] {
-    grid-template-columns: minmax(300px, 1fr) minmax(300px, 1fr) minmax(560px, 1.7fr);
   }
 }
 
@@ -78,41 +86,21 @@
 .board-scroll {
   flex: 1 1 auto;
   min-height: 0;
-  overflow-x: hidden;
+  overflow-x: auto;
   overflow-y: auto;
   padding: 2px 2px 8px;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
 }
 
-.board-scroll--single {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  align-content: start;
-}
-
+/* Fixed card tracks — never shrink below normal card width */
+.board-scroll--single,
 .board-scroll--duo {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, 300px);
   gap: 18px;
+  justify-content: start;
   align-content: start;
-}
-
-/* When fewer sections are visible, cards spread into the freed space */
-.boards-row[data-cols='1'] .board-scroll--single,
-.boards-row[data-cols='1'] .board-scroll--duo {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  display: grid;
-}
-
-.boards-row[data-cols='2'] .board-scroll--single {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.boards-row[data-cols='2'] .board--explore .board-scroll--duo {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .board-empty-span {
@@ -375,8 +363,11 @@
 .course-tile {
   display: flex;
   flex-direction: column;
-  flex: 0 0 auto;
-  width: 100%;
+  flex: 0 0 300px;
+  box-sizing: border-box;
+  width: 300px;
+  min-width: 300px;
+  max-width: 300px;
   border: 1px solid var(--border-color, #e3e8ee);
   border-radius: 12px;
   overflow: hidden;
@@ -391,14 +382,10 @@
   }
 }
 
-.board-scroll--single .course-tile {
-  /* Keep joined/created cards at the same visual size as explore tiles */
-  max-width: 100%;
-}
-
 .tile-cover {
   position: relative;
-  aspect-ratio: 16 / 9;
+  width: 100%;
+  height: 168px;
   flex-shrink: 0;
   overflow: hidden;
   display: grid;
@@ -674,17 +661,13 @@
 }
 
 @media (max-width: 1100px) {
-  .boards-row[data-cols='3'] {
-    grid-template-columns: 1fr 1fr;
+  .boards-row.has-joined.has-created.has-explore {
+    grid-template-columns: 320px 320px;
   }
 
-  .boards-row[data-cols='3'] .board--explore {
+  .boards-row.has-joined.has-created.has-explore .board--explore {
     grid-column: 1 / -1;
     max-height: min(70dvh, 640px);
-  }
-
-  .boards-row[data-cols='3'] .board--explore .board-scroll--duo {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -708,9 +691,10 @@
   }
 
   .boards-row,
-  .boards-row[data-cols='1'],
-  .boards-row[data-cols='2'],
-  .boards-row[data-cols='3'] {
+  .boards-row.has-joined.has-created.has-explore,
+  .boards-row.has-joined.has-explore:not(.has-created),
+  .boards-row.has-created.has-explore:not(.has-joined),
+  .boards-row.has-joined.has-created:not(.has-explore) {
     grid-template-columns: 1fr;
     min-height: 0;
     gap: 12px;
@@ -724,13 +708,22 @@
     grid-column: auto;
   }
 
-  .boards-row[data-cols='1'] .board-scroll--single,
-  .boards-row[data-cols='1'] .board-scroll--duo,
-  .boards-row[data-cols='2'] .board-scroll--single,
-  .boards-row[data-cols='2'] .board--explore .board-scroll--duo,
-  .boards-row[data-cols='3'] .board--explore .board-scroll--duo,
+  .board-scroll--single,
   .board-scroll--duo {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    justify-content: stretch;
+  }
+
+  .course-tile {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    flex-basis: auto;
+  }
+
+  .tile-cover {
+    height: auto;
+    aspect-ratio: 16 / 9;
   }
 
   .search-field input {

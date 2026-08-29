@@ -30,7 +30,13 @@
   }
 
   @if (visibleBoardCount() > 0) {
-  <div class="boards-row" [attr.data-cols]="visibleBoardCount()">
+  <div
+    class="boards-row"
+    [attr.data-cols]="visibleBoardCount()"
+    [class.has-joined]="showJoinedBoard()"
+    [class.has-created]="showCreatedBoard()"
+    [class.has-explore]="showExploreBoard()"
+  >
     @if (showJoinedBoard()) {
     <section class="board">
       <header class="board-head">
