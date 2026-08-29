@@ -53,21 +53,16 @@ export class StudentHome implements OnInit {
   formBusy = signal(false);
   deleteBusy = signal(false);
   failedCovers = signal(new Set<string>());
+  yoursOpen = signal(true);
+  exploreOpen = signal(true);
   searchQuery = signal('');
   selectedCategory = signal('All');
 
   readonly joinedIds = computed(() => new Set(this.enrollments().map((e) => e.categoryId)));
 
-  readonly createdProgrammes = computed(() =>
-    this.programmes().filter((p) => this.canManageProgramme(p)),
-  );
-
-  readonly createdIds = computed(() => new Set(this.createdProgrammes().map((p) => p.id)));
-
   readonly availableProgrammes = computed(() => {
     const joined = this.joinedIds();
-    const created = this.createdIds();
-    return this.programmes().filter((p) => !joined.has(p.id) && !created.has(p.id));
+    return this.programmes().filter((p) => !joined.has(p.id));
   });
 
   readonly programmeFilters = computed(() => {
@@ -84,18 +79,6 @@ export class StudentHome implements OnInit {
       const haystack = `${p.title} ${p.abbreviation || ''} ${p.programmeCode || ''} ${p.description || ''} ${p.affiliatedInstitution || ''}`.toLowerCase();
       return haystack.includes(q);
     });
-  });
-
-  readonly showJoinedBoard = computed(() => this.enrollments().length > 0);
-  readonly showCreatedBoard = computed(() => this.createdProgrammes().length > 0);
-  readonly showExploreBoard = computed(() => this.availableProgrammes().length > 0);
-
-  readonly visibleBoardCount = computed(() => {
-    let n = 0;
-    if (this.showJoinedBoard()) n++;
-    if (this.showCreatedBoard()) n++;
-    if (this.showExploreBoard()) n++;
-    return n;
   });
 
   get userName(): string {
@@ -217,6 +200,14 @@ export class StudentHome implements OnInit {
     return this.coverTheme(title, id).url;
   }
 
+  toggleYours(): void {
+    this.yoursOpen.update((open) => !open);
+  }
+
+  toggleExplore(): void {
+    this.exploreOpen.update((open) => !open);
+  }
+
   onSearch(event: Event): void {
     this.searchQuery.set((event.target as HTMLInputElement).value);
   }
@@ -240,7 +231,6 @@ export class StudentHome implements OnInit {
     this.unjoinTarget.set(null);
     this.unjoinPassword.set('');
     this.unjoinError.set('');
-    // Browsers sometimes dump the saved email into the next text/search field after a password prompt.
     this.clearAutofillSearchLeak();
   }
 
@@ -263,7 +253,6 @@ export class StudentHome implements OnInit {
       }
     };
     scrub();
-    // Autofill often writes into the next field a tick after the password dialog closes.
     setTimeout(scrub, 0);
     setTimeout(scrub, 100);
     setTimeout(scrub, 300);
