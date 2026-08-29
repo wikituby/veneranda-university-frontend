@@ -64,7 +64,11 @@ export class ProgrammeBrowse implements OnInit {
       const u = this.auth.currentUser;
       return (u?.fullName || '').trim() || u?.username || 'You';
     }
-    return (p.createdByName || '').trim() || 'Programme coordinator';
+    return (p.createdByName || '').trim();
+  }
+
+  hasCreator(p?: CourseCategory | null): boolean {
+    return !!this.isCreatedByYou(p) || !!(p?.createdByName || '').trim();
   }
 
   creatorAvatarUrl(p?: CourseCategory | null): string | null {

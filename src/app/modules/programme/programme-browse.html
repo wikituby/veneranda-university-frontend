@@ -29,6 +29,7 @@
           <div class="tile-body">
             <p class="partner">{{ p.affiliatedInstitution || defaultInstitution }}</p>
             <h3>{{ programmeHeading(p) }}</h3>
+            @if (hasCreator(p)) {
             <div class="creator-row">
               @if (isCreatedByYou(p)) {
                 <span class="creator-avatar" aria-hidden="true">
@@ -50,6 +51,7 @@
                 <span class="creator-name">{{ creatorName(p) }}</span>
               }
             </div>
+            }
             <p class="desc">{{ p.description || 'Published programme' }}</p>
             <div class="tile-footer">
               <button type="button" class="btn btn-sm btn-primary" [disabled]="joiningId() === p.id" (click)="openOrJoin(p, $event)">

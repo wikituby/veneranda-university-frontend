@@ -46,6 +46,7 @@
                     <p class="partner">{{ institutionOf(item.categoryId) }}</p>
                     <h3>{{ programmeHeading(prog, item.categoryTitle) }}</h3>
                     @if (prog; as owned) {
+                      @if (hasCreator(owned)) {
                       <div class="creator-row">
                         @if (isCreatedByYou(owned)) {
                           <span class="creator-avatar" aria-hidden="true">
@@ -67,6 +68,7 @@
                           <span class="creator-name">{{ creatorName(owned) }}</span>
                         }
                       </div>
+                      }
                     }
                     <p class="desc">{{ prog?.description || 'Published programme' }}</p>
                     @if (prog; as owned) {
@@ -278,6 +280,7 @@
                     <div class="tile-body">
                       <p class="partner">{{ p.affiliatedInstitution || defaultInstitution }}</p>
                       <h3>{{ programmeHeading(p) }}</h3>
+                      @if (hasCreator(p)) {
                       <div class="creator-row">
                         @if (isCreatedByYou(p)) {
                           <span class="creator-avatar" aria-hidden="true">
@@ -299,6 +302,7 @@
                           <span class="creator-name">{{ creatorName(p) }}</span>
                         }
                       </div>
+                      }
                       <p class="desc">{{ p.description || 'Published programme' }}</p>
                       @if (canManageProgramme(p)) {
                         <div class="tile-footer" (click)="$event.stopPropagation()">

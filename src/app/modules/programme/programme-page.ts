@@ -84,7 +84,11 @@ export class ProgrammePage implements OnInit {
       const u = this.auth.currentUser;
       return (u?.fullName || '').trim() || u?.username || 'You';
     }
-    return (p.createdByName || '').trim() || 'Programme coordinator';
+    return (p.createdByName || '').trim();
+  }
+
+  hasCreator(): boolean {
+    return this.isCreatedByYou() || !!(this.programme()?.createdByName || '').trim();
   }
 
   creatorAvatarUrl(): string | null {

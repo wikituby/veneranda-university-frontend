@@ -54,6 +54,7 @@
         <p class="code-line">{{ programme()!.programmeCode }}</p>
       }
       <p class="affil">Affiliated to {{ programme()!.affiliatedInstitution || defaultInstitution }}</p>
+      @if (hasCreator()) {
       <div class="creator-row">
         @if (isCreatedByYou()) {
           <span class="creator-avatar" aria-hidden="true">
@@ -75,6 +76,7 @@
           <span class="creator-name">{{ creatorName() }}</span>
         }
       </div>
+      }
       <p class="lede">{{ programme()!.description }}</p>
     </header>
 
