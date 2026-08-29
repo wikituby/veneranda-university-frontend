@@ -76,9 +76,10 @@ export class ProgrammeDetails implements OnInit {
 
   isCreatedByYou(): boolean {
     const p = this.programme();
-    if (!p?.createdBy) return false;
+    if (p?.createdBy == null) return false;
     const userId = this.auth.currentUser?.id;
-    return userId != null && p.createdBy === userId;
+    if (userId == null) return false;
+    return Number(p.createdBy) === Number(userId);
   }
 
   creatorName(): string {
@@ -92,7 +93,10 @@ export class ProgrammeDetails implements OnInit {
   }
 
   hasCreator(): boolean {
-    return this.isCreatedByYou() || !!(this.programme()?.createdByName || '').trim();
+    const p = this.programme();
+    if (this.isCreatedByYou()) return true;
+    if ((p?.createdByName || '').trim()) return true;
+    return p?.createdBy != null;
   }
 
   creatorAvatarUrl(): string | null {

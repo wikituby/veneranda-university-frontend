@@ -53,9 +53,10 @@ export class ProgrammeBrowse implements OnInit {
   }
 
   isCreatedByYou(p?: CourseCategory | null): boolean {
-    if (!p?.createdBy) return false;
+    if (p?.createdBy == null) return false;
     const userId = this.auth.currentUser?.id;
-    return userId != null && p.createdBy === userId;
+    if (userId == null) return false;
+    return Number(p.createdBy) === Number(userId);
   }
 
   creatorName(p?: CourseCategory | null): string {
@@ -68,7 +69,9 @@ export class ProgrammeBrowse implements OnInit {
   }
 
   hasCreator(p?: CourseCategory | null): boolean {
-    return !!this.isCreatedByYou(p) || !!(p?.createdByName || '').trim();
+    if (this.isCreatedByYou(p)) return true;
+    if ((p?.createdByName || '').trim()) return true;
+    return p?.createdBy != null;
   }
 
   creatorAvatarUrl(p?: CourseCategory | null): string | null {
