@@ -240,6 +240,8 @@ export class StudentHome implements OnInit {
     this.unjoinTarget.set(null);
     this.unjoinPassword.set('');
     this.unjoinError.set('');
+    // Browsers sometimes dump the saved email into the next text/search field after a password prompt.
+    this.clearAutofillSearchLeak();
   }
 
   continueUnjoin(): void {
@@ -250,6 +252,21 @@ export class StudentHome implements OnInit {
 
   onUnjoinPassword(event: Event): void {
     this.unjoinPassword.set((event.target as HTMLInputElement).value);
+  }
+
+  /** Drop accidental credential autofill that lands in Explore search. */
+  private clearAutofillSearchLeak(): void {
+    const scrub = () => {
+      const q = this.searchQuery().trim();
+      if (q.includes('@')) {
+        this.searchQuery.set('');
+      }
+    };
+    scrub();
+    // Autofill often writes into the next field a tick after the password dialog closes.
+    setTimeout(scrub, 0);
+    setTimeout(scrub, 100);
+    setTimeout(scrub, 300);
   }
 
   confirmUnjoin(): void {

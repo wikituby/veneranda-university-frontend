@@ -120,6 +120,13 @@
             <i class="bi bi-search" aria-hidden="true"></i>
             <input
               type="search"
+              name="explore-programme-filter"
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"
+              spellcheck="false"
+              data-1p-ignore="true"
+              data-lpignore="true"
               [value]="searchQuery()"
               (input)="onSearch($event)"
               placeholder="Search"
@@ -192,31 +199,48 @@
       } @else {
         <h2 id="unjoinTitle">Confirm with your password</h2>
         <p class="confirm-lead">Enter your account password to unjoin <strong>{{ unjoinTarget()?.title }}</strong>.</p>
-        <label class="modal-field">
-          <span>Password</span>
-          <div class="password-row">
-            <input
-              class="form-control"
-              [type]="hideUnjoinPassword() ? 'password' : 'text'"
-              [value]="unjoinPassword()"
-              (input)="onUnjoinPassword($event)"
-              autocomplete="current-password"
-              placeholder="Your password"
-            />
-            <button type="button" class="btn btn-outline-secondary" (click)="hideUnjoinPassword.set(!hideUnjoinPassword())">
-              {{ hideUnjoinPassword() ? 'Show' : 'Hide' }}
+        <form autocomplete="off" (submit)="$event.preventDefault(); confirmUnjoin()">
+          <!-- Absorb browser username/email autofill so it does not leak into Explore search -->
+          <input
+            type="text"
+            name="unjoin-username"
+            autocomplete="username"
+            tabindex="-1"
+            aria-hidden="true"
+            class="autofill-trap"
+            value=""
+            readonly
+            (focus)="$any($event.target).removeAttribute('readonly')"
+          />
+          <label class="modal-field">
+            <span>Password</span>
+            <div class="password-row">
+              <input
+                class="form-control"
+                name="unjoin-confirm-password"
+                [type]="hideUnjoinPassword() ? 'password' : 'text'"
+                [value]="unjoinPassword()"
+                (input)="onUnjoinPassword($event)"
+                autocomplete="new-password"
+                data-1p-ignore="true"
+                data-lpignore="true"
+                placeholder="Your password"
+              />
+              <button type="button" class="btn btn-outline-secondary" (click)="hideUnjoinPassword.set(!hideUnjoinPassword())">
+                {{ hideUnjoinPassword() ? 'Show' : 'Hide' }}
+              </button>
+            </div>
+          </label>
+          @if (unjoinError()) {
+            <p class="cover-error">{{ unjoinError() }}</p>
+          }
+          <div class="modal-actions">
+            <button type="button" class="btn btn-outline-secondary" [disabled]="unjoining()" (click)="cancelUnjoin()">Cancel</button>
+            <button type="submit" class="btn btn-outline-danger" [disabled]="unjoining() || !unjoinPassword().trim()">
+              {{ unjoining() ? 'Unjoining…' : 'Unjoin programme' }}
             </button>
           </div>
-        </label>
-        @if (unjoinError()) {
-          <p class="cover-error">{{ unjoinError() }}</p>
-        }
-        <div class="modal-actions">
-          <button type="button" class="btn btn-outline-secondary" [disabled]="unjoining()" (click)="cancelUnjoin()">Cancel</button>
-          <button type="button" class="btn btn-outline-danger" [disabled]="unjoining() || !unjoinPassword().trim()" (click)="confirmUnjoin()">
-            {{ unjoining() ? 'Unjoining…' : 'Unjoin programme' }}
-          </button>
-        </div>
+        </form>
       }
     </div>
   </div>
