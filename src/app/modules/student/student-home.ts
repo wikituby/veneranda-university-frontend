@@ -53,16 +53,21 @@ export class StudentHome implements OnInit {
   formBusy = signal(false);
   deleteBusy = signal(false);
   failedCovers = signal(new Set<string>());
-  yoursOpen = signal(true);
-  exploreOpen = signal(true);
   searchQuery = signal('');
   selectedCategory = signal('All');
 
   readonly joinedIds = computed(() => new Set(this.enrollments().map((e) => e.categoryId)));
 
+  readonly createdProgrammes = computed(() =>
+    this.programmes().filter((p) => this.canManageProgramme(p)),
+  );
+
+  readonly createdIds = computed(() => new Set(this.createdProgrammes().map((p) => p.id)));
+
   readonly availableProgrammes = computed(() => {
     const joined = this.joinedIds();
-    return this.programmes().filter((p) => !joined.has(p.id));
+    const created = this.createdIds();
+    return this.programmes().filter((p) => !joined.has(p.id) && !created.has(p.id));
   });
 
   readonly programmeFilters = computed(() => {
@@ -198,14 +203,6 @@ export class StudentHome implements OnInit {
       return this.programmeCoverUrl(title, id, coverImageUrl);
     }
     return this.coverTheme(title, id).url;
-  }
-
-  toggleYours(): void {
-    this.yoursOpen.update((open) => !open);
-  }
-
-  toggleExplore(): void {
-    this.exploreOpen.update((open) => !open);
   }
 
   onSearch(event: Event): void {

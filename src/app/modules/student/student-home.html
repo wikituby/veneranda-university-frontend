@@ -5,7 +5,7 @@
   <header class="student-home-hero">
     <p class="eyebrow">Your catalogue</p>
     <h1>Welcome, {{ userName }}</h1>
-    <p class="lede">{{ enrollments().length ? 'Continue in programmes you have joined, or explore others below to join.' : 'Explore programmes below to join one and start learning.' }}</p>
+    <p class="lede">Joined programmes on the left, ones you created in the middle, and new ones to explore on the right.</p>
   </header>
 
   @if (error()) {
@@ -22,136 +22,143 @@
     </div>
   }
 
-    <div class="sections-stack">
-    @if (enrollments().length) {
-    <section class="vu-accordion">
-      <button type="button" class="acc-head" [attr.aria-expanded]="yoursOpen()" (click)="toggleYours()">
+  <div class="boards-row">
+    <section class="board">
+      <header class="board-head">
         <span class="acc-label">
           Your programmes
           <span class="count">{{ enrollments().length }}</span>
         </span>
-        <i class="bi" [class.bi-chevron-down]="yoursOpen()" [class.bi-chevron-right]="!yoursOpen()" aria-hidden="true"></i>
-      </button>
-      @if (yoursOpen()) {
-        <div class="acc-body">
-            <div class="catalog-grid">
-              @for (item of enrollments(); track item.categoryId) {
-                @let prog = programmeById(item.categoryId);
-                @let theme = coverTheme(item.categoryTitle || '', item.categoryId, prog?.coverImageUrl);
-                <article class="course-tile" (click)="openDetailsById(item.categoryId)">
-                  <div class="tile-cover" [style.background]="theme.gradient">
-                    <img [src]="cardCoverSrc(item.categoryTitle || '', item.categoryId, prog?.coverImageUrl)" [alt]="item.categoryTitle" (error)="onCoverError(item.categoryId, prog?.coverImageUrl)" />
-                  </div>
-                  <div class="tile-body">
-                    <p class="partner">{{ institutionOf(item.categoryId) }}</p>
-                    <h3>{{ programmeHeading(prog, item.categoryTitle) }}</h3>
-                    <p class="desc">{{ prog?.description || 'Published programme' }}</p>
-                    @if (prog; as owned) {
-                      @if (canManageProgramme(owned)) {
-                        <div class="tile-footer" (click)="$event.stopPropagation()">
-                          <button type="button" class="tile-admin" (click)="startEdit(owned, $event)">Edit</button>
-                          <button type="button" class="tile-admin danger" (click)="startDelete(owned, $event)">Delete</button>
-                        </div>
-                      }
-                    }
-                    <div class="card-actions" (click)="$event.stopPropagation()">
-                      <button type="button" class="continue-open" (click)="openProgramme(item.categoryId, $event)">
-                        Open
-                      </button>
-                      <button type="button" class="continue-unjoin" (click)="startUnjoin(item, $event)">
-                        Unjoin
-                      </button>
-                    </div>
-                  </div>
-                </article>
-              }
-            </div>
-        </div>
-      }
+      </header>
+      <div class="board-scroll board-scroll--single">
+        @if (enrollments().length) {
+          @for (item of enrollments(); track item.categoryId) {
+            @let prog = programmeById(item.categoryId);
+            @let theme = coverTheme(item.categoryTitle || '', item.categoryId, prog?.coverImageUrl);
+            <article class="course-tile" (click)="openDetailsById(item.categoryId)">
+              <div class="tile-cover" [style.background]="theme.gradient">
+                <img [src]="cardCoverSrc(item.categoryTitle || '', item.categoryId, prog?.coverImageUrl)" [alt]="item.categoryTitle" (error)="onCoverError(item.categoryId, prog?.coverImageUrl)" />
+              </div>
+              <div class="tile-body">
+                <p class="partner">{{ institutionOf(item.categoryId) }}</p>
+                <h3>{{ programmeHeading(prog, item.categoryTitle) }}</h3>
+                <p class="desc">{{ prog?.description || 'Published programme' }}</p>
+                <div class="card-actions" (click)="$event.stopPropagation()">
+                  <button type="button" class="continue-open" (click)="openProgramme(item.categoryId, $event)">Open</button>
+                  <button type="button" class="continue-unjoin" (click)="startUnjoin(item, $event)">Unjoin</button>
+                </div>
+              </div>
+            </article>
+          }
+        } @else {
+          <p class="empty">You have not joined a programme yet. Browse Explore to join one.</p>
+        }
+      </div>
     </section>
-    }
 
-    <section class="vu-accordion">
-      <div class="acc-head-split">
-        <button type="button" class="acc-head" [attr.aria-expanded]="exploreOpen()" (click)="toggleExplore()">
-          <span class="acc-label">
-            Explore programmes
-            <span class="count">{{ availableProgrammes().length }}</span>
-          </span>
-          <i class="bi" [class.bi-chevron-down]="exploreOpen()" [class.bi-chevron-right]="!exploreOpen()" aria-hidden="true"></i>
-        </button>
-        @if (exploreOpen() && availableProgrammes().length) {
+    <section class="board">
+      <header class="board-head board-head--split">
+        <span class="acc-label">
+          Created programmes
+          <span class="count">{{ createdProgrammes().length }}</span>
+        </span>
+        <a routerLink="/programmes/new" class="btn btn-primary btn-sm create-programme-btn">Register</a>
+      </header>
+      <div class="board-scroll board-scroll--single">
+        @if (createdProgrammes().length) {
+          @for (p of createdProgrammes(); track p.id) {
+            @let theme = coverTheme(p.title, p.id, p.coverImageUrl);
+            <article class="course-tile" (click)="openDetails(p)">
+              <div class="tile-cover" [style.background]="theme.gradient">
+                <img [src]="cardCoverSrc(p.title, p.id, p.coverImageUrl)" [alt]="p.title" (error)="onCoverError(p.id, p.coverImageUrl)" />
+              </div>
+              <div class="tile-body">
+                <p class="partner">{{ p.affiliatedInstitution || defaultInstitution }}</p>
+                <h3>{{ programmeHeading(p) }}</h3>
+                <p class="desc">{{ p.description || 'Published programme' }}</p>
+                <div class="tile-footer" (click)="$event.stopPropagation()">
+                  <button type="button" class="tile-admin" (click)="startEdit(p, $event)">Edit</button>
+                  <button type="button" class="tile-admin danger" (click)="startDelete(p, $event)">Delete</button>
+                </div>
+                <div class="card-actions" (click)="$event.stopPropagation()">
+                  <button type="button" class="continue-open" (click)="openProgramme(p.id, $event)">Open</button>
+                </div>
+              </div>
+            </article>
+          }
+        } @else {
+          <p class="empty">No programmes created yet. Use Register to add one.</p>
+        }
+      </div>
+    </section>
+
+    <section class="board board--explore">
+      <header class="board-head board-head--explore">
+        <span class="acc-label">
+          Explore
+          <span class="count">{{ availableProgrammes().length }}</span>
+        </span>
+        @if (availableProgrammes().length) {
           <label class="search-field explore-search">
             <i class="bi bi-search" aria-hidden="true"></i>
             <input
               type="search"
               [value]="searchQuery()"
               (input)="onSearch($event)"
-              placeholder="Search programmes"
+              placeholder="Search"
               aria-label="Search programmes"
             />
           </label>
         }
-        <a routerLink="/programmes/new" class="btn btn-primary btn-sm create-programme-btn">Register a programme</a>
-      </div>
-      @if (exploreOpen()) {
-        <div class="acc-body">
-          @if (availableProgrammes().length) {
-            @if (programmeFilters().length > 1) {
-              <div class="filter-row" role="group" aria-label="Programme category">
-                @for (cat of programmeFilters(); track cat) {
-                  <button
-                    type="button"
-                    class="filter-chip"
-                    [class.active]="selectedCategory() === cat"
-                    (click)="setCategory(cat)"
-                  >
-                    {{ cat }}
-                  </button>
-                }
-              </div>
-            }
-            @if (exploreProgrammes().length) {
-              <div class="catalog-grid">
-                @for (p of exploreProgrammes(); track p.id) {
-                  @let theme = coverTheme(p.title, p.id, p.coverImageUrl);
-                  <article class="course-tile" (click)="openDetails(p)">
-                    <div class="tile-cover" [style.background]="theme.gradient">
-                      <img [src]="cardCoverSrc(p.title, p.id, p.coverImageUrl)" [alt]="p.title" (error)="onCoverError(p.id, p.coverImageUrl)" />
-                    </div>
-                    <div class="tile-body">
-                      <p class="partner">{{ p.affiliatedInstitution || defaultInstitution }}</p>
-                      <h3>{{ programmeHeading(p) }}</h3>
-                      <p class="desc">{{ p.description || 'Published programme' }}</p>
-                      @if (canManageProgramme(p)) {
-                        <div class="tile-footer" (click)="$event.stopPropagation()">
-                          <button type="button" class="tile-admin" (click)="startEdit(p, $event)">Edit</button>
-                          <button type="button" class="tile-admin danger" (click)="startDelete(p, $event)">Delete</button>
-                        </div>
-                      }
-                      <div class="card-actions" (click)="$event.stopPropagation()">
-                        <button type="button" class="continue-open" [disabled]="joiningId() === p.id" (click)="joinProgramme(p, $event)">
-                          @if (joiningId() === p.id) {
-                            <span class="spinner-border spinner-border-sm"></span>
-                          } @else {
-                            Join
-                          }
-                        </button>
-                      </div>
-                    </div>
-                  </article>
-                }
-              </div>
-            } @else {
-              <p class="empty">No programmes match that search or filter.</p>
-            }
-          } @else {
-            <p class="empty">No other programmes to explore right now.</p>
+      </header>
+      @if (programmeFilters().length > 1) {
+        <div class="filter-row board-filters" role="group" aria-label="Programme category">
+          @for (cat of programmeFilters(); track cat) {
+            <button
+              type="button"
+              class="filter-chip"
+              [class.active]="selectedCategory() === cat"
+              (click)="setCategory(cat)"
+            >
+              {{ cat }}
+            </button>
           }
         </div>
       }
+      <div class="board-scroll board-scroll--duo">
+        @if (availableProgrammes().length) {
+          @if (exploreProgrammes().length) {
+            @for (p of exploreProgrammes(); track p.id) {
+              @let theme = coverTheme(p.title, p.id, p.coverImageUrl);
+              <article class="course-tile" (click)="openDetails(p)">
+                <div class="tile-cover" [style.background]="theme.gradient">
+                  <img [src]="cardCoverSrc(p.title, p.id, p.coverImageUrl)" [alt]="p.title" (error)="onCoverError(p.id, p.coverImageUrl)" />
+                </div>
+                <div class="tile-body">
+                  <p class="partner">{{ p.affiliatedInstitution || defaultInstitution }}</p>
+                  <h3>{{ programmeHeading(p) }}</h3>
+                  <p class="desc">{{ p.description || 'Published programme' }}</p>
+                  <div class="card-actions" (click)="$event.stopPropagation()">
+                    <button type="button" class="continue-open" [disabled]="joiningId() === p.id" (click)="joinProgramme(p, $event)">
+                      @if (joiningId() === p.id) {
+                        <span class="spinner-border spinner-border-sm"></span>
+                      } @else {
+                        Join
+                      }
+                    </button>
+                  </div>
+                </div>
+              </article>
+            }
+          } @else {
+            <p class="empty board-empty-span">No programmes match that search or filter.</p>
+          }
+        } @else {
+          <p class="empty board-empty-span">No other programmes to explore right now.</p>
+        }
+      </div>
     </section>
-    </div>
+  </div>
   </div>
 </div>
 
@@ -161,9 +168,8 @@
       @if (step === 'warn') {
         <h2 id="unjoinTitle">Unjoin this programme?</h2>
         <p class="confirm-lead">
-          If you unjoin, every subscription in this programme will be terminated and no refunds will be issued.
-          You will lose access to all years, semesters, and course units you had subscribed to.
-          Proceed only if you are sure.
+          You are about to leave <strong>{{ unjoinTarget()?.title }}</strong>.
+          You will lose access to its outline until you join again.
         </p>
         <div class="modal-actions">
           <button type="button" class="btn btn-outline-secondary" (click)="cancelUnjoin()">Cancel</button>
@@ -171,7 +177,7 @@
         </div>
       } @else {
         <h2 id="unjoinTitle">Confirm with your password</h2>
-        <p class="confirm-lead">Enter your account password to unjoin {{ unjoinTarget()?.title }}. This cannot be undone, and subscriptions will not be refunded.</p>
+        <p class="confirm-lead">Enter your account password to unjoin <strong>{{ unjoinTarget()?.title }}</strong>.</p>
         <label class="modal-field">
           <span>Password</span>
           <div class="password-row">
@@ -189,7 +195,7 @@
           </div>
         </label>
         @if (unjoinError()) {
-          <p class="confirm-note unjoin-error">{{ unjoinError() }}</p>
+          <p class="cover-error">{{ unjoinError() }}</p>
         }
         <div class="modal-actions">
           <button type="button" class="btn btn-outline-secondary" [disabled]="unjoining()" (click)="cancelUnjoin()">Cancel</button>
