@@ -81,43 +81,43 @@
           <i class="bi" [class.bi-chevron-down]="exploreOpen()" [class.bi-chevron-right]="!exploreOpen()" aria-hidden="true"></i>
         </button>
         @if (exploreOpen() && availableProgrammes().length) {
-          <label class="search-field explore-search">
-            <i class="bi bi-search" aria-hidden="true"></i>
-            <input
-              type="search"
-              name="explore-programme-filter"
-              autocomplete="off"
-              autocorrect="off"
-              autocapitalize="off"
-              spellcheck="false"
-              data-1p-ignore="true"
-              data-lpignore="true"
-              [value]="searchQuery()"
-              (input)="onSearch($event)"
-              placeholder="Search programmes"
-              aria-label="Search programmes"
-            />
-          </label>
+          <div class="explore-tools">
+            <div class="filter-row explore-filters" role="group" aria-label="Programme category">
+              @for (cat of programmeFilters(); track cat) {
+                <button
+                  type="button"
+                  class="filter-chip"
+                  [class.active]="selectedCategory() === cat"
+                  (click)="setCategory(cat)"
+                >
+                  {{ cat }}
+                </button>
+              }
+            </div>
+            <label class="search-field explore-search">
+              <i class="bi bi-search" aria-hidden="true"></i>
+              <input
+                type="search"
+                name="explore-programme-filter"
+                autocomplete="off"
+                autocorrect="off"
+                autocapitalize="off"
+                spellcheck="false"
+                data-1p-ignore="true"
+                data-lpignore="true"
+                [value]="searchQuery()"
+                (input)="onSearch($event)"
+                placeholder="Search programmes"
+                aria-label="Search programmes"
+              />
+            </label>
+          </div>
         }
         <a routerLink="/programmes/new" class="btn btn-primary btn-sm create-programme-btn">Register a programme</a>
       </div>
       @if (exploreOpen()) {
         <div class="acc-body">
           @if (availableProgrammes().length) {
-            @if (programmeFilters().length > 1) {
-              <div class="filter-row" role="group" aria-label="Programme category">
-                @for (cat of programmeFilters(); track cat) {
-                  <button
-                    type="button"
-                    class="filter-chip"
-                    [class.active]="selectedCategory() === cat"
-                    (click)="setCategory(cat)"
-                  >
-                    {{ cat }}
-                  </button>
-                }
-              </div>
-            }
             @if (exploreProgrammes().length) {
               <div class="catalog-grid">
                 @for (p of exploreProgrammes(); track p.id) {

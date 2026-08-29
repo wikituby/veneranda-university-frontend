@@ -6,7 +6,7 @@ import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { CourseService } from '../../core/services/course.service';
 import { CourseCategory, CourseEnrollment } from '../../core/models/course.model';
-import { coverTheme, programmeCategory, PROGRAMME_CATEGORIES, DEFAULT_INSTITUTION, programmeHeading, programmeCoverUrl } from '../../core/utils/programme.util';
+import { coverTheme, programmeCategory, DEFAULT_INSTITUTION, programmeHeading, programmeCoverUrl } from '../../core/utils/programme.util';
 import { CatalogueTopbar } from '../../layout/catalogue-topbar/catalogue-topbar';
 import { InstitutionPicker } from '../../shared/institution-picker/institution-picker';
 
@@ -65,16 +65,17 @@ export class StudentHome implements OnInit {
     return this.programmes().filter((p) => !joined.has(p.id));
   });
 
-  readonly programmeFilters = computed(() => {
-    const present = new Set(this.availableProgrammes().map((p) => programmeCategory(p.title)));
-    return ['All', ...PROGRAMME_CATEGORIES.filter((cat) => present.has(cat))];
-  });
+  readonly programmeFilters = computed(() => ['All', 'Diploma', 'Degree'] as const);
 
   readonly exploreProgrammes = computed(() => {
     const q = this.searchQuery().trim().toLowerCase();
     const cat = this.selectedCategory();
     return this.availableProgrammes().filter((p) => {
-      if (cat !== 'All' && programmeCategory(p.title) !== cat) return false;
+      if (cat !== 'All') {
+        const kind = programmeCategory(p.title);
+        if (cat === 'Diploma' && kind !== 'Diploma') return false;
+        if (cat === 'Degree' && !['Bachelor', 'Masters', 'Doctorate'].includes(kind)) return false;
+      }
       if (!q) return true;
       const haystack = `${p.title} ${p.abbreviation || ''} ${p.programmeCode || ''} ${p.description || ''} ${p.affiliatedInstitution || ''}`.toLowerCase();
       return haystack.includes(q);
