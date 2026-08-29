@@ -3,9 +3,12 @@
 
   <div class="student-home">
   <header class="student-home-hero">
-    <p class="eyebrow">Your catalogue</p>
-    <h1>Welcome, {{ userName }}</h1>
-    <p class="lede">Joined programmes on the left, ones you created in the middle, and new ones to explore on the right.</p>
+    <div class="hero-copy">
+      <p class="eyebrow">Your catalogue</p>
+      <h1>Welcome, {{ userName }}</h1>
+      <p class="lede">Browse the programmes available to you. Empty sections stay hidden.</p>
+    </div>
+    <a routerLink="/programmes/new" class="btn btn-primary btn-sm create-programme-btn">Register a programme</a>
   </header>
 
   @if (error()) {
@@ -22,7 +25,13 @@
     </div>
   }
 
-  <div class="boards-row">
+  @if (!loading() && visibleBoardCount() === 0 && !error()) {
+    <p class="empty">No programmes to show yet. Register a programme to get started.</p>
+  }
+
+  @if (visibleBoardCount() > 0) {
+  <div class="boards-row" [attr.data-cols]="visibleBoardCount()">
+    @if (showJoinedBoard()) {
     <section class="board">
       <header class="board-head">
         <span class="acc-label">
@@ -31,7 +40,6 @@
         </span>
       </header>
       <div class="board-scroll board-scroll--single">
-        @if (enrollments().length) {
           @for (item of enrollments(); track item.categoryId) {
             @let prog = programmeById(item.categoryId);
             @let theme = coverTheme(item.categoryTitle || '', item.categoryId, prog?.coverImageUrl);
@@ -58,22 +66,19 @@
               </div>
             </article>
           }
-        } @else {
-          <p class="empty">You have not joined a programme yet. Browse Explore to join one.</p>
-        }
       </div>
     </section>
+    }
 
+    @if (showCreatedBoard()) {
     <section class="board">
       <header class="board-head board-head--split">
         <span class="acc-label">
           Created programmes
           <span class="count">{{ createdProgrammes().length }}</span>
         </span>
-        <a routerLink="/programmes/new" class="btn btn-primary btn-sm create-programme-btn">Register</a>
       </header>
       <div class="board-scroll board-scroll--single">
-        @if (createdProgrammes().length) {
           @for (p of createdProgrammes(); track p.id) {
             @let theme = coverTheme(p.title, p.id, p.coverImageUrl);
             <article class="course-tile" (click)="openDetails(p)">
@@ -94,19 +99,17 @@
               </div>
             </article>
           }
-        } @else {
-          <p class="empty">No programmes created yet. Use Register to add one.</p>
-        }
       </div>
     </section>
+    }
 
+    @if (showExploreBoard()) {
     <section class="board board--explore">
       <header class="board-head board-head--explore">
         <span class="acc-label">
           Explore
           <span class="count">{{ availableProgrammes().length }}</span>
         </span>
-        @if (availableProgrammes().length) {
           <label class="search-field explore-search">
             <i class="bi bi-search" aria-hidden="true"></i>
             <input
@@ -117,7 +120,6 @@
               aria-label="Search programmes"
             />
           </label>
-        }
       </header>
       @if (programmeFilters().length > 1) {
         <div class="filter-row board-filters" role="group" aria-label="Programme category">
@@ -134,7 +136,6 @@
         </div>
       }
       <div class="board-scroll board-scroll--duo">
-        @if (availableProgrammes().length) {
           @if (exploreProgrammes().length) {
             @for (p of exploreProgrammes(); track p.id) {
               @let theme = coverTheme(p.title, p.id, p.coverImageUrl);
@@ -161,12 +162,11 @@
           } @else {
             <p class="empty board-empty-span">No programmes match that search or filter.</p>
           }
-        } @else {
-          <p class="empty board-empty-span">No other programmes to explore right now.</p>
-        }
       </div>
     </section>
+    }
   </div>
+  }
   </div>
 </div>
 

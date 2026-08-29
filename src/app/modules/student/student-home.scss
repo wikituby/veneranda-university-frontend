@@ -13,10 +13,22 @@
 
 .boards-row {
   display: grid;
-  grid-template-columns: minmax(300px, 1fr) minmax(300px, 1fr) minmax(560px, 1.7fr);
   gap: 20px;
   align-items: stretch;
   min-height: calc(100dvh - 200px);
+  grid-template-columns: minmax(300px, 1fr) minmax(300px, 1fr) minmax(560px, 1.7fr);
+
+  &[data-cols='1'] {
+    grid-template-columns: 1fr;
+  }
+
+  &[data-cols='2'] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  &[data-cols='3'] {
+    grid-template-columns: minmax(300px, 1fr) minmax(300px, 1fr) minmax(560px, 1.7fr);
+  }
 }
 
 .board {
@@ -87,6 +99,22 @@
   align-content: start;
 }
 
+/* When fewer sections are visible, cards spread into the freed space */
+.boards-row[data-cols='1'] .board-scroll--single,
+.boards-row[data-cols='1'] .board-scroll--duo {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: grid;
+}
+
+.boards-row[data-cols='2'] .board-scroll--single {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.boards-row[data-cols='2'] .board--explore .board-scroll--duo {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .board-empty-span {
   grid-column: 1 / -1;
 }
@@ -100,7 +128,16 @@
 }
 
 .student-home-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
   margin-bottom: 18px;
+
+  .hero-copy {
+    min-width: 0;
+    flex: 1;
+  }
 
   .eyebrow {
     margin: 0 0 6px;
@@ -637,13 +674,17 @@
 }
 
 @media (max-width: 1100px) {
-  .boards-row {
+  .boards-row[data-cols='3'] {
     grid-template-columns: 1fr 1fr;
   }
 
-  .board--explore {
+  .boards-row[data-cols='3'] .board--explore {
     grid-column: 1 / -1;
     max-height: min(70dvh, 640px);
+  }
+
+  .boards-row[data-cols='3'] .board--explore .board-scroll--duo {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -659,13 +700,17 @@
   }
 
   .student-home-hero {
+    flex-wrap: wrap;
     margin-bottom: 16px;
 
     h1 { font-size: 1.45rem; }
     .lede { font-size: 0.9rem; }
   }
 
-  .boards-row {
+  .boards-row,
+  .boards-row[data-cols='1'],
+  .boards-row[data-cols='2'],
+  .boards-row[data-cols='3'] {
     grid-template-columns: 1fr;
     min-height: 0;
     gap: 12px;
@@ -679,6 +724,11 @@
     grid-column: auto;
   }
 
+  .boards-row[data-cols='1'] .board-scroll--single,
+  .boards-row[data-cols='1'] .board-scroll--duo,
+  .boards-row[data-cols='2'] .board-scroll--single,
+  .boards-row[data-cols='2'] .board--explore .board-scroll--duo,
+  .boards-row[data-cols='3'] .board--explore .board-scroll--duo,
   .board-scroll--duo {
     grid-template-columns: 1fr;
   }

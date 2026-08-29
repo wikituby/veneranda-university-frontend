@@ -86,6 +86,18 @@ export class StudentHome implements OnInit {
     });
   });
 
+  readonly showJoinedBoard = computed(() => this.enrollments().length > 0);
+  readonly showCreatedBoard = computed(() => this.createdProgrammes().length > 0);
+  readonly showExploreBoard = computed(() => this.availableProgrammes().length > 0);
+
+  readonly visibleBoardCount = computed(() => {
+    let n = 0;
+    if (this.showJoinedBoard()) n++;
+    if (this.showCreatedBoard()) n++;
+    if (this.showExploreBoard()) n++;
+    return n;
+  });
+
   get userName(): string {
     const u = this.auth.currentUser;
     if (!u) return 'there';
