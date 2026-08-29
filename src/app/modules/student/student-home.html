@@ -177,18 +177,69 @@
                 </button>
               }
             </div>
-            <label class="uni-field explore-university">
-              <span class="visually-hidden">University</span>
-              <select
-                [value]="selectedUniversity()"
-                (change)="setUniversity(($any($event.target).value))"
+            <div class="uni-filter explore-university" [class.open]="uniMenuOpen()" [class.active]="universityFilterActive()">
+              <button
+                type="button"
+                class="uni-trigger"
+                [attr.aria-expanded]="uniMenuOpen()"
+                aria-haspopup="listbox"
                 aria-label="Filter by university"
+                (click)="toggleUniversityMenu($event)"
               >
-                @for (uni of exploreUniversities(); track uni) {
-                  <option [value]="uni">{{ uni }}</option>
+                <i class="bi bi-building" aria-hidden="true"></i>
+                <span class="uni-trigger-text">{{ selectedUniversity() }}</span>
+                @if (universityFilterActive()) {
+                  <span
+                    class="uni-clear"
+                    role="button"
+                    tabindex="0"
+                    aria-label="Clear university filter"
+                    (click)="clearUniversityFilter($event)"
+                    (keydown.enter)="clearUniversityFilter($event)"
+                  >
+                    <i class="bi bi-x" aria-hidden="true"></i>
+                  </span>
+                } @else {
+                  <i class="bi uni-chevron" [class.bi-chevron-up]="uniMenuOpen()" [class.bi-chevron-down]="!uniMenuOpen()" aria-hidden="true"></i>
                 }
-              </select>
-            </label>
+              </button>
+              @if (uniMenuOpen()) {
+                <div class="uni-panel" role="listbox" aria-label="Universities" (click)="$event.stopPropagation()">
+                  <label class="uni-search">
+                    <i class="bi bi-search" aria-hidden="true"></i>
+                    <input
+                      type="search"
+                      autocomplete="off"
+                      [value]="uniQuery()"
+                      (input)="onUniversityQuery($event)"
+                      placeholder="Search universities…"
+                      aria-label="Search universities"
+                    />
+                  </label>
+                  <div class="uni-list">
+                    @if (filteredUniversities().length) {
+                      @for (uni of filteredUniversities(); track uni) {
+                        <button
+                          type="button"
+                          class="uni-option"
+                          role="option"
+                          [class.selected]="uni === selectedUniversity()"
+                          [attr.aria-selected]="uni === selectedUniversity()"
+                          (click)="setUniversity(uni)"
+                        >
+                          <span>{{ uni }}</span>
+                          @if (uni === selectedUniversity()) {
+                            <i class="bi bi-check2" aria-hidden="true"></i>
+                          }
+                        </button>
+                      }
+                    } @else {
+                      <p class="uni-empty">No universities match “{{ uniQuery() }}”.</p>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
             <label class="search-field explore-search">
               <i class="bi bi-search" aria-hidden="true"></i>
               <input

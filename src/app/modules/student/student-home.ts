@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { of } from 'rxjs';
@@ -21,6 +21,7 @@ export class StudentHome implements OnInit {
   private auth = inject(AuthService);
   private courses = inject(CourseService);
   private router = inject(Router);
+  private host = inject(ElementRef<HTMLElement>);
 
   readonly coverTheme = coverTheme;
   readonly programmeCoverUrl = programmeCoverUrl;
@@ -80,6 +81,19 @@ export class StudentHome implements OnInit {
   });
 
   selectedUniversity = signal('All universities');
+  uniMenuOpen = signal(false);
+  uniQuery = signal('');
+
+  readonly filteredUniversities = computed(() => {
+    const q = this.uniQuery().trim().toLowerCase();
+    const list = this.exploreUniversities();
+    if (!q) return list;
+    return list.filter((uni) => uni.toLowerCase().includes(q));
+  });
+
+  readonly universityFilterActive = computed(
+    () => this.selectedUniversity() !== 'All universities',
+  );
 
   readonly exploreProgrammes = computed(() => {
     const q = this.searchQuery().trim().toLowerCase();
@@ -283,7 +297,45 @@ export class StudentHome implements OnInit {
   }
 
   setUniversity(university: string): void {
-    this.selectedUniversity.set(university);
+    this.selectedUniversity.set(university || 'All universities');
+    this.uniMenuOpen.set(false);
+    this.uniQuery.set('');
+  }
+
+  toggleUniversityMenu(event?: Event): void {
+    event?.stopPropagation();
+    this.uniMenuOpen.update((open) => !open);
+    if (!this.uniMenuOpen()) {
+      this.uniQuery.set('');
+    }
+  }
+
+  onUniversityQuery(event: Event): void {
+    this.uniQuery.set((event.target as HTMLInputElement).value);
+  }
+
+  clearUniversityFilter(event?: Event): void {
+    event?.stopPropagation();
+    this.setUniversity('All universities');
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.uniMenuOpen()) return;
+    const target = event.target as Node | null;
+    if (target && this.host.nativeElement.contains(target)) {
+      const wrap = (target as HTMLElement).closest?.('.uni-filter');
+      if (wrap) return;
+    }
+    this.uniMenuOpen.set(false);
+    this.uniQuery.set('');
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (!this.uniMenuOpen()) return;
+    this.uniMenuOpen.set(false);
+    this.uniQuery.set('');
   }
 
   startUnjoin(item: CourseEnrollment, event: Event): void {
