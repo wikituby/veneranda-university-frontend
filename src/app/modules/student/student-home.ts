@@ -54,15 +54,23 @@ export class StudentHome implements OnInit {
   deleteBusy = signal(false);
   failedCovers = signal(new Set<string>());
   yoursOpen = signal(true);
+  createdOpen = signal(true);
   exploreOpen = signal(true);
   searchQuery = signal('');
   selectedCategory = signal('All');
 
   readonly joinedIds = computed(() => new Set(this.enrollments().map((e) => e.categoryId)));
 
+  readonly createdProgrammes = computed(() =>
+    this.programmes().filter((p) => this.canManageProgramme(p)),
+  );
+
+  readonly createdIds = computed(() => new Set(this.createdProgrammes().map((p) => p.id)));
+
   readonly availableProgrammes = computed(() => {
     const joined = this.joinedIds();
-    return this.programmes().filter((p) => !joined.has(p.id));
+    const created = this.createdIds();
+    return this.programmes().filter((p) => !joined.has(p.id) && !created.has(p.id));
   });
 
   readonly programmeFilters = computed(() => ['All', 'Diploma', 'Degree'] as const);
@@ -203,6 +211,10 @@ export class StudentHome implements OnInit {
 
   toggleYours(): void {
     this.yoursOpen.update((open) => !open);
+  }
+
+  toggleCreated(): void {
+    this.createdOpen.update((open) => !open);
   }
 
   toggleExplore(): void {
