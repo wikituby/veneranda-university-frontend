@@ -34,11 +34,11 @@
       </button>
       @if (yoursOpen()) {
         <div class="acc-body">
-            <div class="continue-row">
+            <div class="catalog-grid">
               @for (item of enrollments(); track item.categoryId) {
                 @let prog = programmeById(item.categoryId);
                 @let theme = coverTheme(item.categoryTitle || '', item.categoryId, prog?.coverImageUrl);
-                <article class="course-tile continue-card" (click)="openDetailsById(item.categoryId)">
+                <article class="course-tile" (click)="openDetailsById(item.categoryId)">
                   <div class="tile-cover" [style.background]="theme.gradient">
                     <img [src]="cardCoverSrc(item.categoryTitle || '', item.categoryId, prog?.coverImageUrl)" [alt]="item.categoryTitle" (error)="onCoverError(item.categoryId, prog?.coverImageUrl)" />
                   </div>
