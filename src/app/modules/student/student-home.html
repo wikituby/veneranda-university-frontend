@@ -41,17 +41,9 @@
                 <article class="continue-card" (click)="openDetailsById(item.categoryId)">
                   <div class="continue-cover" [style.background]="theme.gradient">
                     <img [src]="cardCoverSrc(item.categoryTitle || '', item.categoryId, prog?.coverImageUrl)" [alt]="item.categoryTitle" (error)="onCoverError(item.categoryId, prog?.coverImageUrl)" />
-                    <div class="cover-actions">
-                      <button type="button" class="continue-open" (click)="openProgramme(item.categoryId, $event)">
-                        Open
-                      </button>
-                      <button type="button" class="continue-unjoin" (click)="startUnjoin(item, $event)">
-                        Unjoin
-                      </button>
-                    </div>
                   </div>
                   <div class="continue-copy">
-                      <p class="partner">{{ institutionOf(item.categoryId) }}</p>
+                    <p class="partner">{{ institutionOf(item.categoryId) }}</p>
                     <h3>{{ programmeHeading(programmeById(item.categoryId), item.categoryTitle) }}</h3>
                     @if (programmeById(item.categoryId); as owned) {
                       @if (canManageProgramme(owned)) {
@@ -61,6 +53,14 @@
                         </div>
                       }
                     }
+                    <div class="card-actions" (click)="$event.stopPropagation()">
+                      <button type="button" class="continue-open" (click)="openProgramme(item.categoryId, $event)">
+                        Open
+                      </button>
+                      <button type="button" class="continue-unjoin" (click)="startUnjoin(item, $event)">
+                        Unjoin
+                      </button>
+                    </div>
                   </div>
                 </article>
               }
@@ -117,13 +117,6 @@
                   <article class="course-tile" (click)="openDetails(p)">
                     <div class="tile-cover" [style.background]="theme.gradient">
                       <img [src]="cardCoverSrc(p.title, p.id, p.coverImageUrl)" [alt]="p.title" (error)="onCoverError(p.id, p.coverImageUrl)" />
-                      <button type="button" class="continue-open" [disabled]="joiningId() === p.id" (click)="joinProgramme(p, $event)">
-                        @if (joiningId() === p.id) {
-                          <span class="spinner-border spinner-border-sm"></span>
-                        } @else {
-                          Join
-                        }
-                      </button>
                     </div>
                     <div class="tile-body">
                       <p class="partner">{{ p.affiliatedInstitution || defaultInstitution }}</p>
@@ -135,6 +128,15 @@
                           <button type="button" class="tile-admin danger" (click)="startDelete(p, $event)">Delete</button>
                         </div>
                       }
+                      <div class="card-actions" (click)="$event.stopPropagation()">
+                        <button type="button" class="continue-open" [disabled]="joiningId() === p.id" (click)="joinProgramme(p, $event)">
+                          @if (joiningId() === p.id) {
+                            <span class="spinner-border spinner-border-sm"></span>
+                          } @else {
+                            Join
+                          }
+                        </button>
+                      </div>
                     </div>
                   </article>
                 }
