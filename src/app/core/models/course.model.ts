@@ -20,6 +20,10 @@ export interface CourseCategory {
   priceAmount?: number | null;
   currency?: string;
   createdBy?: number | null;
+  /** Display name of the programme creator. */
+  createdByName?: string | null;
+  /** Optional avatar URL for the programme creator. */
+  createdByAvatarUrl?: string | null;
   createdAt?: string;
   updatedAt?: string;
   affiliatedInstitution?: string | null;

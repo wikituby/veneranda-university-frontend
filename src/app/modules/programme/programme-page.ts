@@ -70,6 +70,37 @@ export class ProgrammePage implements OnInit {
     return this.auth.canManageProgramme(p.createdBy);
   });
 
+  isCreatedByYou(): boolean {
+    const p = this.programme();
+    if (!p?.createdBy) return false;
+    const userId = this.auth.currentUser?.id;
+    return userId != null && p.createdBy === userId;
+  }
+
+  creatorName(): string {
+    const p = this.programme();
+    if (!p) return '';
+    if (this.isCreatedByYou()) {
+      const u = this.auth.currentUser;
+      return (u?.fullName || '').trim() || u?.username || 'You';
+    }
+    return (p.createdByName || '').trim() || 'Programme coordinator';
+  }
+
+  creatorAvatarUrl(): string | null {
+    const p = this.programme();
+    if (!p) return null;
+    return (p.createdByAvatarUrl || '').trim() || null;
+  }
+
+  creatorInitials(): string {
+    const name = this.creatorName();
+    const parts = name.split(/\s+/).filter(Boolean);
+    if (!parts.length) return '?';
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+
   isStaff(): boolean {
     return this.auth.canManageCourseContent();
   }

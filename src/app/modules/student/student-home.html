@@ -45,6 +45,29 @@
                   <div class="tile-body">
                     <p class="partner">{{ institutionOf(item.categoryId) }}</p>
                     <h3>{{ programmeHeading(prog, item.categoryTitle) }}</h3>
+                    @if (prog; as owned) {
+                      <div class="creator-row">
+                        @if (isCreatedByYou(owned)) {
+                          <span class="creator-avatar" aria-hidden="true">
+                            @if (creatorAvatarUrl(owned); as av) {
+                              <img [src]="av" alt="" />
+                            } @else {
+                              {{ creatorInitials(owned) }}
+                            }
+                          </span>
+                          <span class="creator-label">Created by you</span>
+                        } @else {
+                          <span class="creator-avatar" aria-hidden="true">
+                            @if (creatorAvatarUrl(owned); as av) {
+                              <img [src]="av" alt="" />
+                            } @else {
+                              {{ creatorInitials(owned) }}
+                            }
+                          </span>
+                          <span class="creator-name">{{ creatorName(owned) }}</span>
+                        }
+                      </div>
+                    }
                     <p class="desc">{{ prog?.description || 'Published programme' }}</p>
                     @if (prog; as owned) {
                       @if (canManageProgramme(owned)) {
@@ -93,6 +116,16 @@
                 <div class="tile-body">
                   <p class="partner">{{ p.affiliatedInstitution || defaultInstitution }}</p>
                   <h3>{{ programmeHeading(p) }}</h3>
+                  <div class="creator-row">
+                    <span class="creator-avatar" aria-hidden="true">
+                      @if (creatorAvatarUrl(p); as av) {
+                        <img [src]="av" alt="" />
+                      } @else {
+                        {{ creatorInitials(p) }}
+                      }
+                    </span>
+                    <span class="creator-label">Created by you</span>
+                  </div>
                   <p class="desc">{{ p.description || 'Published programme' }}</p>
                   <div class="tile-footer" (click)="$event.stopPropagation()">
                     <button type="button" class="tile-admin" (click)="startEdit(p, $event)">Edit</button>
@@ -194,6 +227,27 @@
                     <div class="tile-body">
                       <p class="partner">{{ p.affiliatedInstitution || defaultInstitution }}</p>
                       <h3>{{ programmeHeading(p) }}</h3>
+                      <div class="creator-row">
+                        @if (isCreatedByYou(p)) {
+                          <span class="creator-avatar" aria-hidden="true">
+                            @if (creatorAvatarUrl(p); as av) {
+                              <img [src]="av" alt="" />
+                            } @else {
+                              {{ creatorInitials(p) }}
+                            }
+                          </span>
+                          <span class="creator-label">Created by you</span>
+                        } @else {
+                          <span class="creator-avatar" aria-hidden="true">
+                            @if (creatorAvatarUrl(p); as av) {
+                              <img [src]="av" alt="" />
+                            } @else {
+                              {{ creatorInitials(p) }}
+                            }
+                          </span>
+                          <span class="creator-name">{{ creatorName(p) }}</span>
+                        }
+                      </div>
                       <p class="desc">{{ p.description || 'Published programme' }}</p>
                       @if (canManageProgramme(p)) {
                         <div class="tile-footer" (click)="$event.stopPropagation()">

@@ -62,7 +62,7 @@ export class StudentHome implements OnInit {
   readonly joinedIds = computed(() => new Set(this.enrollments().map((e) => e.categoryId)));
 
   readonly createdProgrammes = computed(() =>
-    this.programmes().filter((p) => this.canManageProgramme(p)),
+    this.programmes().filter((p) => this.isCreatedByYou(p)),
   );
 
   /** Explore lists all published programmes, including ones already joined. */
@@ -173,6 +173,35 @@ export class StudentHome implements OnInit {
 
   canManageProgramme(p: CourseCategory): boolean {
     return this.auth.canManageProgramme(p.createdBy);
+  }
+
+  /** True when the signed-in user is the programme creator (not just staff). */
+  isCreatedByYou(p?: CourseCategory | null): boolean {
+    if (!p?.createdBy) return false;
+    const userId = this.auth.currentUser?.id;
+    return userId != null && p.createdBy === userId;
+  }
+
+  creatorName(p?: CourseCategory | null): string {
+    if (!p) return '';
+    if (this.isCreatedByYou(p)) {
+      const u = this.auth.currentUser;
+      return (u?.fullName || '').trim() || u?.username || 'You';
+    }
+    return (p.createdByName || '').trim() || 'Programme coordinator';
+  }
+
+  creatorAvatarUrl(p?: CourseCategory | null): string | null {
+    if (!p) return null;
+    return (p.createdByAvatarUrl || '').trim() || null;
+  }
+
+  creatorInitials(p?: CourseCategory | null): string {
+    const name = this.creatorName(p);
+    const parts = name.split(/\s+/).filter(Boolean);
+    if (!parts.length) return '?';
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
 
   joinLabel(p: CourseCategory): string {

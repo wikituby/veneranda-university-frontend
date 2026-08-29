@@ -28,6 +28,27 @@
               }
               <h1>{{ programmeHeading(programme()!) }}</h1>
               <p class="affil">Affiliated to {{ programme()!.affiliatedInstitution || defaultInstitution }}</p>
+              <div class="creator-row">
+                @if (isCreatedByYou()) {
+                  <span class="creator-avatar" aria-hidden="true">
+                    @if (creatorAvatarUrl(); as av) {
+                      <img [src]="av" alt="" />
+                    } @else {
+                      {{ creatorInitials() }}
+                    }
+                  </span>
+                  <span class="creator-label">Created by you</span>
+                } @else {
+                  <span class="creator-avatar" aria-hidden="true">
+                    @if (creatorAvatarUrl(); as av) {
+                      <img [src]="av" alt="" />
+                    } @else {
+                      {{ creatorInitials() }}
+                    }
+                  </span>
+                  <span class="creator-name">{{ creatorName() }}</span>
+                }
+              </div>
             </div>
           </div>
 

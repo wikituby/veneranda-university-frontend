@@ -29,6 +29,27 @@
           <div class="tile-body">
             <p class="partner">{{ p.affiliatedInstitution || defaultInstitution }}</p>
             <h3>{{ programmeHeading(p) }}</h3>
+            <div class="creator-row">
+              @if (isCreatedByYou(p)) {
+                <span class="creator-avatar" aria-hidden="true">
+                  @if (creatorAvatarUrl(p); as av) {
+                    <img [src]="av" alt="" />
+                  } @else {
+                    {{ creatorInitials(p) }}
+                  }
+                </span>
+                <span class="creator-label">Created by you</span>
+              } @else {
+                <span class="creator-avatar" aria-hidden="true">
+                  @if (creatorAvatarUrl(p); as av) {
+                    <img [src]="av" alt="" />
+                  } @else {
+                    {{ creatorInitials(p) }}
+                  }
+                </span>
+                <span class="creator-name">{{ creatorName(p) }}</span>
+              }
+            </div>
             <p class="desc">{{ p.description || 'Published programme' }}</p>
             <div class="tile-footer">
               <button type="button" class="btn btn-sm btn-primary" [disabled]="joiningId() === p.id" (click)="openOrJoin(p, $event)">

@@ -290,6 +290,9 @@ export class CourseService {
       joinMode: String(raw['joinMode'] ?? raw['join_mode'] ?? 'OPEN') || 'OPEN',
       serverFeeAmount: raw['serverFeeAmount'] != null ? Number(raw['serverFeeAmount']) : null,
       totalPriceAmount: raw['totalPriceAmount'] != null ? Number(raw['totalPriceAmount']) : null,
+      createdBy: raw['createdBy'] != null ? Number(raw['createdBy']) : null,
+      createdByName: String(raw['createdByName'] ?? raw['created_by_name'] ?? '') || null,
+      createdByAvatarUrl: String(raw['createdByAvatarUrl'] ?? raw['created_by_avatar_url'] ?? '') || null,
     };
   }
 
