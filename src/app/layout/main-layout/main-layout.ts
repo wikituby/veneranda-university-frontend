@@ -363,6 +363,11 @@ export class MainLayout implements OnInit, OnDestroy {
 
   courseModalIcon = computed(() => (this.courseModalEditNode() ? 'bi-pencil-square' : 'bi-journal-plus'));
 
+  /** Live viewport width so the mobile drawer stays full-bleed on rotate/resize. */
+  viewportWidth = signal(
+    typeof window !== 'undefined' ? window.innerWidth : 390
+  );
+
   /** Width reserved for the page (does not grow when hover overlay expands). */
   contentSidebarWidth = computed(() => {
     // Mobile drawer overlays content — reserve no sidebar gutter.
@@ -371,15 +376,18 @@ export class MainLayout implements OnInit, OnDestroy {
     return this.sidebarCollapsed() ? this.collapsedWidth : this.sidebarWidth();
   });
 
-  /** Visible sidenav width, including overlay expansion. */
+  /** Visible sidenav width in px (desktop) or full viewport (mobile). */
   sidenavDisplayWidth = computed(() => {
-    // Full-bleed mobile drawer; CSS also forces 100% width.
-    if (this.isMobile()) {
-      return typeof window !== 'undefined' ? window.innerWidth : 390;
-    }
+    if (this.isMobile()) return this.viewportWidth();
     if (this.hoverSidebar() && this.sidebarHovered()) return this.sidebarWidth();
     return this.contentSidebarWidth();
   });
+
+  /** CSS custom-property value for content gutter. */
+  contentSidebarWidthCss = computed(() => `${this.contentSidebarWidth()}px`);
+
+  /** CSS custom-property value for the drawer — 100vw on mobile. */
+  sidenavWidthCss = computed(() => (this.isMobile() ? '100vw' : `${this.sidenavDisplayWidth()}px`));
 
   /** Icon-only rail (no labels). */
   iconRail = computed(() => {
@@ -1043,6 +1051,12 @@ export class MainLayout implements OnInit, OnDestroy {
     this.parentPickerDropUp.set(false);
   }
 
+  @HostListener('window:resize')
+  onViewportResize(): void {
+    if (typeof window === 'undefined') return;
+    this.viewportWidth.set(window.innerWidth);
+  }
+
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     if (this.parentPickerOpen()) this.closeParentPicker();
@@ -1228,6 +1242,9 @@ export class MainLayout implements OnInit, OnDestroy {
 
   toggleSidebar(): void {
     if (this.isMobile()) {
+      if (typeof window !== 'undefined') {
+        this.viewportWidth.set(window.innerWidth);
+      }
       this.mobileDrawerOpen.update((open) => !open);
     } else if (this.hoverSidebar()) {
       this.sidebarHovered.update((open) => !open);

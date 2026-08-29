@@ -2,8 +2,8 @@
   class="app-sidenav-container"
   [class.mobile-overlay]="isMobile()"
   [class.hover-rail]="hoverSidebar() && !isMobile()"
-  [style.--app-sidebar-width.px]="contentSidebarWidth()"
-  [style.--app-sidenav-width.px]="sidenavDisplayWidth()"
+  [style.--app-sidebar-width]="contentSidebarWidthCss()"
+  [style.--app-sidenav-width]="sidenavWidthCss()"
 >
   <!-- ===== Sidebar ===== -->
   <mat-sidenav
@@ -11,6 +11,7 @@
     class="app-sidenav"
     [class.collapsed]="iconRail()"
     [class.hover-overlay]="hoverOverlayOpen()"
+    [class.mobile-full]="isMobile()"
     [mode]="sidenavMode()"
     [opened]="sidenavOpened()"
     [disableClose]="!isMobile()"
