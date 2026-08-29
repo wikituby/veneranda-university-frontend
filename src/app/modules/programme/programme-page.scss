@@ -136,16 +136,26 @@ h1 {
   flex-wrap: nowrap;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 6px;
   width: 20rem;
   white-space: nowrap;
   padding-right: 0;
   cursor: default;
+
+  .btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .btn-short { display: none; }
+  .btn-full { display: inline; }
 }
 
 .acc-head-row,
 .sem-row {
-  grid-template-columns: auto minmax(0, 1fr);
+  /* Actions keep intrinsic width so Subscribe / Edit / Add stay one row */
+  grid-template-columns: max-content minmax(0, 1fr);
+  column-gap: 10px;
   padding-right: 16px;
 }
 
@@ -156,13 +166,17 @@ h1 {
 
 .acc-head-row .acc-head {
   padding: 6px 8px 6px 0;
+  min-width: 0;
 }
 
 .acc-head-row .row-actions,
 .sem-row .row-actions {
-  width: auto;
-  max-width: 100%;
+  width: max-content;
+  max-width: none;
+  min-width: 0;
   justify-content: flex-start;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
 }
 
 .add-row {
@@ -541,18 +555,30 @@ h1 {
   .acc-head-row,
   .sem-row,
   .accordion > .level-row.acc-head-row {
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: max-content minmax(0, 1fr);
     align-items: center;
   }
 
   .acc-head-row .row-actions,
   .sem-row .row-actions {
-    width: auto;
-    max-width: calc(100% - 8px);
+    width: max-content;
+    max-width: none;
     justify-content: flex-start;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    gap: 4px;
+
+    .btn {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      min-height: 34px;
+      line-height: 1.2;
+    }
+
+    .btn-full { display: none; }
+    .btn-short { display: inline; }
   }
 
-  .row-actions,
   .head .head-actions {
     width: 100%;
     max-width: 100%;
@@ -561,7 +587,6 @@ h1 {
     white-space: normal;
   }
 
-  .row-actions .btn,
   .head-actions .btn,
   .join-row .btn {
     min-height: 40px;

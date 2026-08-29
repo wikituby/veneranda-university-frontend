@@ -81,7 +81,8 @@
             @if (canManage()) {
               <button type="button" class="btn btn-sm btn-outline-secondary" (click)="startEdit(year, $event, year.id)">Edit</button>
               <button type="button" class="btn btn-sm btn-outline-primary add-btn" (click)="startAddSemester(year, $event)">
-                Add section
+                <span class="btn-full">Add section</span>
+                <span class="btn-short">Add</span>
               </button>
             }
           </div>
@@ -118,8 +119,9 @@
                     }
                     @if (canManage()) {
                       <button type="button" class="btn btn-sm btn-outline-secondary" (click)="startEdit(sem, $event, year.id, sem.id)">Edit</button>
-                      <button type="button" class="btn btn-sm btn-outline-primary" (click)="startAddUnit(sem, year.id, $event)">
-                        Add section
+                      <button type="button" class="btn btn-sm btn-outline-primary add-btn" (click)="startAddUnit(sem, year.id, $event)">
+                        <span class="btn-full">Add section</span>
+                        <span class="btn-short">Add</span>
                       </button>
                     }
                   </div>
