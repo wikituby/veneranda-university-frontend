@@ -43,6 +43,14 @@
                 <p class="partner">{{ institutionOf(item.categoryId) }}</p>
                 <h3>{{ programmeHeading(prog, item.categoryTitle) }}</h3>
                 <p class="desc">{{ prog?.description || 'Published programme' }}</p>
+                @if (prog; as owned) {
+                  @if (canManageProgramme(owned)) {
+                    <div class="tile-footer" (click)="$event.stopPropagation()">
+                      <button type="button" class="tile-admin" (click)="startEdit(owned, $event)">Edit</button>
+                      <button type="button" class="tile-admin danger" (click)="startDelete(owned, $event)">Delete</button>
+                    </div>
+                  }
+                }
                 <div class="card-actions" (click)="$event.stopPropagation()">
                   <button type="button" class="continue-open" (click)="openProgramme(item.categoryId, $event)">Open</button>
                   <button type="button" class="continue-unjoin" (click)="startUnjoin(item, $event)">Unjoin</button>

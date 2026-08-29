@@ -5,7 +5,7 @@
 }
 
 .student-home {
-  max-width: 1440px;
+  max-width: 1480px;
   margin: 0 auto;
   padding: 20px 20px 32px;
   min-width: 0;
@@ -13,8 +13,8 @@
 
 .boards-row {
   display: grid;
-  grid-template-columns: minmax(240px, 1fr) minmax(240px, 1fr) minmax(420px, 1.55fr);
-  gap: 16px;
+  grid-template-columns: minmax(300px, 1fr) minmax(300px, 1fr) minmax(560px, 1.7fr);
+  gap: 20px;
   align-items: stretch;
   min-height: calc(100dvh - 200px);
 }
@@ -25,10 +25,10 @@
   min-width: 0;
   min-height: 0;
   max-height: calc(100dvh - 180px);
-  border: 1px solid var(--border-color, #e3e8ee);
-  border-radius: 14px;
-  background: var(--bg-card, #fff);
-  box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.03));
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
   overflow: hidden;
 }
 
@@ -37,9 +37,9 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--border-color, #eef1f6);
-  background: #fbfcfe;
+  padding: 0 2px 12px;
+  border-bottom: 0;
+  background: transparent;
 }
 
 .board-head--split {
@@ -50,8 +50,8 @@
   flex-wrap: wrap;
 
   .explore-search {
-    flex: 1 1 160px;
-    min-width: 120px;
+    flex: 1 1 180px;
+    min-width: 140px;
     max-width: none;
     margin: 0;
   }
@@ -59,7 +59,7 @@
 
 .board-filters {
   flex-shrink: 0;
-  padding: 8px 12px 0;
+  padding: 0 2px 10px;
   margin: 0;
 }
 
@@ -68,7 +68,7 @@
   min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
-  padding: 12px;
+  padding: 2px 2px 8px;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
 }
@@ -76,14 +76,14 @@
 .board-scroll--single {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 18px;
   align-content: start;
 }
 
 .board-scroll--duo {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: 18px;
   align-content: start;
 }
 
@@ -95,7 +95,7 @@
   flex-shrink: 0;
   white-space: nowrap;
   font-weight: 700;
-  padding: 0.35rem 0.75rem;
+  padding: 0.4rem 0.85rem;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
 }
 
@@ -338,6 +338,8 @@
 .course-tile {
   display: flex;
   flex-direction: column;
+  flex: 0 0 auto;
+  width: 100%;
   border: 1px solid var(--border-color, #e3e8ee);
   border-radius: 12px;
   overflow: hidden;
@@ -352,9 +354,15 @@
   }
 }
 
+.board-scroll--single .course-tile {
+  /* Keep joined/created cards at the same visual size as explore tiles */
+  max-width: 100%;
+}
+
 .tile-cover {
   position: relative;
   aspect-ratio: 16 / 9;
+  flex-shrink: 0;
   overflow: hidden;
   display: grid;
   place-items: center;
@@ -393,9 +401,9 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  flex: 1;
+  flex: 1 1 auto;
   padding: 12px 14px 14px;
-  min-height: 0;
+  min-height: 148px;
 
   .partner {
     margin: 0;
