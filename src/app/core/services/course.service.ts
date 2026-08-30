@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, map, shareReplay } from 'rxjs';
+import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
+import { Observable, catchError, forkJoin, map, of, shareReplay, switchMap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { AuthService } from './auth.service';
 import {
   CourseAccess,
   CourseCategory,
@@ -35,6 +36,7 @@ interface CourseLessonResponse {
 @Injectable({ providedIn: 'root' })
 export class CourseService {
   private http = inject(HttpClient);
+  private auth = inject(AuthService);
   private readonly baseUrl = `${environment.apiUrl}/course-categories`;
   /** Cached once per session — status rarely changes and was hit on every lesson open. */
   private r2Status$?: Observable<{ enabled: boolean }>;
@@ -195,7 +197,95 @@ export class CourseService {
     if (programmeId) {
       params = params.set('programmeId', programmeId);
     }
-    return this.http.get<CreatorDashboard>(`${this.baseUrl}/creator/dashboard`, { params });
+    const dashboardUrl = `${environment.apiUrl}/creator-dashboard`;
+    const legacyUrl = `${this.baseUrl}/creator/dashboard`;
+    return this.http.get<CreatorDashboard>(dashboardUrl, { params }).pipe(
+      catchError((err: HttpErrorResponse) => {
+        if (err.status !== 404) {
+          return throwError(() => err);
+        }
+        return this.http.get<CreatorDashboard>(legacyUrl, { params }).pipe(
+          catchError((legacyErr: HttpErrorResponse) => {
+            if (legacyErr.status !== 404) {
+              return throwError(() => legacyErr);
+            }
+            return this.buildCreatorDashboardFallback(programmeId);
+          })
+        );
+      })
+    );
+  }
+
+  private buildCreatorDashboardFallback(programmeId?: string): Observable<CreatorDashboard> {
+    const userId = this.auth.currentUser?.id;
+    if (!userId) {
+      return throwError(() => new Error('Not authenticated'));
+    }
+    return this.getCategories().pipe(
+      switchMap((categories) => {
+        let programmes = categories.filter(
+          (c) =>
+            !c.parentId &&
+            String(c.nodeKind || '').toUpperCase() === 'PROGRAMME' &&
+            c.createdBy === userId
+        );
+        if (programmeId && programmeId !== 'ALL') {
+          programmes = programmes.filter((p) => p.id === programmeId);
+        }
+        if (!programmes.length) {
+          return of(this.emptyCreatorDashboard());
+        }
+        const pendingCalls = programmes.map((p) =>
+          this.listJoinRequests(p.id).pipe(catchError(() => of([] as CourseEnrollment[])))
+        );
+        return forkJoin(pendingCalls).pipe(
+          map((pendingLists) => {
+            const pendingRequests = pendingLists.flat();
+            const programmeRows = programmes.map((p, index) => ({
+              programmeId: p.id,
+              title: p.title,
+              joinMode: p.joinMode || 'OPEN',
+              activeStudents: 0,
+              pendingJoinRequests: pendingLists[index].length,
+              subscribedStudents: 0,
+            }));
+            return {
+              programmesCreated: programmes.length,
+              activeStudents: 0,
+              pendingJoinRequests: pendingRequests.length,
+              subscribedStudents: 0,
+              invitedPending: pendingRequests.length,
+              totalCoordinatorRevenue: 0,
+              currency: programmes[0]?.currency || 'UGX',
+              enrollmentsOverTime: [],
+              activeStudentsOverTime: [],
+              subscriptionsOverTime: [],
+              programmes: programmeRows,
+              pendingRequests,
+              recentEnrollments: [],
+            } as CreatorDashboard;
+          })
+        );
+      })
+    );
+  }
+
+  private emptyCreatorDashboard(): CreatorDashboard {
+    return {
+      programmesCreated: 0,
+      activeStudents: 0,
+      pendingJoinRequests: 0,
+      subscribedStudents: 0,
+      invitedPending: 0,
+      totalCoordinatorRevenue: 0,
+      currency: 'UGX',
+      enrollmentsOverTime: [],
+      activeStudentsOverTime: [],
+      subscriptionsOverTime: [],
+      programmes: [],
+      pendingRequests: [],
+      recentEnrollments: [],
+    };
   }
 
   getAccess(categoryId: string): Observable<CourseAccess> {
