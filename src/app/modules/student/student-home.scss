@@ -1,9 +1,3 @@
-.home-shell {
-  min-height: 100vh;
-  min-height: 100dvh;
-  background: var(--bg-body, #f0f2f7);
-}
-
 .student-home {
   max-width: 1180px;
   margin: 0 auto;
@@ -43,6 +37,55 @@
     font-size: 0.95rem;
     line-height: 1.5;
   }
+
+  .section-count {
+    margin: 10px 0 0;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-muted, #8b95a8);
+  }
+}
+
+.page-section {
+  min-width: 0;
+}
+
+.section-panel {
+  margin-bottom: 0;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px 16px;
+}
+
+.acc-head-split .section-head {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 14px 0 14px 16px;
+}
+
+.page-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.empty-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 24px 20px;
+  border: 1px solid var(--border-color, #e3e8ee);
+  border-radius: 14px;
+  background: var(--bg-card, #fff);
 }
 
 .vu-accordion {
@@ -81,6 +124,11 @@
   flex-wrap: wrap;
 
   .acc-head {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .section-head {
     flex: 1 1 auto;
     min-width: 0;
   }
@@ -211,7 +259,7 @@
   color: #fff;
   font-size: 1.2rem;
 
-  &.join { background: #0056d2; }
+  &.join { background: var(--accent-strong, #0056d2); }
   &.create { background: #0f766e; }
 }
 
@@ -281,8 +329,8 @@
   }
 
   &.active {
-    background: #0056d2;
-    border-color: #0056d2;
+    background: var(--accent-strong, #0056d2);
+    border-color: var(--accent-strong, #0056d2);
     color: #fff;
   }
 }
@@ -333,7 +381,7 @@
   }
 
   .uni-filter.active & > .bi-building {
-    color: #0056d2;
+    color: var(--accent-strong, #0056d2);
   }
 }
 
@@ -357,7 +405,7 @@
   align-items: center;
   justify-content: center;
   color: #fff;
-  background: #0056d2;
+  background: var(--accent-strong, #0056d2);
   font-size: 0.85rem;
   line-height: 1;
   cursor: pointer;
@@ -460,7 +508,7 @@
 
   i {
     flex-shrink: 0;
-    color: #0056d2;
+    color: var(--accent-strong, #0056d2);
     font-size: 1rem;
   }
 
@@ -470,7 +518,7 @@
 
   &.selected {
     background: rgba(0, 86, 210, 0.08);
-    color: #0056d2;
+    color: var(--accent-strong, #0056d2);
   }
 }
 
@@ -506,8 +554,8 @@
   cursor: pointer;
 
   &:hover:not(:disabled) {
-    border-color: #0056d2;
-    color: #0056d2;
+    border-color: var(--accent-strong, #0056d2);
+    color: var(--accent-strong, #0056d2);
     background: #f8fafc;
   }
 
@@ -518,8 +566,8 @@
 }
 
 .continue-open {
-  background: #0056d2;
-  border-color: #0056d2;
+  background: var(--accent-strong, #0056d2);
+  border-color: var(--accent-strong, #0056d2);
   color: #fff;
 
   &:hover:not(:disabled) {
@@ -670,7 +718,7 @@
     font-weight: 700;
     letter-spacing: 0.02em;
     color: #fff;
-    background: linear-gradient(135deg, #1d4ed8, #0ea5e9);
+    background: var(--gradient-primary);
     line-height: 1;
 
     img {
@@ -748,8 +796,8 @@
   cursor: pointer;
 
   &:hover {
-    border-color: #0056d2;
-    color: #0056d2;
+    border-color: var(--accent-strong, #0056d2);
+    color: var(--accent-strong, #0056d2);
   }
 
   &.danger:hover {
@@ -819,6 +867,52 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+}
+
+.join-mode {
+  border: 1px solid var(--border-color, #e3e8ee);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin: 0;
+
+  legend {
+    float: none;
+    width: auto;
+    padding: 0;
+    margin-bottom: 4px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-secondary, #697386);
+  }
+}
+
+.mode-option {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 8px;
+  border-radius: 10px;
+  cursor: pointer;
+
+  & + & {
+    border-top: 1px solid var(--border-color, #e3e8ee);
+  }
+
+  input {
+    margin-top: 4px;
+  }
+
+  strong {
+    display: block;
+    font-size: 0.92rem;
+  }
+
+  small {
+    display: block;
+    color: var(--text-secondary, #697386);
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
 }
 
 .modal-field {

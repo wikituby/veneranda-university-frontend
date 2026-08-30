@@ -1,7 +1,4 @@
-<div class="prog-shell">
-  <app-catalogue-topbar />
-
-  <div class="page">
+<div class="page">
     @if (loading()) {
       <div class="state"><div class="spinner-border text-primary"></div><span>Preparing checkout…</span></div>
     } @else if (!item()) {
@@ -146,5 +143,4 @@
         </button>
       }
     }
-  </div>
 </div>

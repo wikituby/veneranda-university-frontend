@@ -1,14 +1,14 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
-import { CatalogueTopbar } from '../../layout/catalogue-topbar/catalogue-topbar';
+import { userAvatarUrl, userInitials } from '../../core/utils/user-display.util';
 
 @Component({
   selector: 'app-profile-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, CatalogueTopbar, RouterLink],
+  imports: [CommonModule, FormsModule],
   templateUrl: './profile-page.html',
   styleUrl: './profile-page.scss',
 })
@@ -28,8 +28,11 @@ export class ProfilePage implements OnInit {
 
   savingProfile = signal(false);
   savingPassword = signal(false);
+  uploadingAvatar = signal(false);
   profileError = signal('');
   profileOk = signal('');
+  avatarError = signal('');
+  avatarOk = signal('');
   passwordError = signal('');
   passwordOk = signal('');
 
@@ -42,17 +45,11 @@ export class ProfilePage implements OnInit {
   }
 
   get initials(): string {
-    const name = (this.auth.currentUser?.fullName || '').trim();
-    if (name) {
-      return name
-        .split(/\s+/)
-        .map((part) => part[0])
-        .filter(Boolean)
-        .slice(0, 2)
-        .join('')
-        .toUpperCase();
-    }
-    return (this.username || '?').slice(0, 2).toUpperCase();
+    return userInitials(this.auth.currentUser);
+  }
+
+  get avatarUrl(): string | null {
+    return userAvatarUrl(this.auth.currentUser);
   }
 
   ngOnInit(): void {
@@ -71,6 +68,38 @@ export class ProfilePage implements OnInit {
       if (fragment === 'password') {
         queueMicrotask(() => document.getElementById('password')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
       }
+    });
+  }
+
+  onAvatarSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      this.avatarError.set('Choose a JPEG, PNG, WebP, or GIF image.');
+      this.avatarOk.set('');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      this.avatarError.set('Image must be 5 MB or smaller.');
+      this.avatarOk.set('');
+      return;
+    }
+
+    this.uploadingAvatar.set(true);
+    this.avatarError.set('');
+    this.avatarOk.set('');
+    this.auth.uploadAvatar(file).subscribe({
+      next: () => {
+        this.uploadingAvatar.set(false);
+        this.avatarOk.set('Profile photo updated.');
+      },
+      error: (err) => {
+        this.uploadingAvatar.set(false);
+        this.avatarError.set(err?.error?.message || 'Could not upload profile photo.');
+      },
     });
   }
 

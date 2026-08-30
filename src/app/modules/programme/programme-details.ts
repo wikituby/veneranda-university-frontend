@@ -15,12 +15,10 @@ import {
   programmeHeading,
   programmeCoverUrl,
 } from '../../core/utils/programme.util';
-import { CatalogueTopbar } from '../../layout/catalogue-topbar/catalogue-topbar';
-
 @Component({
   selector: 'app-programme-details',
   standalone: true,
-  imports: [CommonModule, RouterLink, CatalogueTopbar],
+  imports: [CommonModule, RouterLink],
   templateUrl: './programme-details.html',
   styleUrl: './programme-details.scss',
 })
@@ -116,7 +114,7 @@ export class ProgrammeDetails implements OnInit {
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (!id) {
-      this.router.navigateByUrl('/home');
+      this.router.navigateByUrl('/explore');
       return;
     }
     forkJoin({

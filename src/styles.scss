@@ -34,7 +34,16 @@ html.appearance-split,
 body.appearance-split,
 html.appearance-light,
 body.appearance-light {
-  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-primary: linear-gradient(135deg, var(--theme-accent-start, #667eea) 0%, var(--theme-accent-end, #764ba2) 100%);
+  --theme-accent-start: #667eea;
+  --theme-accent-end: #764ba2;
+  --theme-accent-deep: #0056d2;
+  --theme-accent-rgb: 102, 126, 234;
+  --accent: var(--theme-accent-start);
+  --accent-strong: var(--theme-accent-deep);
+  --accent-focus-ring: rgba(102, 126, 234, 0.15);
+  --accent-soft-bg: rgba(102, 126, 234, 0.1);
+  --sidebar-hover-accent: rgba(102, 126, 234, 0.08);
   --gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   --gradient-warning: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   --gradient-info: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
@@ -86,8 +95,8 @@ body.appearance-light {
   --sidebar-text: #1a1f36;
   --sidebar-text-muted: #8b95a8;
   --sidebar-text-dim: #697386;
-  --sidebar-hover: rgba(102, 126, 234, 0.08);
-  --sidebar-active: rgba(102, 126, 234, 0.14);
+  --sidebar-hover: var(--sidebar-hover-accent, rgba(102, 126, 234, 0.08));
+  --sidebar-active: var(--accent-soft-bg, rgba(102, 126, 234, 0.14));
   --sidebar-search-bg: #f5f7fb;
   --sidebar-search-border: #e3e8ee;
   --sidebar-profile-bg: #f7f8fa;
@@ -133,7 +142,7 @@ body.appearance-dark {
 // ===== Base =====
 html, body { height: 100%; margin: 0; overflow: auto; overflow-x: hidden; font-family: Roboto, 'Helvetica Neue', sans-serif; -webkit-font-smoothing: antialiased; }
 html.app-shell, body.app-shell { height: 100%; overflow: hidden; }
-body { background: var(--bg-body); color: var(--text-primary); transition: background-color .2s ease, color .2s ease; -webkit-tap-highlight-color: rgba(0, 86, 210, 0.12); }
+body { background: var(--site-bg, var(--bg-body)); color: var(--text-primary); transition: background .35s ease, color .2s ease; -webkit-tap-highlight-color: rgba(0, 86, 210, 0.12); }
 img, svg, video { max-width: 100%; }
 
 @media (max-width: 768px) {
@@ -250,7 +259,7 @@ app-root { display: block; min-height: 100%; }
   background: var(--bg-input);
   color: var(--text-primary);
   transition: all .2s;
-  &:focus { border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,.15); background: var(--bg-input); color: var(--text-primary); }
+  &:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-focus-ring); background: var(--bg-input); color: var(--text-primary); }
   &::placeholder { color: var(--text-muted); }
 }
 .form-label { font-size: .8rem; color: var(--text-secondary); margin-bottom: .35rem; }

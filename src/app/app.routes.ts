@@ -1,8 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard, guestGuard } from './core/guards/auth.guard';
 import { MainLayout } from './layout/main-layout/main-layout';
-import { Login } from './modules/auth/login/login';
-import { Dashboard } from './modules/dashboard/dashboard';
+import { CatalogueLayout } from './layout/catalogue-layout/catalogue-layout';
 
 export const routes: Routes = [
   {
@@ -21,47 +20,75 @@ export const routes: Routes = [
     loadComponent: () => import('./modules/auth/login/login').then((m) => m.Login),
   },
   {
-    path: 'profile',
+    path: '',
+    component: CatalogueLayout,
     canActivate: [authGuard],
-    loadComponent: () =>
-      import('./modules/profile/profile-page').then((m) => m.ProfilePage),
-  },
-  {
-    path: 'home',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./modules/student/student-home').then((m) => m.StudentHome),
-  },
-  {
-    path: 'programmes',
-    pathMatch: 'full',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./modules/programme/programme-browse').then((m) => m.ProgrammeBrowse),
-  },
-  {
-    path: 'programmes/new',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./modules/programme/programme-create').then((m) => m.ProgrammeCreate),
-  },
-  {
-    path: 'programmes/:id/details',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./modules/programme/programme-details').then((m) => m.ProgrammeDetails),
-  },
-  {
-    path: 'programmes/:id',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./modules/programme/programme-page').then((m) => m.ProgrammePage),
-  },
-  {
-    path: 'checkout/:categoryId',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./modules/programme/checkout').then((m) => m.Checkout),
+    children: [
+      {
+        path: 'home',
+        redirectTo: 'explore',
+        pathMatch: 'full',
+      },
+      {
+        path: 'explore',
+        loadComponent: () =>
+          import('./modules/student/student-home').then((m) => m.StudentHome),
+        data: { section: 'explore' },
+      },
+      {
+        path: 'your-programmes',
+        loadComponent: () =>
+          import('./modules/student/student-home').then((m) => m.StudentHome),
+        data: { section: 'yours' },
+      },
+      {
+        path: 'created-programmes',
+        loadComponent: () =>
+          import('./modules/student/student-home').then((m) => m.StudentHome),
+        data: { section: 'created' },
+      },
+      {
+        path: 'creator-dashboard',
+        loadComponent: () =>
+          import('./modules/creator/creator-dashboard').then((m) => m.CreatorDashboardPage),
+      },
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./modules/profile/profile-page').then((m) => m.ProfilePage),
+      },
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import('./modules/account/account-settings').then((m) => m.AccountSettings),
+      },
+      {
+        path: 'programmes',
+        pathMatch: 'full',
+        loadComponent: () =>
+          import('./modules/programme/programme-browse').then((m) => m.ProgrammeBrowse),
+      },
+      {
+        path: 'programmes/new',
+        loadComponent: () =>
+          import('./modules/programme/programme-create').then((m) => m.ProgrammeCreate),
+      },
+      {
+        path: 'programmes/:id/details',
+        loadComponent: () =>
+          import('./modules/programme/programme-details').then((m) => m.ProgrammeDetails),
+      },
+      {
+        path: 'programmes/:id',
+        loadComponent: () =>
+          import('./modules/programme/programme-page').then((m) => m.ProgrammePage),
+      },
+      {
+        path: 'checkout/:categoryId',
+        loadComponent: () =>
+          import('./modules/programme/checkout').then((m) => m.Checkout),
+      },
+    ],
   },
   {
     path: '',

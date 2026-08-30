@@ -13,7 +13,7 @@
 .back {
   font-size: 0.82rem;
   font-weight: 700;
-  color: #0056d2;
+  color: var(--accent-strong, #0056d2);
   text-decoration: none;
 }
 
@@ -64,7 +64,7 @@ h1 {
   margin: 8px 0 0;
   font-size: 0.9rem;
   font-weight: 600;
-  color: #0056d2;
+  color: var(--accent-strong, #0056d2);
 }
 
 .creator-row {
@@ -191,7 +191,7 @@ h1 {
   span {
     font-size: 0.8rem;
     font-weight: 600;
-    color: #0056d2;
+    color: var(--accent-strong, #0056d2);
   }
 
   em {
@@ -209,7 +209,7 @@ h1 {
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: var(--gradient-primary);
   color: #fff;
   font-size: 0.75rem;
   font-weight: 700;

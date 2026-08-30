@@ -12,7 +12,7 @@
       <span>Veneranda<span class="brand-rest"> University</span></span>
     </a>
     @if (isLoggedIn) {
-      <a routerLink="/home" class="nav-login">Open programmes</a>
+      <a routerLink="/explore" class="nav-login">Open programmes</a>
     } @else {
       <a routerLink="/login" class="nav-login">Log in</a>
     }
@@ -26,7 +26,7 @@
       prepared by your course coordinator.
     </p>
     <a
-      [routerLink]="isLoggedIn ? '/home' : '/login'"
+      [routerLink]="isLoggedIn ? '/explore' : '/login'"
       [queryParams]="isLoggedIn ? null : { tab: 'signup' }"
       class="get-started"
     >Get Started</a>

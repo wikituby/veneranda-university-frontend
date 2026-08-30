@@ -8,6 +8,7 @@ import {
   CourseContent,
   CourseDocument,
   CourseEnrollment,
+  CreatorDashboard,
   CourseLessonPayload,
   CourseLiveSession,
   CourseNode,
@@ -187,6 +188,14 @@ export class CourseService {
 
   listMySubscriptions(): Observable<CourseSubscription[]> {
     return this.http.get<CourseSubscription[]>(`${this.baseUrl}/subscriptions/mine`);
+  }
+
+  getCreatorDashboard(programmeId?: string): Observable<CreatorDashboard> {
+    let params = new HttpParams();
+    if (programmeId) {
+      params = params.set('programmeId', programmeId);
+    }
+    return this.http.get<CreatorDashboard>(`${this.baseUrl}/creator/dashboard`, { params });
   }
 
   getAccess(categoryId: string): Observable<CourseAccess> {

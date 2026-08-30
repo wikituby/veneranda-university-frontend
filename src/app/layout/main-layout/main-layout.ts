@@ -475,7 +475,7 @@ export class MainLayout implements OnInit, OnDestroy {
   sidebarProgrammeLink = computed(() => {
     const programme = this.programmeNode();
     if (programme?.id) return ['/programmes', programme.id] as string[];
-    return '/home';
+    return '/explore';
   });
 
   displayCourseTree = computed(() => {

@@ -11,7 +11,7 @@
   margin: 0 auto;
   padding: 20px 24px 56px;
 }
-.back { font-size: 0.82rem; font-weight: 700; color: #0056d2; text-decoration: none; }
+.back { font-size: 0.82rem; font-weight: 700; color: var(--accent-strong, #0056d2); text-decoration: none; }
 .title-line,
 .section-label {
   display: flex;
@@ -75,7 +75,7 @@ h1 {
   margin: 8px 0 0;
   font-size: 0.85rem;
   font-weight: 700;
-  color: #0056d2;
+  color: var(--accent-strong, #0056d2);
 }
 .creator-row {
   display: flex;
@@ -454,6 +454,52 @@ h1 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+}
+
+.join-mode {
+  border: 1px solid var(--border-color, #e3e8ee);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin: 0;
+
+  legend {
+    float: none;
+    width: auto;
+    padding: 0;
+    margin-bottom: 4px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-secondary, #697386);
+  }
+}
+
+.mode-option {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 8px;
+  border-radius: 10px;
+  cursor: pointer;
+
+  & + & {
+    border-top: 1px solid var(--border-color, #e3e8ee);
+  }
+
+  input {
+    margin-top: 4px;
+  }
+
+  strong {
+    display: block;
+    font-size: 0.92rem;
+  }
+
+  small {
+    display: block;
+    color: var(--text-secondary, #697386);
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
 }
 
 .modal-field {

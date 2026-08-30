@@ -1,14 +1,11 @@
-<div class="prog-shell">
-  <app-catalogue-topbar />
-
-  <div class="page">
+<div class="page">
   @if (loading()) {
     <div class="state"><div class="spinner-border text-primary"></div><span>Loading programme…</span></div>
   } @else if (!programme()) {
     <p class="empty">Programme not found.</p>
   } @else {
     <header class="head">
-      <a routerLink="/home" class="back">Home</a>
+      <a routerLink="/explore" class="back">Home</a>
       <div class="level-row">
         <div class="title-line">
           @if (isCovered(programme()!.id)) {
@@ -228,7 +225,6 @@
       </section>
     }
   }
-  </div>
 </div>
 
 @if (formOpen()) {
@@ -266,6 +262,23 @@
         <textarea class="form-control" rows="4" [value]="formDescription()" (input)="onFormDescription($event)" placeholder="What this section covers"></textarea>
       </label>
       @if (editing()?.kind === 'PROGRAMME') {
+        <fieldset class="join-mode modal-field">
+          <legend>How learners join</legend>
+          <label class="mode-option">
+            <input type="radio" name="joinMode" [checked]="formJoinMode() === 'OPEN'" (change)="formJoinMode.set('OPEN')" />
+            <span>
+              <strong>Open join</strong>
+              <small>Anyone can join this programme without approval.</small>
+            </span>
+          </label>
+          <label class="mode-option">
+            <input type="radio" name="joinMode" [checked]="formJoinMode() === 'REQUEST'" (change)="formJoinMode.set('REQUEST')" />
+            <span>
+              <strong>Request to join</strong>
+              <small>Learners request access; you (or a coordinator) must accept before they join.</small>
+            </span>
+          </label>
+        </fieldset>
         <label class="modal-field">
           <span>Institution affiliated to</span>
           <app-institution-picker [value]="formInstitution()" (valueChange)="formInstitution.set($event)" />

@@ -1,11 +1,16 @@
 <header class="home-topbar">
-  <a class="brand" routerLink="/home">
+  @if (showMenuToggle()) {
+    <button type="button" class="menu-toggle" aria-label="Open menu" (click)="onMenuToggle($event)">
+      <i class="bi bi-list" aria-hidden="true"></i>
+    </button>
+  }
+  <a class="brand" routerLink="/explore">
     <i class="bi bi-mortarboard-fill"></i>
     <span>Veneranda<span class="brand-rest"> University</span></span>
   </a>
   <div class="topbar-right">
     @if (showHome()) {
-      <a routerLink="/home" class="home-link">Home</a>
+      <a routerLink="/explore" class="home-link">Home</a>
     }
     <div class="profile-wrap">
       <button
@@ -16,14 +21,26 @@
         [attr.aria-label]="displayName"
         [attr.aria-expanded]="menuOpen()"
       >
-        <span class="user-avatar">{{ initials }}</span>
+        <span class="user-avatar">
+          @if (avatarUrl; as av) {
+            <img [src]="av" alt="" />
+          } @else {
+            {{ initials }}
+          }
+        </span>
       </button>
       @if (menuOpen()) {
         <div class="profile-menu-backdrop" (click)="closeMenu()"></div>
         <div class="profile-dropdown" role="menu">
           @if (user; as u) {
             <div class="profile-dropdown-head">
-              <div class="profile-dropdown-avatar">{{ initials }}</div>
+              <div class="profile-dropdown-avatar">
+                @if (avatarUrl; as av) {
+                  <img [src]="av" alt="" />
+                } @else {
+                  {{ initials }}
+                }
+              </div>
               <div class="profile-dropdown-meta">
                 <strong>{{ displayName }}</strong>
                 <span>{{ u.email }}</span>

@@ -116,7 +116,7 @@ h1 {
   min-width: 200px;
   padding: 14px 28px;
   border-radius: 8px;
-  background: #0056d2;
+  background: var(--accent-strong, #0056d2);
   color: #fff;
   font-weight: 800;
   font-size: 1.05rem;

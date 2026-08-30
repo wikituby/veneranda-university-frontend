@@ -1,13 +1,10 @@
-<div class="details-shell">
-  <app-catalogue-topbar />
-
-  <div class="page">
+<div class="page">
     @if (loading()) {
       <div class="state"><div class="spinner-border text-primary"></div><span>Loading programme…</span></div>
     } @else if (!programme()) {
       <p class="empty">Programme not found.</p>
     } @else {
-      <a routerLink="/home" class="back">Home</a>
+      <a routerLink="/explore" class="back">Home</a>
 
       @if (error()) {
         <div class="inline-alert">{{ error() }}</div>
@@ -145,5 +142,4 @@
         </aside>
       </div>
     }
-  </div>
 </div>

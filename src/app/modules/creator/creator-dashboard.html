@@ -1,0 +1,194 @@
+<div class="creator-dashboard">
+  <header class="dash-hero">
+    <div class="hero-row">
+      <div>
+        <p class="eyebrow">Creator</p>
+        <h1>Programme dashboard</h1>
+        <p class="lede">See who joined, who subscribed, who is waiting for approval, and how your programmes grow over time.</p>
+      </div>
+      <div class="hero-actions">
+        <a routerLink="/programmes/new" class="btn btn-primary btn-sm">Register programme</a>
+        <a routerLink="/created-programmes" class="btn btn-outline-secondary btn-sm">Created programmes</a>
+        <button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="loading() || refreshing()" (click)="load(false)">
+          {{ refreshing() ? 'Refreshing…' : 'Refresh' }}
+        </button>
+      </div>
+    </div>
+  </header>
+
+  @if (successMsg()) {
+    <div class="state ok">{{ successMsg() }}</div>
+  }
+
+  @if (error()) {
+    <div class="state error">
+      <p>{{ error() }}</p>
+      <button type="button" class="btn btn-outline-secondary btn-sm" (click)="load(true)">Retry</button>
+    </div>
+  }
+
+  @if (loading() && !dashboard()) {
+    <div class="state">
+      <div class="spinner-border text-primary" role="status"></div>
+      <span>Loading dashboard…</span>
+    </div>
+  }
+
+  @if (dashboard(); as data) {
+    <div class="toolbar-row">
+      <label class="programme-picker">
+        <span>Focus programme</span>
+        <select [value]="selectedProgrammeId()" (change)="onProgrammeChange($event)">
+          <option value="ALL">All programmes</option>
+          @for (p of data.programmes; track p.programmeId) {
+            <option [value]="p.programmeId">{{ p.title }}</option>
+          }
+        </select>
+      </label>
+      @if (refreshing()) {
+        <span class="refresh-hint">Updating…</span>
+      }
+    </div>
+
+    <div class="kpi-grid">
+      <article class="kpi-card">
+        <span class="kpi-label"><i class="bi bi-journal-bookmark"></i> Programmes</span>
+        <strong>{{ data.programmesCreated }}</strong>
+      </article>
+      <article class="kpi-card">
+        <span class="kpi-label"><i class="bi bi-people"></i> Active students</span>
+        <strong>{{ data.activeStudents }}</strong>
+      </article>
+      <article class="kpi-card">
+        <span class="kpi-label"><i class="bi bi-credit-card"></i> Subscribed</span>
+        <strong>{{ data.subscribedStudents }}</strong>
+      </article>
+      <article class="kpi-card highlight">
+        <span class="kpi-label"><i class="bi bi-hourglass-split"></i> Pending requests</span>
+        <strong>{{ data.pendingJoinRequests }}</strong>
+      </article>
+      <article class="kpi-card revenue">
+        <span class="kpi-label"><i class="bi bi-cash-stack"></i> Your share (paid)</span>
+        <strong>{{ formatRevenue(data.totalCoordinatorRevenue, data.currency || 'UGX') }}</strong>
+      </article>
+    </div>
+
+    <div class="chart-grid">
+      <section class="chart-card">
+        <h2>New joins per week</h2>
+        <p class="chart-hint">Learners who joined your programme(s) each week.</p>
+        <div class="chart-wrap"><canvas #enrollmentsChart></canvas></div>
+      </section>
+      <section class="chart-card">
+        <h2>Active students over time</h2>
+        <p class="chart-hint">Running total of joined learners week by week.</p>
+        <div class="chart-wrap"><canvas #activeChart></canvas></div>
+      </section>
+      <section class="chart-card wide">
+        <h2>New subscriptions per week</h2>
+        <p class="chart-hint">Paid subscriptions across programme, year, semester, and unit levels.</p>
+        <div class="chart-wrap"><canvas #subscriptionsChart></canvas></div>
+      </section>
+    </div>
+
+    <section class="vu-accordion section-panel">
+      <div class="section-head">
+        <span class="acc-label">Recent learners <span class="count">{{ data.recentEnrollments.length }}</span></span>
+      </div>
+      <div class="acc-body">
+        @if (data.recentEnrollments.length) {
+          <ul class="learner-list">
+            @for (learner of data.recentEnrollments; track learner.id) {
+              <li>
+                <div>
+                  <strong>{{ learner.userFullName || learner.userEmail || 'Learner' }}</strong>
+                  <span>{{ learner.categoryTitle }}</span>
+                  @if (learner.userEmail) {
+                    <small>{{ learner.userEmail }}</small>
+                  }
+                </div>
+                <span class="joined-date">{{ formatEnrolledDate(learner.enrolledAt) }}</span>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="empty">No learners have joined your programmes yet.</p>
+        }
+      </div>
+    </section>
+
+    <section class="vu-accordion section-panel">
+      <div class="section-head">
+        <span class="acc-label">Your programmes <span class="count">{{ data.programmes.length }}</span></span>
+      </div>
+      <div class="acc-body">
+        @if (data.programmes.length) {
+          <div class="programme-table-wrap">
+            <table class="programme-table">
+              <thead>
+                <tr>
+                  <th>Programme</th>
+                  <th>Join mode</th>
+                  <th>Active</th>
+                  <th>Subscribed</th>
+                  <th>Pending</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (p of data.programmes; track p.programmeId) {
+                  <tr [class.selected]="selectedProgrammeId() === p.programmeId">
+                    <td>{{ p.title }}</td>
+                    <td><span class="join-badge" [class.request]="(p.joinMode || 'OPEN').toUpperCase() === 'REQUEST'">{{ joinModeLabel(p.joinMode) }}</span></td>
+                    <td>{{ p.activeStudents }}</td>
+                    <td>{{ p.subscribedStudents }}</td>
+                    <td>{{ p.pendingJoinRequests }}</td>
+                    <td class="row-actions">
+                      <button type="button" class="linkish" (click)="filterProgramme(p.programmeId)">Focus</button>
+                      <a [routerLink]="['/programmes', p.programmeId]">Open</a>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <p class="empty">You have not created any programmes yet.</p>
+          <a routerLink="/programmes/new" class="btn btn-primary btn-sm">Register a programme</a>
+        }
+      </div>
+    </section>
+
+    <section class="vu-accordion section-panel">
+      <div class="section-head">
+        <span class="acc-label">
+          Pending join requests
+          <span class="count">{{ data.pendingRequests.length }}</span>
+        </span>
+      </div>
+      <div class="acc-body">
+        @if (data.pendingRequests.length) {
+          <ul class="request-list">
+            @for (req of data.pendingRequests; track req.id) {
+              <li>
+                <div>
+                  <strong>{{ req.userFullName || req.userEmail || 'Learner' }}</strong>
+                  <span>{{ req.categoryTitle }}</span>
+                  @if (req.userEmail) {
+                    <small>{{ req.userEmail }}</small>
+                  }
+                </div>
+                <div class="request-actions">
+                  <button type="button" class="btn btn-primary btn-sm" [disabled]="requestBusy() === req.id" (click)="acceptJoin(req.categoryId, req.id)">Accept</button>
+                  <button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="requestBusy() === req.id" (click)="rejectJoin(req.categoryId, req.id)">Reject</button>
+                </div>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="empty">No learners waiting for approval right now.</p>
+        }
+      </div>
+    </section>
+  }
+</div>

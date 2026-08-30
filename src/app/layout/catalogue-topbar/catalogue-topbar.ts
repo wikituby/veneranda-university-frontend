@@ -1,6 +1,7 @@
-import { Component, HostListener, inject, input, signal } from '@angular/core';
+import { Component, HostListener, inject, input, output, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { userAvatarUrl, userInitials } from '../../core/utils/user-display.util';
 
 @Component({
   selector: 'app-catalogue-topbar',
@@ -14,6 +15,8 @@ export class CatalogueTopbar {
   private router = inject(Router);
 
   showHome = input(true);
+  showMenuToggle = input(false);
+  menuToggle = output<void>();
   menuOpen = signal(false);
 
   get user() {
@@ -27,19 +30,16 @@ export class CatalogueTopbar {
   }
 
   get initials(): string {
-    const u = this.user;
-    if (!u) return '?';
-    const name = (u.fullName || '').trim();
-    if (name) {
-      return name
-        .split(/\s+/)
-        .map((part) => part[0])
-        .filter(Boolean)
-        .slice(0, 2)
-        .join('')
-        .toUpperCase();
-    }
-    return (u.username || '?').slice(0, 2).toUpperCase();
+    return userInitials(this.user);
+  }
+
+  get avatarUrl(): string | null {
+    return userAvatarUrl(this.user);
+  }
+
+  onMenuToggle(event: Event): void {
+    event.stopPropagation();
+    this.menuToggle.emit();
   }
 
   toggleMenu(event: Event): void {

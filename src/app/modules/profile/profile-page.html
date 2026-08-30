@@ -1,111 +1,127 @@
-<div class="profile-shell">
-  <app-catalogue-topbar />
-
-  <div class="page">
-    <a routerLink="/home" class="back">Home</a>
-    <header class="head">
-      <div class="avatar">{{ initials }}</div>
-      <div>
-        <p class="eyebrow">Account</p>
-        <h1>Your profile</h1>
-        <p class="lede">Update your contact details and password. These are used to sign in and confirm unsubscribe actions.</p>
+<div class="page">
+  <header class="head">
+    <div class="avatar-block">
+      <div class="avatar">
+        @if (avatarUrl; as av) {
+          <img [src]="av" alt="" />
+        } @else {
+          {{ initials }}
+        }
       </div>
-    </header>
-
-    <section class="card">
-      <h2>Personal details</h2>
-      <form (submit)="$event.preventDefault(); saveProfile()">
-        <label class="field">
-          <span>Username</span>
-          <input class="form-control" [value]="username" disabled />
-        </label>
-        <label class="field">
-          <span>Full name</span>
-          <input class="form-control" [(ngModel)]="fullName" name="fullName" autocomplete="name" required />
-        </label>
-        <label class="field">
-          <span>Email</span>
-          <input class="form-control" type="email" [(ngModel)]="email" name="email" autocomplete="email" required />
-        </label>
-        <label class="field">
-          <span>Phone</span>
-          <input class="form-control" type="tel" [(ngModel)]="phone" name="phone" autocomplete="tel" placeholder="Optional" />
-        </label>
-        @if (profileError()) {
-          <p class="alert error">{{ profileError() }}</p>
-        }
-        @if (profileOk()) {
-          <p class="alert ok">{{ profileOk() }}</p>
-        }
-        <button type="submit" class="btn btn-primary" [disabled]="savingProfile()">
-          {{ savingProfile() ? 'Saving…' : 'Save details' }}
-        </button>
-      </form>
-    </section>
-
-    <section class="card" id="password">
-      <h2>{{ hasPassword ? 'Change password' : 'Set a password' }}</h2>
-      @if (!hasPassword) {
-        <p class="hint">This account was created with Google. Set a password if you also want to sign in with email.</p>
+      <label class="avatar-upload">
+        <input type="file" accept="image/*" [disabled]="uploadingAvatar()" (change)="onAvatarSelected($event)" />
+        <span class="btn btn-outline-secondary btn-sm">
+          {{ uploadingAvatar() ? 'Uploading…' : 'Change photo' }}
+        </span>
+      </label>
+      @if (avatarError()) {
+        <p class="avatar-hint error">{{ avatarError() }}</p>
+      } @else if (avatarOk()) {
+        <p class="avatar-hint ok">{{ avatarOk() }}</p>
+      } @else {
+        <p class="avatar-hint">JPEG, PNG, WebP, or GIF. Max 5 MB.</p>
       }
-      <form (submit)="$event.preventDefault(); savePassword()">
-        @if (hasPassword) {
-          <label class="field">
-            <span>Current password</span>
-            <div class="password-row">
-              <input
-                class="form-control"
-                [type]="hideCurrent() ? 'password' : 'text'"
-                [(ngModel)]="currentPassword"
-                name="currentPassword"
-                autocomplete="current-password"
-              />
-              <button type="button" class="btn btn-outline-secondary" (click)="hideCurrent.set(!hideCurrent())">
-                {{ hideCurrent() ? 'Show' : 'Hide' }}
-              </button>
-            </div>
-          </label>
-        }
+    </div>
+    <div>
+      <p class="eyebrow">Account</p>
+      <h1>Your profile</h1>
+      <p class="lede">Update your photo, contact details, and password. These are used to sign in and confirm unsubscribe actions.</p>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2>Personal details</h2>
+    <form (submit)="$event.preventDefault(); saveProfile()">
+      <label class="field">
+        <span>Username</span>
+        <input class="form-control" [value]="username" disabled />
+      </label>
+      <label class="field">
+        <span>Full name</span>
+        <input class="form-control" [(ngModel)]="fullName" name="fullName" autocomplete="name" required />
+      </label>
+      <label class="field">
+        <span>Email</span>
+        <input class="form-control" type="email" [(ngModel)]="email" name="email" autocomplete="email" required />
+      </label>
+      <label class="field">
+        <span>Phone</span>
+        <input class="form-control" type="tel" [(ngModel)]="phone" name="phone" autocomplete="tel" placeholder="Optional" />
+      </label>
+      @if (profileError()) {
+        <p class="alert error">{{ profileError() }}</p>
+      }
+      @if (profileOk()) {
+        <p class="alert ok">{{ profileOk() }}</p>
+      }
+      <button type="submit" class="btn btn-primary" [disabled]="savingProfile()">
+        {{ savingProfile() ? 'Saving…' : 'Save details' }}
+      </button>
+    </form>
+  </section>
+
+  <section class="card" id="password">
+    <h2>{{ hasPassword ? 'Change password' : 'Set a password' }}</h2>
+    @if (!hasPassword) {
+      <p class="hint">This account was created with Google. Set a password if you also want to sign in with email.</p>
+    }
+    <form (submit)="$event.preventDefault(); savePassword()">
+      @if (hasPassword) {
         <label class="field">
-          <span>New password</span>
+          <span>Current password</span>
           <div class="password-row">
             <input
               class="form-control"
-              [type]="hideNew() ? 'password' : 'text'"
-              [(ngModel)]="newPassword"
-              name="newPassword"
-              autocomplete="new-password"
+              [type]="hideCurrent() ? 'password' : 'text'"
+              [(ngModel)]="currentPassword"
+              name="currentPassword"
+              autocomplete="current-password"
             />
-            <button type="button" class="btn btn-outline-secondary" (click)="hideNew.set(!hideNew())">
-              {{ hideNew() ? 'Show' : 'Hide' }}
+            <button type="button" class="btn btn-outline-secondary" (click)="hideCurrent.set(!hideCurrent())">
+              {{ hideCurrent() ? 'Show' : 'Hide' }}
             </button>
           </div>
         </label>
-        <label class="field">
-          <span>Confirm new password</span>
-          <div class="password-row">
-            <input
-              class="form-control"
-              [type]="hideConfirm() ? 'password' : 'text'"
-              [(ngModel)]="confirmPassword"
-              name="confirmPassword"
-              autocomplete="new-password"
-            />
-            <button type="button" class="btn btn-outline-secondary" (click)="hideConfirm.set(!hideConfirm())">
-              {{ hideConfirm() ? 'Show' : 'Hide' }}
-            </button>
-          </div>
-        </label>
-        @if (passwordError()) {
-          <p class="alert error">{{ passwordError() }}</p>
-        }
-        @if (passwordOk()) {
-          <p class="alert ok">{{ passwordOk() }}</p>
-        }
-        <button type="submit" class="btn btn-primary" [disabled]="savingPassword()">
-          {{ savingPassword() ? 'Saving…' : hasPassword ? 'Update password' : 'Set password' }}
-        </button>
-      </form>
-    </section>
-  </div>
+      }
+      <label class="field">
+        <span>New password</span>
+        <div class="password-row">
+          <input
+            class="form-control"
+            [type]="hideNew() ? 'password' : 'text'"
+            [(ngModel)]="newPassword"
+            name="newPassword"
+            autocomplete="new-password"
+          />
+          <button type="button" class="btn btn-outline-secondary" (click)="hideNew.set(!hideNew())">
+            {{ hideNew() ? 'Show' : 'Hide' }}
+          </button>
+        </div>
+      </label>
+      <label class="field">
+        <span>Confirm new password</span>
+        <div class="password-row">
+          <input
+            class="form-control"
+            [type]="hideConfirm() ? 'password' : 'text'"
+            [(ngModel)]="confirmPassword"
+            name="confirmPassword"
+            autocomplete="new-password"
+          />
+          <button type="button" class="btn btn-outline-secondary" (click)="hideConfirm.set(!hideConfirm())">
+            {{ hideConfirm() ? 'Show' : 'Hide' }}
+          </button>
+        </div>
+      </label>
+      @if (passwordError()) {
+        <p class="alert error">{{ passwordError() }}</p>
+      }
+      @if (passwordOk()) {
+        <p class="alert ok">{{ passwordOk() }}</p>
+      }
+      <button type="submit" class="btn btn-primary" [disabled]="savingPassword()">
+        {{ savingPassword() ? 'Saving…' : hasPassword ? 'Update password' : 'Set password' }}
+      </button>
+    </form>
+  </section>
 </div>

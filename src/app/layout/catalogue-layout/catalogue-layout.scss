@@ -1,0 +1,202 @@
+.catalogue-layout {
+  display: flex;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--site-bg, var(--bg-body, #f0f2f7));
+}
+
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  border: none;
+  background: rgba(15, 23, 42, 0.42);
+  cursor: pointer;
+}
+
+.catalogue-sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--catalogue-sidebar-bg, var(--bg-card, #fff));
+  border-right: 1px solid var(--catalogue-sidebar-border, var(--border-color, #e3e8ee));
+  color: var(--catalogue-sidebar-text, var(--text-primary, #1a1f36));
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 40;
+  transition: background 0.35s ease, border-color 0.35s ease;
+}
+
+.sidebar-brand {
+  padding: 18px 18px 14px;
+
+  a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: inherit;
+    font-weight: 700;
+    font-size: 0.95rem;
+
+    i {
+      color: var(--theme-accent-end, var(--accent-strong, #0056d2));
+      font-size: 1.25rem;
+    }
+  }
+}
+
+.sidebar-nav {
+  flex: 1;
+  overflow: auto;
+  padding: 6px 12px 16px;
+}
+
+.nav-section-label {
+  margin: 14px 10px 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--catalogue-sidebar-text-dim, var(--text-muted, #8b95a8));
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0.55rem 0.7rem;
+  margin-bottom: 2px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+  font-size: 0.86rem;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+
+  i {
+    width: 20px;
+    text-align: center;
+    color: var(--catalogue-sidebar-text-dim, var(--text-secondary, #697386));
+    font-size: 0.95rem;
+  }
+
+  &:hover {
+    background: var(--catalogue-nav-hover, var(--bg-hover, #f4f6fb));
+  }
+
+  &.active {
+    background: var(--catalogue-nav-active, var(--accent-soft-bg, rgba(102, 126, 234, 0.1)));
+    color: var(--catalogue-nav-active-text, #fff);
+    font-weight: 600;
+
+    i {
+      color: var(--catalogue-nav-active-icon, #fff);
+    }
+  }
+}
+
+.sidebar-footer {
+  padding: 12px;
+  border-top: 1px solid var(--catalogue-sidebar-border, var(--border-color, #e3e8ee));
+}
+
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.sidebar-user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  object-fit: cover;
+
+  &.initials {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gradient-primary);
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+}
+
+.sidebar-user-meta {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  strong {
+    font-size: 0.82rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  span {
+    font-size: 0.72rem;
+    color: var(--catalogue-sidebar-text-dim, var(--text-secondary, #697386));
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.sidebar-logout {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0.5rem;
+  border: 1px solid var(--catalogue-sidebar-border, var(--border-color, #e3e8ee));
+  border-radius: 10px;
+  background: transparent;
+  color: var(--catalogue-sidebar-text-dim, var(--text-secondary, #697386));
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--bg-hover, #f4f6fb);
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.25);
+  }
+}
+
+.catalogue-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.catalogue-content {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 960px) {
+  .catalogue-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    transform: translateX(-105%);
+    transition: transform 0.22s ease;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+    z-index: 100;
+
+    &.open {
+      transform: translateX(0);
+    }
+  }
+}

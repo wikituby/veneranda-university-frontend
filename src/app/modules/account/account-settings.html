@@ -1,0 +1,77 @@
+<div class="settings-page">
+  <header class="head">
+    <p class="eyebrow">Account</p>
+    <h1>Settings</h1>
+    <p class="lede">Pick a site theme and preferences, then save to apply everywhere immediately.</p>
+  </header>
+
+  <section class="card">
+    <h2>Site colour theme</h2>
+    <p class="hint">Preview a theme below, then click <strong>Save settings</strong>. Backgrounds, sidebar, buttons, and accents update across the whole app.</p>
+    <div class="theme-grid">
+      @for (theme of themes; track theme.id) {
+        <button
+          type="button"
+          class="theme-card"
+          [class.active]="pendingThemeId() === theme.id"
+          [attr.aria-pressed]="pendingThemeId() === theme.id"
+          (click)="selectTheme(theme.id)"
+        >
+          <span
+            class="theme-swatch"
+            [style.background]="'linear-gradient(135deg, ' + theme.start + ', ' + theme.end + ')'"
+            aria-hidden="true"
+          ></span>
+          <span class="theme-copy">
+            <strong>{{ theme.label }}</strong>
+            <span>{{ theme.description }}</span>
+          </span>
+          @if (pendingThemeId() === theme.id) {
+            <i class="bi bi-check2 theme-check" aria-hidden="true"></i>
+          }
+        </button>
+      }
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Course reader sidebar</h2>
+    <p class="hint">When you open a programme course outline, this controls whether the sidebar stays collapsed until you hover over it.</p>
+    <label class="toggle-row">
+      <input
+        type="checkbox"
+        [checked]="pendingHoverSidebar()"
+        (change)="onHoverSidebarChange($event)"
+      />
+      <span>Expand course sidebar on hover</span>
+    </label>
+  </section>
+
+  <section class="card">
+    <h2>Security</h2>
+    <p class="hint">Update your password or review sign-in details on your profile page.</p>
+    <a routerLink="/profile" fragment="password" class="btn btn-outline-primary btn-sm">Change password</a>
+  </section>
+
+  <footer class="save-bar">
+  @if (saveError()) {
+    <p class="alert error">{{ saveError() }}</p>
+  }
+  @if (saveOk()) {
+    <p class="alert ok">{{ saveOk() }}</p>
+  }
+  <div class="save-actions">
+    <p class="save-hint" [class.pending]="hasChanges()">
+      {{ hasChanges() ? 'You have unsaved changes — save to apply site-wide.' : 'All settings saved.' }}
+    </p>
+    <button
+      type="button"
+      class="btn btn-primary"
+      [disabled]="!hasChanges() || saving()"
+      (click)="saveSettings()"
+    >
+      {{ saving() ? 'Saving…' : 'Save settings' }}
+    </button>
+  </div>
+  </footer>
+</div>

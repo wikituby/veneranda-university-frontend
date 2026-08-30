@@ -6,12 +6,10 @@ import { AuthService } from '../../core/services/auth.service';
 import { CourseService } from '../../core/services/course.service';
 import { CourseCategory } from '../../core/models/course.model';
 import { coverTheme, DEFAULT_INSTITUTION, programmeHeading, programmeCoverUrl } from '../../core/utils/programme.util';
-import { CatalogueTopbar } from '../../layout/catalogue-topbar/catalogue-topbar';
-
 @Component({
   selector: 'app-programme-browse',
   standalone: true,
-  imports: [CommonModule, CatalogueTopbar],
+  imports: [CommonModule],
   templateUrl: './programme-browse.html',
   styleUrl: './programme-browse.scss',
 })

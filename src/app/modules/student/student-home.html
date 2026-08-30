@@ -1,11 +1,8 @@
-<div class="home-shell">
-  <app-catalogue-topbar [showHome]="false" />
-
-  <div class="student-home">
+<div class="student-home">
   <header class="student-home-hero">
     <p class="eyebrow">Your catalogue</p>
     <h1>Welcome, {{ userName }}</h1>
-    <p class="lede">{{ enrollments().length ? 'Continue in programmes you have joined, or explore others below to join.' : 'Explore programmes below to join one and start learning.' }}</p>
+    <p class="lede">{{ pageLede() }}</p>
   </header>
 
   @if (error()) {
@@ -22,31 +19,30 @@
     </div>
   }
 
-    <div class="sections-stack">
-    @if (enrollments().length) {
-    <section class="vu-accordion">
-      <button type="button" class="acc-head" [attr.aria-expanded]="yoursOpen()" (click)="toggleYours()">
-        <span class="acc-label">
-          Your programmes
-          <span class="count">{{ enrollments().length }}</span>
-        </span>
-        <i class="bi" [class.bi-chevron-down]="yoursOpen()" [class.bi-chevron-right]="!yoursOpen()" aria-hidden="true"></i>
-      </button>
-      @if (yoursOpen()) {
+  @switch (section()) {
+    @case ('yours') {
+      <section class="vu-accordion section-panel">
+        <div class="section-head">
+          <span class="acc-label">
+            Your programmes
+            <span class="count">{{ enrollments().length }}</span>
+          </span>
+        </div>
         <div class="acc-body">
+          @if (enrollments().length) {
             <div class="catalog-grid">
-              @for (item of enrollments(); track item.categoryId) {
-                @let prog = programmeById(item.categoryId);
-                @let theme = coverTheme(item.categoryTitle || '', item.categoryId, prog?.coverImageUrl);
-                <article class="course-tile" (click)="openDetailsById(item.categoryId)">
-                  <div class="tile-cover" [style.background]="theme.gradient">
-                    <img [src]="cardCoverSrc(item.categoryTitle || '', item.categoryId, prog?.coverImageUrl)" [alt]="item.categoryTitle" (error)="onCoverError(item.categoryId, prog?.coverImageUrl)" />
-                  </div>
-                  <div class="tile-body">
-                    <p class="partner">{{ institutionOf(item.categoryId) }}</p>
-                    <h3>{{ programmeHeading(prog, item.categoryTitle) }}</h3>
-                    @if (prog; as owned) {
-                      @if (hasCreator(owned)) {
+            @for (item of enrollments(); track item.categoryId) {
+              @let prog = programmeById(item.categoryId);
+              @let theme = coverTheme(item.categoryTitle || '', item.categoryId, prog?.coverImageUrl);
+              <article class="course-tile" (click)="openDetailsById(item.categoryId)">
+                <div class="tile-cover" [style.background]="theme.gradient">
+                  <img [src]="cardCoverSrc(item.categoryTitle || '', item.categoryId, prog?.coverImageUrl)" [alt]="item.categoryTitle" (error)="onCoverError(item.categoryId, prog?.coverImageUrl)" />
+                </div>
+                <div class="tile-body">
+                  <p class="partner">{{ institutionOf(item.categoryId) }}</p>
+                  <h3>{{ programmeHeading(prog, item.categoryTitle) }}</h3>
+                  @if (prog; as owned) {
+                    @if (hasCreator(owned)) {
                       <div class="creator-row">
                         @if (isCreatedByYou(owned)) {
                           <span class="creator-avatar" aria-hidden="true">
@@ -68,47 +64,44 @@
                           <span class="creator-name">{{ creatorName(owned) }}</span>
                         }
                       </div>
-                      }
                     }
-                    <p class="desc">{{ prog?.description || 'Published programme' }}</p>
-                    @if (prog; as owned) {
-                      @if (canManageProgramme(owned)) {
-                        <div class="tile-footer" (click)="$event.stopPropagation()">
-                          <button type="button" class="tile-admin" (click)="startEdit(owned, $event)">Edit</button>
-                          <button type="button" class="tile-admin danger" (click)="startDelete(owned, $event)">Delete</button>
-                        </div>
-                      }
+                  }
+                  <p class="desc">{{ prog?.description || 'Published programme' }}</p>
+                  @if (prog; as owned) {
+                    @if (canManageProgramme(owned)) {
+                      <div class="tile-footer" (click)="$event.stopPropagation()">
+                        <button type="button" class="tile-admin" (click)="startEdit(owned, $event)">Edit</button>
+                        <button type="button" class="tile-admin danger" (click)="startDelete(owned, $event)">Delete</button>
+                      </div>
                     }
-                    <div class="card-actions" (click)="$event.stopPropagation()">
-                      <button type="button" class="continue-open" (click)="openProgramme(item.categoryId, $event)">
-                        Open
-                      </button>
-                      <button type="button" class="continue-unjoin" (click)="startUnjoin(item, $event)">
-                        Unjoin
-                      </button>
-                    </div>
+                  }
+                  <div class="card-actions" (click)="$event.stopPropagation()">
+                    <button type="button" class="continue-open" (click)="openProgramme(item.categoryId, $event)">Open</button>
+                    <button type="button" class="continue-unjoin" (click)="startUnjoin(item, $event)">Unjoin</button>
                   </div>
-                </article>
-              }
+                </div>
+              </article>
+            }
             </div>
+          } @else if (!loading()) {
+            <p class="empty">You have not joined any programmes yet.</p>
+            <a routerLink="/explore" class="btn btn-primary btn-sm">Explore programmes</a>
+          }
         </div>
-      }
-    </section>
+      </section>
     }
 
-
-    @if (createdProgrammes().length) {
-    <section class="vu-accordion">
-      <button type="button" class="acc-head" [attr.aria-expanded]="createdOpen()" (click)="toggleCreated()">
-        <span class="acc-label">
-          Programmes you created
-          <span class="count">{{ createdProgrammes().length }}</span>
-        </span>
-        <i class="bi" [class.bi-chevron-down]="createdOpen()" [class.bi-chevron-right]="!createdOpen()" aria-hidden="true"></i>
-      </button>
-      @if (createdOpen()) {
+    @case ('created') {
+      <section class="vu-accordion section-panel">
+        <div class="section-head">
+          <span class="acc-label">
+            Programmes you created
+            <span class="count">{{ createdProgrammes().length }}</span>
+          </span>
+        </div>
         <div class="acc-body">
-          <div class="catalog-grid">
+          @if (createdProgrammes().length) {
+            <div class="catalog-grid">
             @for (p of createdProgrammes(); track p.id) {
               @let theme = coverTheme(p.title, p.id, p.coverImageUrl);
               <article class="course-tile" (click)="openDetails(p)">
@@ -150,137 +143,151 @@
                 </div>
               </article>
             }
-          </div>
+            </div>
+          } @else if (!loading()) {
+            <p class="empty">You have not created any programmes yet.</p>
+            <a routerLink="/programmes/new" class="btn btn-primary btn-sm">Register a programme</a>
+          }
         </div>
-      }
-    </section>
+      </section>
     }
 
-    <section class="vu-accordion">
-      <div class="acc-head-split">
-        <button type="button" class="acc-head" [attr.aria-expanded]="exploreOpen()" (click)="toggleExplore()">
-          <span class="acc-label">
-            Explore programmes
-            <span class="count">{{ availableProgrammes().length }}</span>
-          </span>
-          <i class="bi" [class.bi-chevron-down]="exploreOpen()" [class.bi-chevron-right]="!exploreOpen()" aria-hidden="true"></i>
-        </button>
-        @if (exploreOpen() && availableProgrammes().length) {
-          <div class="explore-tools">
-            <div class="filter-row explore-filters" role="group" aria-label="Programme category">
-              @for (cat of programmeFilters(); track cat) {
+    @default {
+      <section class="vu-accordion section-panel">
+        <div class="acc-head-split">
+          <div class="section-head">
+            <span class="acc-label">
+              Explore programmes
+              <span class="count">{{ availableProgrammes().length }}</span>
+            </span>
+          </div>
+          @if (availableProgrammes().length) {
+            <div class="explore-tools">
+              <div class="filter-row explore-filters" role="group" aria-label="Programme category">
+                @for (cat of programmeFilters(); track cat) {
+                  <button
+                    type="button"
+                    class="filter-chip"
+                    [class.active]="selectedCategory() === cat"
+                    (click)="setCategory(cat)"
+                  >
+                    {{ cat }}
+                  </button>
+                }
+              </div>
+              <div class="filter-row explore-filters" role="group" aria-label="How learners join">
+                @for (mode of joinModeFilters; track mode.id) {
+                  <button
+                    type="button"
+                    class="filter-chip"
+                    [class.active]="joinModeFilter() === mode.id"
+                    (click)="setJoinModeFilter(mode.id)"
+                  >
+                    {{ mode.label }}
+                  </button>
+                }
+              </div>
+              <div class="uni-filter explore-university" [class.open]="uniMenuOpen()" [class.active]="universityFilterActive()">
                 <button
                   type="button"
-                  class="filter-chip"
-                  [class.active]="selectedCategory() === cat"
-                  (click)="setCategory(cat)"
+                  class="uni-trigger"
+                  [attr.aria-expanded]="uniMenuOpen()"
+                  aria-haspopup="listbox"
+                  aria-label="Filter by university"
+                  (click)="toggleUniversityMenu($event)"
                 >
-                  {{ cat }}
+                  <i class="bi bi-building" aria-hidden="true"></i>
+                  <span class="uni-trigger-text">{{ selectedUniversity() }}</span>
+                  @if (universityFilterActive()) {
+                    <span
+                      class="uni-clear"
+                      role="button"
+                      tabindex="0"
+                      aria-label="Clear university filter"
+                      (click)="clearUniversityFilter($event)"
+                      (keydown.enter)="clearUniversityFilter($event)"
+                    >
+                      <i class="bi bi-x" aria-hidden="true"></i>
+                    </span>
+                  } @else {
+                    <i class="bi uni-chevron" [class.bi-chevron-up]="uniMenuOpen()" [class.bi-chevron-down]="!uniMenuOpen()" aria-hidden="true"></i>
+                  }
                 </button>
-              }
-            </div>
-            <div class="uni-filter explore-university" [class.open]="uniMenuOpen()" [class.active]="universityFilterActive()">
-              <button
-                type="button"
-                class="uni-trigger"
-                [attr.aria-expanded]="uniMenuOpen()"
-                aria-haspopup="listbox"
-                aria-label="Filter by university"
-                (click)="toggleUniversityMenu($event)"
-              >
-                <i class="bi bi-building" aria-hidden="true"></i>
-                <span class="uni-trigger-text">{{ selectedUniversity() }}</span>
-                @if (universityFilterActive()) {
-                  <span
-                    class="uni-clear"
-                    role="button"
-                    tabindex="0"
-                    aria-label="Clear university filter"
-                    (click)="clearUniversityFilter($event)"
-                    (keydown.enter)="clearUniversityFilter($event)"
-                  >
-                    <i class="bi bi-x" aria-hidden="true"></i>
-                  </span>
-                } @else {
-                  <i class="bi uni-chevron" [class.bi-chevron-up]="uniMenuOpen()" [class.bi-chevron-down]="!uniMenuOpen()" aria-hidden="true"></i>
-                }
-              </button>
-              @if (uniMenuOpen()) {
-                <div class="uni-panel" role="listbox" aria-label="Universities" (click)="$event.stopPropagation()">
-                  <label class="uni-search">
-                    <i class="bi bi-search" aria-hidden="true"></i>
-                    <input
-                      type="search"
-                      autocomplete="off"
-                      [value]="uniQuery()"
-                      (input)="onUniversityQuery($event)"
-                      placeholder="Search universities…"
-                      aria-label="Search universities"
-                    />
-                  </label>
-                  <div class="uni-list">
-                    @if (filteredUniversities().length) {
-                      @for (uni of filteredUniversities(); track uni) {
-                        <button
-                          type="button"
-                          class="uni-option"
-                          role="option"
-                          [class.selected]="uni === selectedUniversity()"
-                          [attr.aria-selected]="uni === selectedUniversity()"
-                          (click)="setUniversity(uni)"
-                        >
-                          <span>{{ uni }}</span>
-                          @if (uni === selectedUniversity()) {
-                            <i class="bi bi-check2" aria-hidden="true"></i>
-                          }
-                        </button>
+                @if (uniMenuOpen()) {
+                  <div class="uni-panel" role="listbox" aria-label="Universities" (click)="$event.stopPropagation()">
+                    <label class="uni-search">
+                      <i class="bi bi-search" aria-hidden="true"></i>
+                      <input
+                        type="search"
+                        autocomplete="off"
+                        [value]="uniQuery()"
+                        (input)="onUniversityQuery($event)"
+                        placeholder="Search universities…"
+                        aria-label="Search universities"
+                      />
+                    </label>
+                    <div class="uni-list">
+                      @if (filteredUniversities().length) {
+                        @for (uni of filteredUniversities(); track uni) {
+                          <button
+                            type="button"
+                            class="uni-option"
+                            role="option"
+                            [class.selected]="uni === selectedUniversity()"
+                            [attr.aria-selected]="uni === selectedUniversity()"
+                            (click)="setUniversity(uni)"
+                          >
+                            <span>{{ uni }}</span>
+                            @if (uni === selectedUniversity()) {
+                              <i class="bi bi-check2" aria-hidden="true"></i>
+                            }
+                          </button>
+                        }
+                      } @else {
+                        <p class="uni-empty">No universities match “{{ uniQuery() }}”.</p>
                       }
-                    } @else {
-                      <p class="uni-empty">No universities match “{{ uniQuery() }}”.</p>
-                    }
+                    </div>
                   </div>
-                </div>
-              }
+                }
+              </div>
+              <label class="search-field explore-search">
+                <i class="bi bi-search" aria-hidden="true"></i>
+                <input
+                  type="search"
+                  name="explore-programme-filter"
+                  autocomplete="off"
+                  autocorrect="off"
+                  autocapitalize="off"
+                  spellcheck="false"
+                  data-1p-ignore="true"
+                  data-lpignore="true"
+                  [value]="searchQuery()"
+                  (input)="onSearch($event)"
+                  placeholder="Search by programme or university"
+                  aria-label="Search programmes"
+                />
+              </label>
             </div>
-            <label class="search-field explore-search">
-              <i class="bi bi-search" aria-hidden="true"></i>
-              <input
-                type="search"
-                name="explore-programme-filter"
-                autocomplete="off"
-                autocorrect="off"
-                autocapitalize="off"
-                spellcheck="false"
-                data-1p-ignore="true"
-                data-lpignore="true"
-                [value]="searchQuery()"
-                (input)="onSearch($event)"
-                placeholder="Search by programme or university"
-                aria-label="Search programmes"
-              />
-            </label>
-          </div>
-        }
-        <a routerLink="/programmes/new" class="btn btn-primary btn-sm create-programme-btn">
-          <span class="btn-full">Register a programme</span>
-          <span class="btn-short">Register</span>
-        </a>
-      </div>
-      @if (exploreOpen()) {
+          }
+          <a routerLink="/programmes/new" class="btn btn-primary btn-sm create-programme-btn">
+            <span class="btn-full">Register a programme</span>
+            <span class="btn-short">Register</span>
+          </a>
+        </div>
         <div class="acc-body">
           @if (availableProgrammes().length) {
             @if (exploreProgrammes().length) {
               <div class="catalog-grid">
-                @for (p of exploreProgrammes(); track p.id) {
-                  @let theme = coverTheme(p.title, p.id, p.coverImageUrl);
-                  <article class="course-tile" (click)="openDetails(p)">
-                    <div class="tile-cover" [style.background]="theme.gradient">
-                      <img [src]="cardCoverSrc(p.title, p.id, p.coverImageUrl)" [alt]="p.title" (error)="onCoverError(p.id, p.coverImageUrl)" />
-                    </div>
-                    <div class="tile-body">
-                      <p class="partner">{{ p.affiliatedInstitution || defaultInstitution }}</p>
-                      <h3>{{ programmeHeading(p) }}</h3>
-                      @if (hasCreator(p)) {
+              @for (p of exploreProgrammes(); track p.id) {
+                @let theme = coverTheme(p.title, p.id, p.coverImageUrl);
+                <article class="course-tile" (click)="openDetails(p)">
+                  <div class="tile-cover" [style.background]="theme.gradient">
+                    <img [src]="cardCoverSrc(p.title, p.id, p.coverImageUrl)" [alt]="p.title" (error)="onCoverError(p.id, p.coverImageUrl)" />
+                  </div>
+                  <div class="tile-body">
+                    <p class="partner">{{ p.affiliatedInstitution || defaultInstitution }}</p>
+                    <h3>{{ programmeHeading(p) }}</h3>
+                    @if (hasCreator(p)) {
                       <div class="creator-row">
                         @if (isCreatedByYou(p)) {
                           <span class="creator-avatar" aria-hidden="true">
@@ -302,44 +309,41 @@
                           <span class="creator-name">{{ creatorName(p) }}</span>
                         }
                       </div>
-                      }
-                      <p class="desc">{{ p.description || 'Published programme' }}</p>
-                      @if (canManageProgramme(p)) {
-                        <div class="tile-footer" (click)="$event.stopPropagation()">
-                          <button type="button" class="tile-admin" (click)="startEdit(p, $event)">Edit</button>
-                          <button type="button" class="tile-admin danger" (click)="startDelete(p, $event)">Delete</button>
-                        </div>
-                      }
-                      <div class="card-actions" (click)="$event.stopPropagation()">
-                        @if (isJoined(p)) {
-                          <button type="button" class="continue-open is-joined" (click)="openProgramme(p.id, $event)">
-                            Joined
-                          </button>
-                        } @else {
-                          <button type="button" class="continue-open" [disabled]="joiningId() === p.id" (click)="joinProgramme(p, $event)">
-                            @if (joiningId() === p.id) {
-                              <span class="spinner-border spinner-border-sm"></span>
-                            } @else {
-                              {{ joinLabel(p) }}
-                            }
-                          </button>
-                        }
+                    }
+                    <p class="desc">{{ p.description || 'Published programme' }}</p>
+                    @if (canManageProgramme(p)) {
+                      <div class="tile-footer" (click)="$event.stopPropagation()">
+                        <button type="button" class="tile-admin" (click)="startEdit(p, $event)">Edit</button>
+                        <button type="button" class="tile-admin danger" (click)="startDelete(p, $event)">Delete</button>
                       </div>
+                    }
+                    <div class="card-actions" (click)="$event.stopPropagation()">
+                      @if (isJoined(p)) {
+                        <button type="button" class="continue-open is-joined" (click)="openProgramme(p.id, $event)">Joined</button>
+                      } @else {
+                        <button type="button" class="continue-open" [disabled]="joiningId() === p.id" (click)="joinProgramme(p, $event)">
+                          @if (joiningId() === p.id) {
+                            <span class="spinner-border spinner-border-sm"></span>
+                          } @else {
+                            {{ joinLabel(p) }}
+                          }
+                        </button>
+                      }
                     </div>
-                  </article>
-                }
+                  </div>
+                </article>
+              }
               </div>
-            } @else {
+            } @else if (!loading()) {
               <p class="empty">No programmes match that search or filter.</p>
             }
-          } @else {
+          } @else if (!loading()) {
             <p class="empty">No programmes published yet.</p>
           }
         </div>
-      }
-    </section>
-    </div>
-  </div>
+      </section>
+    }
+  }
 </div>
 
 @if (unjoinStep(); as step) {
@@ -401,6 +405,23 @@
         <span>Description</span>
         <textarea class="form-control" rows="4" [value]="formDescription()" (input)="onFormDescription($event)" placeholder="What this programme covers"></textarea>
       </label>
+      <fieldset class="join-mode modal-field">
+        <legend>How learners join</legend>
+        <label class="mode-option">
+          <input type="radio" name="joinMode" [checked]="formJoinMode() === 'OPEN'" (change)="formJoinMode.set('OPEN')" />
+          <span>
+            <strong>Open join</strong>
+            <small>Anyone can join this programme without approval.</small>
+          </span>
+        </label>
+        <label class="mode-option">
+          <input type="radio" name="joinMode" [checked]="formJoinMode() === 'REQUEST'" (change)="formJoinMode.set('REQUEST')" />
+          <span>
+            <strong>Request to join</strong>
+            <small>Learners request access; you (or a coordinator) must accept before they join.</small>
+          </span>
+        </label>
+      </fieldset>
         <label class="modal-field">
           <span>Institution affiliated to</span>
           <app-institution-picker [value]="formInstitution()" (valueChange)="formInstitution.set($event)" />

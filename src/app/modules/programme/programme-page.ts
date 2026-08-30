@@ -6,13 +6,12 @@ import { AuthService } from '../../core/services/auth.service';
 import { CourseService } from '../../core/services/course.service';
 import { CourseCategory, CourseEnrollment, CourseNode, CourseSubscription } from '../../core/models/course.model';
 import { coverTheme, defaultPrice, formatKes, DEFAULT_INSTITUTION, programmeHeading, bumpCoverImageVersion, programmeCoverUrl } from '../../core/utils/programme.util';
-import { CatalogueTopbar } from '../../layout/catalogue-topbar/catalogue-topbar';
 import { InstitutionPicker } from '../../shared/institution-picker/institution-picker';
 
 @Component({
   selector: 'app-programme-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, CatalogueTopbar, InstitutionPicker],
+  imports: [CommonModule, RouterLink, InstitutionPicker],
   templateUrl: './programme-page.html',
   styleUrl: './programme-page.scss',
 })
@@ -57,6 +56,7 @@ export class ProgrammePage implements OnInit {
   formDescription = signal('');
   formProgrammeCode = signal('');
   formAbbreviation = signal('');
+  formJoinMode = signal<'OPEN' | 'REQUEST'>('OPEN');
   formInstitution = signal<string>(DEFAULT_INSTITUTION);
   formCoverImageUrl = signal('');
   formCoverError = signal('');
@@ -151,6 +151,7 @@ export class ProgrammePage implements OnInit {
           this.openSemesters.set(new Set([...openSemesters].filter((id) => semesterIds.has(id))));
         }
         this.loading.set(false);
+        this.reloadJoinRequests();
       },
       error: () => {
         this.error.set('Could not load this programme.');
@@ -279,7 +280,7 @@ export class ProgrammePage implements OnInit {
         this.unjoining.set(false);
         this.unjoinStep.set(null);
         this.unjoinPassword.set('');
-        this.router.navigateByUrl('/home');
+        this.router.navigateByUrl('/explore');
       },
       error: (err) => {
         this.unjoining.set(false);
@@ -683,6 +684,8 @@ export class ProgrammePage implements OnInit {
     this.formDescription.set(item.description || '');
     this.formProgrammeCode.set(item.programmeCode || '');
     this.formAbbreviation.set(item.abbreviation || '');
+    const joinMode = (item.joinMode || 'OPEN').toUpperCase();
+    this.formJoinMode.set(joinMode === 'REQUEST' ? 'REQUEST' : 'OPEN');
     this.formInstitution.set(item.affiliatedInstitution || DEFAULT_INSTITUTION);
     this.formCoverImageUrl.set(item.coverImageUrl || '');
     this.formCoverError.set('');
@@ -697,6 +700,7 @@ export class ProgrammePage implements OnInit {
     this.formDescription.set('');
     this.formProgrammeCode.set('');
     this.formAbbreviation.set('');
+    this.formJoinMode.set('OPEN');
     this.formInstitution.set(DEFAULT_INSTITUTION);
     this.formCoverImageUrl.set('');
     this.formCoverError.set('');
@@ -864,6 +868,7 @@ export class ProgrammePage implements OnInit {
     if (draft.kind === 'PROGRAMME' || draft.kind === 'UNIT') {
       if (draft.kind === 'PROGRAMME') {
         patch.affiliatedInstitution = this.formInstitution();
+        patch.joinMode = this.formJoinMode();
         if (this.coverDirty()) {
           patch.coverImageUrl = this.formCoverImageUrl().trim();
         }

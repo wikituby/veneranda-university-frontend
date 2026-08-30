@@ -77,6 +77,14 @@ export class AuthService {
     );
   }
 
+  uploadAvatar(file: File): Observable<UserInfo> {
+    const form = new FormData();
+    form.append('file', file, file.name);
+    return this.http.post<UserInfo>(`${environment.apiUrl}/auth/me/avatar/upload`, form).pipe(
+      tap((user) => this.persistUser(user))
+    );
+  }
+
   changePassword(request: ChangePasswordRequest): Observable<UserInfo> {
     return this.http.put<UserInfo>(`${environment.apiUrl}/auth/me/password`, request).pipe(
       tap((user) => this.persistUser(user))
@@ -135,7 +143,7 @@ export class AuthService {
   }
 
   defaultHomePath(): string {
-    return '/home';
+    return '/explore';
   }
 
   private persistUser(user: UserInfo): void {

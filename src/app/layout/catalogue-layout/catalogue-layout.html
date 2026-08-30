@@ -1,0 +1,91 @@
+<div class="catalogue-layout">
+  @if (sidebarOpen()) {
+    <button type="button" class="sidebar-backdrop" aria-label="Close menu" (click)="closeSidebar()"></button>
+  }
+
+  <aside class="catalogue-sidebar" [class.open]="sidebarOpen()">
+    <div class="sidebar-brand">
+      <a routerLink="/explore" (click)="onNavClick()">
+        <i class="bi bi-mortarboard-fill" aria-hidden="true"></i>
+        <span>Veneranda University</span>
+      </a>
+    </div>
+
+    <nav class="sidebar-nav" aria-label="Catalogue navigation">
+      <p class="nav-section-label">Catalogue</p>
+      @for (item of primaryNav; track item.label) {
+        <a
+          class="nav-item"
+          [routerLink]="navLink(item)"
+          [class.active]="isNavActive(item)"
+          (click)="onNavClick()"
+        >
+          <i class="bi {{ item.icon }}" aria-hidden="true"></i>
+          <span>{{ item.label }}</span>
+        </a>
+      }
+
+      <p class="nav-section-label">Account</p>
+      @for (item of accountNav; track item.label) {
+        <a
+          class="nav-item"
+          [routerLink]="navLink(item)"
+          [class.active]="isNavActive(item)"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          (click)="onNavClick()"
+        >
+          <i class="bi {{ item.icon }}" aria-hidden="true"></i>
+          <span>{{ item.label }}</span>
+        </a>
+      }
+
+      @if (showAdminSection) {
+        <p class="nav-section-label">Administration</p>
+        @for (item of adminNav; track item.label) {
+          @if (canSee(item)) {
+            <a
+              class="nav-item"
+              [routerLink]="navLink(item)"
+              routerLinkActive="active"
+              [routerLinkActiveOptions]="{ exact: false }"
+              (click)="onNavClick()"
+            >
+              <i class="bi {{ item.icon }}" aria-hidden="true"></i>
+              <span>{{ item.label }}</span>
+            </a>
+          }
+        }
+      }
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        @if (avatarUrl; as av) {
+          <img class="sidebar-user-avatar" [src]="av" alt="" />
+        } @else {
+          <span class="sidebar-user-avatar initials">{{ initials }}</span>
+        }
+        <div class="sidebar-user-meta">
+          <strong>{{ displayName }}</strong>
+          <span>{{ user?.email }}</span>
+        </div>
+      </div>
+      <button type="button" class="sidebar-logout" (click)="logout()">
+        <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+        Log out
+      </button>
+    </div>
+  </aside>
+
+  <div class="catalogue-main">
+    <app-catalogue-topbar
+      [showHome]="false"
+      [showMenuToggle]="true"
+      (menuToggle)="toggleSidebar()"
+    />
+    <main class="catalogue-content">
+      <router-outlet />
+    </main>
+  </div>
+</div>

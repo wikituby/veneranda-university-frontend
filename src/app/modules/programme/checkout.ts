@@ -6,8 +6,6 @@ import { CourseService } from '../../core/services/course.service';
 import { CourseCategory } from '../../core/models/course.model';
 import { environment } from '../../../environments/environment';
 import { coordinatorShare, formatKes, formatMoney, kindLabel, priceFor, programmeHeading } from '../../core/utils/programme.util';
-import { CatalogueTopbar } from '../../layout/catalogue-topbar/catalogue-topbar';
-
 export interface PayOption {
   id: string;
   categoryId: string;
@@ -25,7 +23,7 @@ export interface PayOption {
 @Component({
   selector: 'app-checkout',
   standalone: true,
-  imports: [CommonModule, RouterLink, CatalogueTopbar],
+  imports: [CommonModule, RouterLink],
   templateUrl: './checkout.html',
   styleUrl: './checkout.scss',
 })
@@ -66,7 +64,7 @@ export class Checkout implements OnInit {
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('categoryId');
     if (!id) {
-      this.router.navigateByUrl('/home');
+      this.router.navigateByUrl('/explore');
       return;
     }
     forkJoin({
@@ -97,7 +95,7 @@ export class Checkout implements OnInit {
 
   programmeHref(): string {
     const item = this.item();
-    if (!item) return '/home';
+    if (!item) return '/explore';
     return `/programmes/${this.programmeId(item)}`;
   }
 
@@ -181,7 +179,7 @@ export class Checkout implements OnInit {
   private goHomeAfterPay(): void {
     const item = this.item();
     if (!item) {
-      this.router.navigateByUrl('/home');
+      this.router.navigateByUrl('/explore');
       return;
     }
     this.router.navigate(['/programmes', this.programmeId(item)]);

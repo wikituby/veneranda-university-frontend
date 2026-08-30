@@ -135,22 +135,53 @@ export interface CourseAccess {
   canAccess: boolean;
   canManage: boolean;
   amount?: number | null;
+  currency?: string;
 }
 
 export interface CourseSubscription {
-  coordinatorAmount?: number | null;
-  serverFeeAmount?: number | null;
   id?: string;
   categoryId: string;
   categoryTitle?: string;
   nodeKind?: string;
   paymentStatus: string;
   amount?: number | null;
+  coordinatorAmount?: number | null;
+  serverFeeAmount?: number | null;
   currency?: string;
   paymentMethod?: string;
   paid: boolean;
   paidAt?: string | null;
   expiresAt?: string | null;
+}
+
+export interface TimeSeriesPoint {
+  label: string;
+  value: number;
+}
+
+export interface ProgrammeCreatorStats {
+  programmeId: string;
+  title: string;
+  activeStudents: number;
+  pendingJoinRequests: number;
+  subscribedStudents: number;
+  joinMode?: string;
+}
+
+export interface CreatorDashboard {
+  programmesCreated: number;
+  activeStudents: number;
+  pendingJoinRequests: number;
+  subscribedStudents: number;
+  invitedPending: number;
+  totalCoordinatorRevenue?: number | null;
+  currency?: string;
+  enrollmentsOverTime: TimeSeriesPoint[];
+  activeStudentsOverTime: TimeSeriesPoint[];
+  subscriptionsOverTime: TimeSeriesPoint[];
+  programmes: ProgrammeCreatorStats[];
+  pendingRequests: CourseEnrollment[];
+  recentEnrollments: CourseEnrollment[];
 }
 
 /**

@@ -19,6 +19,7 @@ export interface UserInfo {
   fullName: string;
   email: string;
   phone?: string | null;
+  avatarUrl?: string | null;
   hasPassword?: boolean;
   roles: string[];
   permissions: string[];

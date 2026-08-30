@@ -1,19 +1,20 @@
 import { Component, ElementRef, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { CourseService } from '../../core/services/course.service';
 import { CourseCategory, CourseEnrollment } from '../../core/models/course.model';
 import { coverTheme, programmeCategory, DEFAULT_INSTITUTION, programmeHeading, programmeCoverUrl } from '../../core/utils/programme.util';
-import { CatalogueTopbar } from '../../layout/catalogue-topbar/catalogue-topbar';
 import { InstitutionPicker } from '../../shared/institution-picker/institution-picker';
+
+export type StudentHomeSection = 'explore' | 'yours' | 'created';
 
 @Component({
   selector: 'app-student-home',
   standalone: true,
-  imports: [CommonModule, RouterLink, CatalogueTopbar, InstitutionPicker],
+  imports: [CommonModule, RouterLink, InstitutionPicker],
   templateUrl: './student-home.html',
   styleUrl: './student-home.scss',
 })
@@ -21,6 +22,7 @@ export class StudentHome implements OnInit {
   private auth = inject(AuthService);
   private courses = inject(CourseService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private host = inject(ElementRef<HTMLElement>);
 
   readonly coverTheme = coverTheme;
@@ -46,6 +48,7 @@ export class StudentHome implements OnInit {
   formDescription = signal('');
   formProgrammeCode = signal('');
   formAbbreviation = signal('');
+  formJoinMode = signal<'OPEN' | 'REQUEST'>('OPEN');
   formInstitution = signal<string>(DEFAULT_INSTITUTION);
   formCoverImageUrl = signal('');
   formCoverError = signal('');
@@ -54,11 +57,10 @@ export class StudentHome implements OnInit {
   formBusy = signal(false);
   deleteBusy = signal(false);
   failedCovers = signal(new Set<string>());
-  yoursOpen = signal(true);
-  createdOpen = signal(true);
-  exploreOpen = signal(true);
+  section = signal<StudentHomeSection>('explore');
   searchQuery = signal('');
   selectedCategory = signal('All');
+  joinModeFilter = signal<'ALL' | 'OPEN' | 'REQUEST'>('ALL');
 
   readonly joinedIds = computed(() => new Set(this.enrollments().map((e) => e.categoryId)));
 
@@ -70,6 +72,12 @@ export class StudentHome implements OnInit {
   readonly availableProgrammes = computed(() => this.programmes());
 
   readonly programmeFilters = computed(() => ['All', 'Diploma', 'Degree'] as const);
+
+  readonly joinModeFilters: { id: 'ALL' | 'OPEN' | 'REQUEST'; label: string }[] = [
+    { id: 'ALL', label: 'All join types' },
+    { id: 'OPEN', label: 'Open join' },
+    { id: 'REQUEST', label: 'Request to join' },
+  ];
 
   readonly exploreUniversities = computed(() => {
     const names = new Set(
@@ -109,10 +117,53 @@ export class StudentHome implements OnInit {
         const inst = (p.affiliatedInstitution || '').trim();
         if (inst.toLowerCase() !== uni.toLowerCase()) return false;
       }
+      const joinFilter = this.joinModeFilter();
+      if (joinFilter !== 'ALL') {
+        const mode = (p.joinMode || 'OPEN').toUpperCase();
+        if (joinFilter === 'OPEN' && mode !== 'OPEN') return false;
+        if (joinFilter === 'REQUEST' && mode !== 'REQUEST') return false;
+      }
       if (!q) return true;
       const haystack = `${p.title} ${p.abbreviation || ''} ${p.programmeCode || ''} ${p.description || ''} ${p.affiliatedInstitution || ''}`.toLowerCase();
       return haystack.includes(q);
     });
+  });
+
+  readonly sectionCount = computed(() => {
+    switch (this.section()) {
+      case 'yours':
+        return this.enrollments().length;
+      case 'created':
+        return this.createdProgrammes().length;
+      default:
+        return this.availableProgrammes().length;
+    }
+  });
+
+  readonly pageTitle = computed(() => {
+    switch (this.section()) {
+      case 'yours':
+        return 'Your programmes';
+      case 'created':
+        return 'Programmes you created';
+      default:
+        return 'Explore programmes';
+    }
+  });
+
+  readonly pageLede = computed(() => {
+    switch (this.section()) {
+      case 'yours':
+        return this.enrollments().length
+          ? 'Open a programme you have joined, or unjoin if you no longer need it.'
+          : 'You have not joined any programmes yet. Explore the catalogue to find one.';
+      case 'created':
+        return this.createdProgrammes().length
+          ? 'Manage programmes you registered and share them with learners.'
+          : 'Register a programme to build your catalogue and invite learners.';
+      default:
+        return 'Browse published programmes and join to start learning.';
+    }
   });
 
   get userName(): string {
@@ -127,6 +178,12 @@ export class StudentHome implements OnInit {
 
   ngOnInit(): void {
     this.reload();
+    this.route.data.subscribe((data) => {
+      const next = data['section'] as StudentHomeSection | undefined;
+      if (next === 'explore' || next === 'yours' || next === 'created') {
+        this.section.set(next);
+      }
+    });
   }
 
   reload(): void {
@@ -283,24 +340,16 @@ export class StudentHome implements OnInit {
     return this.coverTheme(title, id).url;
   }
 
-  toggleYours(): void {
-    this.yoursOpen.update((open) => !open);
-  }
-
-  toggleCreated(): void {
-    this.createdOpen.update((open) => !open);
-  }
-
-  toggleExplore(): void {
-    this.exploreOpen.update((open) => !open);
-  }
-
   onSearch(event: Event): void {
     this.searchQuery.set((event.target as HTMLInputElement).value);
   }
 
   setCategory(category: string): void {
     this.selectedCategory.set(category);
+  }
+
+  setJoinModeFilter(mode: 'ALL' | 'OPEN' | 'REQUEST'): void {
+    this.joinModeFilter.set(mode);
   }
 
   setUniversity(university: string): void {
@@ -414,6 +463,8 @@ export class StudentHome implements OnInit {
     this.formDescription.set(p.description || '');
     this.formProgrammeCode.set(p.programmeCode || '');
     this.formAbbreviation.set(p.abbreviation || '');
+    const joinMode = (p.joinMode || 'OPEN').toUpperCase();
+    this.formJoinMode.set(joinMode === 'REQUEST' ? 'REQUEST' : 'OPEN');
     this.formInstitution.set(p.affiliatedInstitution || this.defaultInstitution);
     this.formCoverImageUrl.set(p.coverImageUrl || '');
     this.formCoverError.set('');
@@ -497,6 +548,7 @@ export class StudentHome implements OnInit {
       programmeCode: this.formProgrammeCode().trim() || null,
       abbreviation: this.formAbbreviation().trim() || null,
       affiliatedInstitution: this.formInstitution(),
+      joinMode: this.formJoinMode(),
     };
     if (this.coverDirty()) {
       patch.coverImageUrl = this.formCoverImageUrl().trim();

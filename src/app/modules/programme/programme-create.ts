@@ -6,13 +6,12 @@ import { CourseService } from '../../core/services/course.service';
 import { CourseCategory } from '../../core/models/course.model';
 import { environment } from '../../../environments/environment';
 import { DEFAULT_INSTITUTION, formatMoney, programmeHeading, subscriptionTotal } from '../../core/utils/programme.util';
-import { CatalogueTopbar } from '../../layout/catalogue-topbar/catalogue-topbar';
 import { InstitutionPicker } from '../../shared/institution-picker/institution-picker';
 
 @Component({
   selector: 'app-programme-create',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, CatalogueTopbar, InstitutionPicker],
+  imports: [CommonModule, FormsModule, RouterLink, InstitutionPicker],
   templateUrl: './programme-create.html',
   styleUrl: './programme-create.scss',
 })
@@ -251,6 +250,6 @@ export class ProgrammeCreate {
   finish(): void {
     const p = this.programme();
     if (p) this.router.navigate(['/programmes', p.id]);
-    else this.router.navigateByUrl('/home');
+    else this.router.navigateByUrl('/explore');
   }
 }
