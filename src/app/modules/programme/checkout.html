@@ -50,34 +50,47 @@
       </div>
 
       @if (!isTrial()) {
-        <h2 class="section-title">Payment method</h2>
-        <p class="lede method-note">You will complete payment securely on Flutterwave. Amounts are charged in UGX.</p>
-        <div class="method-list">
-          @for (pay of methods; track pay.id) {
-            <button
-              type="button"
-              class="method-card"
-              [class.selected]="method() === pay.id"
-              [class.mtn]="pay.id === 'mtn'"
-              [class.airtel]="pay.id === 'airtel'"
-              [class.visa]="pay.id === 'visa'"
-              (click)="chooseMethod(pay.id)"
-            >
-              <span class="method-mark" [attr.data-brand]="pay.id" aria-hidden="true">
-                @if (pay.id === 'visa') {
-                  <svg viewBox="0 0 72 24" class="brand-logo"><rect width="72" height="24" rx="4" fill="#1A1F71"/><text x="36" y="17" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">VISA</text></svg>
-                } @else if (pay.id === 'mtn') {
-                  <svg viewBox="0 0 72 24" class="brand-logo"><rect width="72" height="24" rx="4" fill="#FFCC00"/><text x="36" y="17" text-anchor="middle" font-size="13" font-weight="800" fill="#111">MTN</text></svg>
-                } @else {
-                  <svg viewBox="0 0 88 24" class="brand-logo"><rect width="88" height="24" rx="4" fill="#E4002B"/><text x="44" y="16.5" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">airtel</text></svg>
-                }
-              </span>
-              <span class="method-copy">
-                <strong>{{ pay.label }}</strong>
-                <small>{{ pay.hint }}</small>
-              </span>
-            </button>
-          }
+        <h2 class="section-title">Payment</h2>
+
+        <div class="flutterwave-card" aria-label="Pay with Flutterwave">
+          <div class="flutterwave-brand">
+            <svg class="flutterwave-logo" viewBox="0 0 160 36" aria-hidden="true">
+              <rect width="160" height="36" rx="8" fill="#1B1F3B"/>
+              <text x="80" y="23" text-anchor="middle" font-size="14" font-weight="800" fill="#F5A623" font-family="Arial,sans-serif">Flutterwave</text>
+            </svg>
+            <div class="flutterwave-copy">
+              <strong>Pay with Flutterwave</strong>
+              <span>Secure card and mobile money checkout. Charged in UGX as one payment.</span>
+            </div>
+          </div>
+          <p class="flutterwave-hint">Choose how you want to pay on Flutterwave:</p>
+          <div class="method-list">
+            @for (pay of methods; track pay.id) {
+              <button
+                type="button"
+                class="method-card"
+                [class.selected]="method() === pay.id"
+                [class.mtn]="pay.id === 'mtn'"
+                [class.airtel]="pay.id === 'airtel'"
+                [class.visa]="pay.id === 'visa'"
+                (click)="chooseMethod(pay.id)"
+              >
+                <span class="method-mark" [attr.data-brand]="pay.id" aria-hidden="true">
+                  @if (pay.id === 'visa') {
+                    <svg viewBox="0 0 72 24" class="brand-logo"><rect width="72" height="24" rx="4" fill="#1A1F71"/><text x="36" y="17" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">VISA</text></svg>
+                  } @else if (pay.id === 'mtn') {
+                    <svg viewBox="0 0 72 24" class="brand-logo"><rect width="72" height="24" rx="4" fill="#FFCC00"/><text x="36" y="17" text-anchor="middle" font-size="13" font-weight="800" fill="#111">MTN</text></svg>
+                  } @else {
+                    <svg viewBox="0 0 88 24" class="brand-logo"><rect width="88" height="24" rx="4" fill="#E4002B"/><text x="44" y="16.5" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">airtel</text></svg>
+                  }
+                </span>
+                <span class="method-copy">
+                  <strong>{{ pay.label }}</strong>
+                  <small>{{ pay.hint }}</small>
+                </span>
+              </button>
+            }
+          </div>
         </div>
 
         @if (needsPhone()) {
@@ -110,10 +123,7 @@
           @if (paying()) {
             Redirecting to Flutterwave…
           } @else if (selected()) {
-            Pay {{ formatKes(selected()!.amount, selected()!.currency) }}
-            @if (method() === 'visa') { with Visa }
-            @else if (method() === 'mtn') { with MTN }
-            @else { with Airtel }
+            Pay {{ formatKes(selected()!.amount, selected()!.currency) }} via Flutterwave
           } @else {
             Choose a plan
           }
