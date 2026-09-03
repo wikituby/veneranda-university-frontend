@@ -1,0 +1,1 @@
+function t(r){if(!r)return"?";let n=(r.fullName||"").trim();return n?n.split(/\s+/).map(e=>e[0]).filter(Boolean).slice(0,2).join("").toUpperCase():(r.username||"?").slice(0,2).toUpperCase()}function l(r){return r?.avatarUrl?.trim()||null}export{t as a,l as b};

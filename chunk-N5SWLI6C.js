@@ -1,0 +1,1 @@
+var e={production:!0,apiUrl:"https://veneranda-university-backend.onrender.com/api/v1",appName:"Veneranda University",appVersion:"1.0.0",serverFeeAmount:5e3,defaultCurrency:"UGX",googleClientId:"936423918383-606sfujp00scurea3cb7a37qsdoh202b.apps.googleusercontent.com"};export{e as a};
