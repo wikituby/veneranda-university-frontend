@@ -34,20 +34,20 @@ html.appearance-split,
 body.appearance-split,
 html.appearance-light,
 body.appearance-light {
-  --gradient-primary: linear-gradient(135deg, var(--theme-accent-start, #667eea) 0%, var(--theme-accent-end, #764ba2) 100%);
+  --gradient-primary: var(--theme-accent-start, #667eea);
   --theme-accent-start: #667eea;
-  --theme-accent-end: #764ba2;
-  --theme-accent-deep: #0056d2;
+  --theme-accent-end: #667eea;
+  --theme-accent-deep: #4f46e5;
   --theme-accent-rgb: 102, 126, 234;
   --accent: var(--theme-accent-start);
   --accent-strong: var(--theme-accent-deep);
   --accent-focus-ring: rgba(102, 126, 234, 0.15);
   --accent-soft-bg: rgba(102, 126, 234, 0.1);
   --sidebar-hover-accent: rgba(102, 126, 234, 0.08);
-  --gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-  --gradient-warning: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  --gradient-info: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  --gradient-dark: linear-gradient(135deg, #434343 0%, #1a1a1a 100%);
+  --gradient-success: #11998e;
+  --gradient-warning: #db2777;
+  --gradient-info: #0284c7;
+  --gradient-dark: #1a1a1a;
   --bg-body: #f0f2f7;
   --bg-elevated: #ffffff;
   --bg-card: #ffffff;
@@ -75,7 +75,7 @@ body.appearance-light {
 :root,
 html.appearance-split,
 body.appearance-split {
-  --sidebar-bg: linear-gradient(180deg, #1a1f36 0%, #2d3250 100%);
+  --sidebar-bg: #1a1f36;
   --sidebar-border: rgba(255, 255, 255, 0.08);
   --sidebar-text: rgba(255, 255, 255, 0.88);
   --sidebar-text-muted: rgba(255, 255, 255, 0.35);
@@ -125,7 +125,7 @@ body.appearance-dark {
   --shadow-md: 0 4px 10px -2px rgba(0,0,0,.35);
   --shadow-lg: 0 10px 20px -4px rgba(0,0,0,.4);
   --shadow-xl: 0 20px 40px -8px rgba(0,0,0,.5);
-  --sidebar-bg: linear-gradient(180deg, #0f1119 0%, #1a1d2e 100%);
+  --sidebar-bg: #0f1119;
   --sidebar-border: rgba(255, 255, 255, 0.06);
   --sidebar-text: rgba(255, 255, 255, 0.96);
   --sidebar-text-muted: rgba(255, 255, 255, 0.62);

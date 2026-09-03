@@ -16,6 +16,7 @@ import {
   CourseSlide,
   CourseSubscription,
   CourseVideo,
+  CheckoutResult,
 } from '../models/course.model';
 
 interface CourseLessonResponse {
@@ -292,12 +293,25 @@ export class CourseService {
     return this.http.get<CourseAccess>(`${this.baseUrl}/${categoryId}/access`);
   }
 
-  checkout(categoryId: string, trial = false): Observable<CourseSubscription> {
+  checkout(
+    categoryId: string,
+    trial = false,
+    body?: { paymentMethod?: string; phone?: string },
+  ): Observable<CheckoutResult> {
     let params = new HttpParams();
     if (trial) {
       params = params.set('trial', 'true');
     }
-    return this.http.post<CourseSubscription>(`${this.baseUrl}/${categoryId}/checkout`, {}, { params });
+    return this.http.post<CheckoutResult>(
+      `${this.baseUrl}/${categoryId}/checkout`,
+      body || {},
+      { params },
+    );
+  }
+
+  verifyFlutterwavePayment(txRef: string): Observable<CourseSubscription> {
+    const params = new HttpParams().set('tx_ref', txRef);
+    return this.http.get<CourseSubscription>(`${environment.apiUrl}/payments/flutterwave/verify`, { params });
   }
 
   unsubscribe(categoryId: string, password: string): Observable<CourseSubscription> {

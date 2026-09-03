@@ -7,7 +7,7 @@
 
   <section class="card">
     <h2>Site colour theme</h2>
-    <p class="hint">Preview a theme below, then click <strong>Save settings</strong>. Backgrounds, sidebar, buttons, and accents update across the whole app.</p>
+    <p class="hint">Preview a solid colour theme below, then click <strong>Save settings</strong>. Accents and sidebar use flat colours with no fade.</p>
     <div class="theme-grid">
       @for (theme of themes; track theme.id) {
         <button
@@ -19,7 +19,7 @@
         >
           <span
             class="theme-swatch"
-            [style.background]="'linear-gradient(135deg, ' + theme.start + ', ' + theme.end + ')'"
+            [style.background]="theme.start"
             aria-hidden="true"
           ></span>
           <span class="theme-copy">

@@ -32,6 +32,12 @@ h1 {
   margin-bottom: 18px;
 }
 
+.method-note {
+  margin-top: -6px;
+  margin-bottom: 14px;
+  font-size: 0.92rem;
+}
+
 .option-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

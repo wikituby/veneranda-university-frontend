@@ -1,5 +1,7 @@
 <div class="page">
-    @if (loading()) {
+    @if (verifying()) {
+      <div class="state"><div class="spinner-border text-primary"></div><span>Confirming your payment…</span></div>
+    } @else if (loading()) {
       <div class="state"><div class="spinner-border text-primary"></div><span>Preparing checkout…</span></div>
     } @else if (!item()) {
       <p class="empty">Item not found.</p>
@@ -9,6 +11,7 @@
       <p class="lede">
         You opened checkout for <strong>{{ item()!.title }}</strong>.
         Coverage only goes downward: a course unit unlocks that unit only; a semester unlocks its units; a year unlocks its semesters and units; the programme unlocks everything.
+        One payment covers the selected plan (coordinator share + server fee).
       </p>
       @if (!enrolled()) {
         <div class="inline-alert">Join this programme from Home before you pay.</div>
@@ -48,6 +51,7 @@
 
       @if (!isTrial()) {
         <h2 class="section-title">Payment method</h2>
+        <p class="lede method-note">You will complete payment securely on Flutterwave. Amounts are charged in UGX.</p>
         <div class="method-list">
           @for (pay of methods; track pay.id) {
             <button
@@ -76,44 +80,14 @@
           }
         </div>
 
-        @if (method() === 'visa') {
-          <div class="pay-fields visa-fields">
-            <label class="visa-name">
-              <span>Name on card</span>
-              <input class="form-control" [value]="cardName()" (input)="onCardName($event)" autocomplete="cc-name" placeholder="Name on the Visa card" />
-            </label>
-            <label class="visa-number">
-              <span>Card number</span>
-              <input class="form-control" [value]="cardNumber()" (input)="onCardNumber($event)" inputmode="numeric" autocomplete="cc-number" placeholder="ACCT-000003" />
-            </label>
-            <label class="visa-expiry">
-              <span>Expiry</span>
-              <input class="form-control" [value]="expiry()" (input)="onExpiry($event)" inputmode="numeric" autocomplete="cc-exp" placeholder="MM/YY" />
-            </label>
-            <label class="visa-cvc">
-              <span>CVC</span>
-              <input class="form-control" [value]="cvc()" (input)="onCvc($event)" inputmode="numeric" autocomplete="cc-csc" placeholder="123" />
-            </label>
-          </div>
-        } @else {
+        @if (needsPhone()) {
           <div class="pay-fields money-fields">
             <label class="money-phone">
               <span class="money-label-row">
                 <span>{{ method() === 'mtn' ? 'MTN Mobile Money number' : 'Airtel Money number' }}</span>
-                <span class="hint">You will receive a prompt on this number to approve the payment.</span>
+                <span class="hint">Flutterwave will prompt this number to approve payment.</span>
               </span>
-              <div class="money-row">
-                <input class="form-control" [value]="phone()" (input)="onPhone($event)" inputmode="tel" autocomplete="tel" placeholder="07XX XXX XXX" />
-                <button type="button" class="btn btn-primary pay-btn" [disabled]="paying() || !enrolled() || !selected() || selected()!.paid" (click)="pay()">
-                  @if (paying()) {
-                    Processing…
-                  } @else if (selected()) {
-                    Pay {{ formatKes(selected()!.amount, selected()!.currency) }}
-                  } @else {
-                    Pay
-                  }
-                </button>
-              </div>
+              <input class="form-control" [value]="phone()" (input)="onPhone($event)" inputmode="tel" autocomplete="tel" placeholder="07XX XXX XXX" />
             </label>
           </div>
         }
@@ -131,12 +105,15 @@
             Start 48-hour free trial
           }
         </button>
-      } @else if (method() === 'visa') {
+      } @else {
         <button type="button" class="btn btn-primary pay-btn" [disabled]="paying() || !enrolled() || !selected() || selected()!.paid" (click)="pay()">
           @if (paying()) {
-            Processing…
+            Redirecting to Flutterwave…
           } @else if (selected()) {
-            Pay {{ formatKes(selected()!.amount, selected()!.currency) }} with Visa
+            Pay {{ formatKes(selected()!.amount, selected()!.currency) }}
+            @if (method() === 'visa') { with Visa }
+            @else if (method() === 'mtn') { with MTN }
+            @else { with Airtel }
           } @else {
             Choose a plan
           }

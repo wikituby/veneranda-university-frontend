@@ -154,6 +154,14 @@ export interface CourseSubscription {
   expiresAt?: string | null;
 }
 
+export interface CheckoutResult {
+  subscription: CourseSubscription;
+  requiresRedirect: boolean;
+  paymentLink?: string | null;
+  txRef?: string | null;
+  currency?: string | null;
+}
+
 export interface TimeSeriesPoint {
   label: string;
   value: number;

@@ -1,6 +1,6 @@
 <div class="container-fluid py-4 settings-page">
   <h4 class="fw-bold mb-1">Settings</h4>
-  <p class="text-muted mb-4">Layout preferences for this browser.</p>
+  <p class="text-muted mb-4">Layout preferences and payment configuration.</p>
 
   <section class="settings-section">
     <h6 class="settings-section-title">Sidebar</h6>
@@ -23,5 +23,79 @@
         />
       </div>
     </label>
+  </section>
+
+  <section class="settings-section payment-section">
+    <h6 class="settings-section-title">Payments (Flutterwave)</h6>
+    <p class="settings-row-desc payment-intro">
+      Currency defaults to <strong>UGX</strong> and is what Flutterwave receives for each subscription.
+      Coordinator share and server fee are charged as one payment; split payouts come later.
+      Set webhook URL in Flutterwave to
+      <code>/api/v1/payments/flutterwave/webhook</code>.
+    </p>
+
+    @if (loadingPayments()) {
+      <p class="text-muted">Loading payment settings…</p>
+    } @else if (paymentError() && !paymentSettings().length) {
+      <div class="inline-alert">{{ paymentError() }}</div>
+    } @else {
+      @if (paymentError()) {
+        <div class="inline-alert">{{ paymentError() }}</div>
+      }
+      @if (paymentSaved()) {
+        <div class="inline-ok">{{ paymentSaved() }}</div>
+      }
+      @for (setting of paymentSettings(); track setting.id) {
+        <div class="settings-row payment-row">
+          <div class="settings-row-copy">
+            <div class="settings-row-title">{{ labelFor(setting.key) }}</div>
+            @if (setting.description) {
+              <p class="settings-row-desc">{{ setting.description }}</p>
+            }
+          </div>
+          <div class="payment-edit">
+            @if (setting.key === 'flutterwave_enabled' || setting.valueType === 'BOOLEAN') {
+              <select
+                class="form-select form-select-sm"
+                [value]="drafts()[setting.id]"
+                (change)="onDraft(setting.id, $event)"
+              >
+                <option value="true">true</option>
+                <option value="false">false</option>
+              </select>
+            } @else if (setting.key === 'payment_currency') {
+              <select
+                class="form-select form-select-sm"
+                [value]="drafts()[setting.id] || 'UGX'"
+                (change)="onDraft(setting.id, $event)"
+              >
+                <option value="UGX">UGX</option>
+                <option value="KES">KES</option>
+                <option value="USD">USD</option>
+                <option value="TZS">TZS</option>
+                <option value="RWF">RWF</option>
+              </select>
+            } @else {
+              <input
+                class="form-control form-control-sm"
+                [type]="setting.isEncrypted ? 'password' : 'text'"
+                [placeholder]="setting.isEncrypted ? '•••••• (enter to replace)' : ''"
+                [value]="drafts()[setting.id] || ''"
+                (input)="onDraft(setting.id, $event)"
+                autocomplete="off"
+              />
+            }
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-primary"
+              [disabled]="savingKey() === setting.key"
+              (click)="saveSetting(setting)"
+            >
+              {{ savingKey() === setting.key ? 'Saving…' : 'Save' }}
+            </button>
+          </div>
+        </div>
+      }
+    }
   </section>
 </div>

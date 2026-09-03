@@ -11,6 +11,10 @@
   margin-bottom: 10px;
 }
 
+.settings-section + .settings-section {
+  margin-top: 2rem;
+}
+
 .settings-row {
   display: flex;
   align-items: flex-start;
@@ -49,4 +53,47 @@
     margin: 0;
     cursor: pointer;
   }
+}
+
+.payment-intro {
+  margin-bottom: 12px;
+}
+
+.payment-row {
+  cursor: default;
+  flex-wrap: wrap;
+}
+
+.payment-edit {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  min-width: min(100%, 280px);
+  flex: 1 1 240px;
+  justify-content: flex-end;
+
+  .form-control,
+  .form-select {
+    max-width: 260px;
+    flex: 1 1 160px;
+  }
+}
+
+.inline-alert {
+  margin: 8px 0 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 0.9rem;
+}
+
+.inline-ok {
+  margin: 8px 0 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #ecfdf5;
+  color: #065f46;
+  font-size: 0.9rem;
 }

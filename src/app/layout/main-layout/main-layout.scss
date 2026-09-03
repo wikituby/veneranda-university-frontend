@@ -1170,7 +1170,7 @@
   }
 
   &[data-theme='split'] {
-    .preview-sidebar { background: linear-gradient(180deg, #1a1f36, #2d3250); }
+    .preview-sidebar { background: #1a1f36; }
     .preview-main { background: #f0f2f7; }
   }
 
@@ -1546,7 +1546,7 @@
 
 .course-modal-accent {
   height: 4px;
-  background: linear-gradient(90deg, var(--theme-accent-start), var(--theme-accent-end));
+  background: var(--theme-accent-start);
   border-radius: 18px 18px 0 0;
 }
 
@@ -1565,7 +1565,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: linear-gradient(135deg, rgba(var(--theme-accent-rgb), 0.18), rgba(var(--theme-accent-rgb), 0.18));
+  background: rgba(var(--theme-accent-rgb), 0.18);
   color: var(--accent);
   font-size: 1.15rem;
 }

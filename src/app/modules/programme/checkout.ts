@@ -6,6 +6,7 @@ import { CourseService } from '../../core/services/course.service';
 import { CourseCategory } from '../../core/models/course.model';
 import { environment } from '../../../environments/environment';
 import { coordinatorShare, formatKes, formatMoney, kindLabel, priceFor, programmeHeading } from '../../core/utils/programme.util';
+
 export interface PayOption {
   id: string;
   categoryId: string;
@@ -38,27 +39,25 @@ export class Checkout implements OnInit {
 
   loading = signal(true);
   paying = signal(false);
+  verifying = signal(false);
   error = signal('');
   enrolled = signal(false);
   item = signal<CourseCategory | null>(null);
   options = signal<PayOption[]>([]);
   selectedId = signal<string | null>(null);
   method = signal<'visa' | 'mtn' | 'airtel'>('visa');
-  cardName = signal('');
-  cardNumber = signal('');
-  expiry = signal('');
-  cvc = signal('');
   phone = signal('');
   private all = signal<CourseCategory[]>([]);
   private paidIds = signal(new Set<string>());
 
   readonly selected = computed(() => this.options().find((o) => o.id === this.selectedId()) || null);
   readonly isTrial = computed(() => !!this.selected()?.trial);
+  readonly needsPhone = computed(() => this.method() === 'mtn' || this.method() === 'airtel');
 
   readonly methods = [
-    { id: 'visa' as const, label: 'Visa card', hint: 'Pay with Visa debit or credit' },
-    { id: 'mtn' as const, label: 'MTN Mobile Money', hint: 'Pay with your MTN number' },
-    { id: 'airtel' as const, label: 'Airtel Money', hint: 'Pay with your Airtel number' },
+    { id: 'visa' as const, label: 'Visa card', hint: 'Continue to Flutterwave to enter your card securely' },
+    { id: 'mtn' as const, label: 'MTN Mobile Money', hint: 'Pay with MTN via Flutterwave' },
+    { id: 'airtel' as const, label: 'Airtel Money', hint: 'Pay with Airtel via Flutterwave' },
   ];
 
   ngOnInit(): void {
@@ -67,6 +66,38 @@ export class Checkout implements OnInit {
       this.router.navigateByUrl('/explore');
       return;
     }
+
+    const txRef = this.route.snapshot.queryParamMap.get('tx_ref');
+    if (txRef) {
+      this.verifying.set(true);
+      this.loading.set(false);
+      this.courses.verifyFlutterwavePayment(txRef).subscribe({
+        next: () => {
+          this.verifying.set(false);
+          this.courses.getCategories(true).subscribe({
+            next: (cats) => {
+              this.all.set(cats || []);
+              const item = (cats || []).find((c) => c.id === id) || null;
+              this.item.set(item);
+              this.goHomeAfterPay();
+            },
+            error: () => this.router.navigate(['/programmes', id], { replaceUrl: true }),
+          });
+        },
+        error: (err) => {
+          this.verifying.set(false);
+          this.error.set(err.error?.message || 'Could not confirm payment. If you paid, contact support with your reference.');
+          this.loadCheckout(id);
+        },
+      });
+      return;
+    }
+
+    this.loadCheckout(id);
+  }
+
+  private loadCheckout(id: string): void {
+    this.loading.set(true);
     forkJoin({
       cats: this.courses.getCategories(true),
       subs: this.courses.listMySubscriptions(),
@@ -109,36 +140,12 @@ export class Checkout implements OnInit {
     this.error.set('');
   }
 
-  onCardName(event: Event): void {
-    this.cardName.set((event.target as HTMLInputElement).value);
-  }
-
-  onCardNumber(event: Event): void {
-    const digits = (event.target as HTMLInputElement).value.replace(/\D/g, '').slice(0, 16);
-    this.cardNumber.set(digits.replace(/(\d{4})(?=\d)/g, '$1 ').trim());
-  }
-
-  onExpiry(event: Event): void {
-    const digits = (event.target as HTMLInputElement).value.replace(/\D/g, '').slice(0, 4);
-    this.expiry.set(digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits);
-  }
-
-  onCvc(event: Event): void {
-    this.cvc.set((event.target as HTMLInputElement).value.replace(/\D/g, '').slice(0, 4));
-  }
-
   onPhone(event: Event): void {
     this.phone.set((event.target as HTMLInputElement).value);
   }
 
   private paymentReady(): boolean {
-    if (this.method() === 'visa') {
-      const number = this.cardNumber().replace(/\s/g, '');
-      return this.cardName().trim().length > 2
-        && /^\d{13,16}$/.test(number)
-        && /^\d{2}\/\d{2}$/.test(this.expiry())
-        && /^\d{3,4}$/.test(this.cvc());
-    }
+    if (!this.needsPhone()) return true;
     return /^\+?\d{9,15}$/.test(this.phone().replace(/\s/g, ''));
   }
 
@@ -155,23 +162,28 @@ export class Checkout implements OnInit {
     }
     if (!this.isTrial() && !this.paymentReady()) {
       this.paying.set(false);
-      this.error.set(this.method() === 'visa'
-        ? 'Enter your Visa card details to continue.'
-        : 'Enter a valid mobile money number to continue.');
+      this.error.set('Enter a valid mobile money number to continue.');
       return;
     }
-    this.courses.checkout(option.categoryId, !!option.trial).subscribe({
-      next: () => {
+    this.courses.checkout(option.categoryId, !!option.trial, {
+      paymentMethod: this.isTrial() ? undefined : this.method(),
+      phone: this.needsPhone() ? this.phone().replace(/\s/g, '') : undefined,
+    }).subscribe({
+      next: (result) => {
+        if (result.requiresRedirect && result.paymentLink) {
+          window.location.href = result.paymentLink;
+          return;
+        }
         this.paying.set(false);
         this.paidIds.update((ids) => new Set(ids).add(option.categoryId));
         this.options.update((list) =>
-          list.map((item) => item.categoryId === option.categoryId ? { ...item, paid: true } : item)
+          list.map((row) => row.categoryId === option.categoryId ? { ...row, paid: true } : row)
         );
         this.goHomeAfterPay();
       },
       error: (err) => {
         this.paying.set(false);
-        this.error.set(err.error?.message || 'Payment could not be completed. Join the programme first.');
+        this.error.set(err.error?.message || 'Payment could not be started. Join the programme first.');
       },
     });
   }
@@ -197,6 +209,7 @@ export class Checkout implements OnInit {
       PROGRAMME: 'Unlock the whole programme: every year, semester, and course unit.',
     };
     const fee = environment.serverFeeAmount ?? 5000;
+    const currency = environment.defaultCurrency || 'UGX';
     const options: PayOption[] = chain.map((c) => {
       const share = coordinatorShare(c.priceAmount, c.nodeKind);
       const serverFee = c.serverFeeAmount ?? fee;
@@ -209,7 +222,7 @@ export class Checkout implements OnInit {
         amount: priceFor(c),
         coordinatorAmount: share,
         serverFeeAmount: serverFee,
-        currency: c.currency || environment.defaultCurrency || 'UGX',
+        currency: c.currency || currency,
         paid: this.paidIds().has(c.id) || this.coveredByAncestor(c.id, chain),
       };
     });
@@ -222,7 +235,7 @@ export class Checkout implements OnInit {
       amount: 0,
       coordinatorAmount: 0,
       serverFeeAmount: 0,
-      currency: item.currency || environment.defaultCurrency || 'UGX',
+      currency: item.currency || currency,
       paid: this.paidIds().has(item.id) || this.coveredByAncestor(item.id, chain),
       trial: true,
     });
